@@ -26,7 +26,9 @@ const authUserWrap = document.getElementById('authUserWrap');
 const userDisplayName = document.getElementById('userDisplayName');
 const googleSignOutBtn = document.getElementById('googleSignOutBtn');
 
+const quickAddForm = document.getElementById('quickAddForm');
 const quickAddInput = document.getElementById('quickAddInput');
+const quickAddSaveBtn = document.getElementById('quickAddSaveBtn');
 const quickAddDateBtn = document.getElementById('quickAddDateBtn');
 const quickAddDateLabel = document.getElementById('quickAddDateLabel');
 const quickAddDateInput = document.getElementById('quickAddDateInput');
@@ -55,6 +57,8 @@ const planViewUpcomingBtn = document.getElementById('planViewUpcomingBtn');
 const planViewUpcomingLabel = document.getElementById('planViewUpcomingLabel');
 
 const dateFilterInput = document.getElementById('dateFilterInput');
+const dateFilterBtn = document.getElementById('dateFilterBtn');
+const dateFilterLabel = document.getElementById('dateFilterLabel');
 const filterDropdownWrap = document.getElementById('filterDropdownWrap');
 const filterDropdownBtn = document.getElementById('filterDropdownBtn');
 const filterBtnLabel = document.getElementById('filterBtnLabel');
@@ -105,20 +109,22 @@ function updateQuickAddDateDisplay() {
   quickAddDateInput.value = state.selectedAddDate;
 }
 
-if (quickAddDateBtn && quickAddDateInput) {
-  quickAddDateBtn.addEventListener('click', () => {
-    try {
-      quickAddDateInput.showPicker();
-    } catch (e) {
-      quickAddDateInput.click();
-    }
-  });
-
+if (quickAddDateInput) {
   quickAddDateInput.addEventListener('change', (e) => {
     if (e.target.value) {
       state.selectedAddDate = e.target.value;
       updateQuickAddDateDisplay();
     }
+  });
+}
+
+if (quickAddDateBtn && quickAddDateInput) {
+  quickAddDateBtn.addEventListener('click', () => {
+    try {
+      if (typeof quickAddDateInput.showPicker === 'function') {
+        quickAddDateInput.showPicker();
+      }
+    } catch (e) {}
   });
 }
 
@@ -154,31 +160,48 @@ quickAddTimeBtn.addEventListener('click', (e) => {
   popover.openTimePopover(quickAddTimeBtn, state.selectedAddStart, state.selectedAddEnd, { type: 'quick' });
 });
 
-// Quick Add Submit
-quickAddInput.addEventListener('keydown', async (e) => {
+// Quick Add Submit (Supports tap button, mobile keyboard Done/Go, and Enter key)
+async function handleQuickAddSubmit(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const rawVal = quickAddInput.value.trim();
+  if (!rawVal) return;
+
+  const parsed = parseTimeFromText(rawVal);
+  const text = parsed ? parsed.cleanText : rawVal;
+  const start = parsed ? parsed.startTime : state.selectedAddStart;
+  const end = parsed ? parsed.endTime : state.selectedAddEnd;
+
+  const today = getLocalISODate();
+  if (state.selectedAddDate > today && state.currentView === 'all') {
+    state.currentView = 'upcoming';
+    updateFilterDisplay();
+  }
+
+  await addTask(text, state.selectedAddDate, start, end);
+  quickAddInput.value = '';
+  state.selectedAddStart = '';
+  state.selectedAddEnd = '';
+  updateQuickAddTimeDisplay();
+  renderTasks();
+}
+
+if (quickAddForm) {
+  quickAddForm.addEventListener('submit', handleQuickAddSubmit);
+}
+
+quickAddInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
-    const rawVal = quickAddInput.value.trim();
-    if (!rawVal) return;
-
-    const parsed = parseTimeFromText(rawVal);
-    const text = parsed ? parsed.cleanText : rawVal;
-    const start = parsed ? parsed.startTime : state.selectedAddStart;
-    const end = parsed ? parsed.endTime : state.selectedAddEnd;
-
-    const today = getLocalISODate();
-    if (state.selectedAddDate > today && state.currentView === 'all') {
-      state.currentView = 'upcoming';
-      updateFilterDisplay();
-    }
-
-    await addTask(text, state.selectedAddDate, start, end);
-    quickAddInput.value = '';
-    state.selectedAddStart = '';
-    state.selectedAddEnd = '';
-    updateQuickAddTimeDisplay();
-    renderTasks();
+    e.preventDefault();
+    handleQuickAddSubmit(e);
   }
 });
+
+if (quickAddSaveBtn) {
+  quickAddSaveBtn.addEventListener('click', handleQuickAddSubmit);
+}
 
 // --- View Mode & Table Toggle ---
 function updateViewModeDisplay() {
@@ -328,9 +351,11 @@ function updateFilterDisplay() {
   if (state.isTableView) {
     filterBtnLabel.textContent = 'Filter';
     filterDropdownBtn.classList.remove('active');
+    if (dateFilterLabel) dateFilterLabel.textContent = 'Pick date';
   } else if (state.specificDateFilter) {
     filterBtnLabel.textContent = `Filter: ${formatShortDate(state.specificDateFilter)}`;
     filterDropdownBtn.classList.add('active');
+    if (dateFilterLabel) dateFilterLabel.textContent = formatShortDate(state.specificDateFilter);
   } else if (state.currentView !== 'all') {
     const viewLabels = {
       today: 'Today',
@@ -340,9 +365,11 @@ function updateFilterDisplay() {
     };
     filterBtnLabel.textContent = `Filter: ${viewLabels[state.currentView] || state.currentView}`;
     filterDropdownBtn.classList.add('active');
+    if (dateFilterLabel) dateFilterLabel.textContent = 'Pick date';
   } else {
     filterBtnLabel.textContent = 'Filter';
     filterDropdownBtn.classList.remove('active');
+    if (dateFilterLabel) dateFilterLabel.textContent = 'Pick date';
   }
 }
 
@@ -357,6 +384,7 @@ filterMenuItems.forEach(btn => {
     state.currentView = btn.dataset.view;
     state.specificDateFilter = null;
     dateFilterInput.value = '';
+    if (dateFilterLabel) dateFilterLabel.textContent = 'Pick date';
     filterDropdownWrap.classList.remove('open');
     updateViewModeDisplay();
     updateFilterDisplay();
@@ -364,15 +392,27 @@ filterMenuItems.forEach(btn => {
   });
 });
 
+if (dateFilterBtn && dateFilterInput) {
+  dateFilterBtn.addEventListener('click', () => {
+    try {
+      if (typeof dateFilterInput.showPicker === 'function') {
+        dateFilterInput.showPicker();
+      }
+    } catch (e) {}
+  });
+}
+
 dateFilterInput.addEventListener('change', (e) => {
   if (e.target.value) {
     state.isTableView = false;
     state.specificDateFilter = e.target.value;
+    if (dateFilterLabel) dateFilterLabel.textContent = formatShortDate(e.target.value);
     updateViewModeDisplay();
     updateFilterDisplay();
     renderTasks();
   } else {
     state.specificDateFilter = null;
+    if (dateFilterLabel) dateFilterLabel.textContent = 'Pick date';
     updateFilterDisplay();
     renderTasks();
   }
@@ -536,8 +576,8 @@ function renderDateGroupElement(dateKey, groupTasks) {
 
       <div class="task-meta">
         <div class="picker-chip-wrap">
-          <input type="date" class="hidden-input task-row-date-picker" value="${task.date}" />
-          <button type="button" class="task-date-chip" title="Change task date">${formatShortDate(task.date)}</button>
+          <button type="button" class="task-date-chip" title="Change task date" tabindex="-1">${formatShortDate(task.date)}</button>
+          <input type="date" class="chip-date-input task-row-date-picker" value="${task.date}" aria-label="Change task date" />
         </div>
         <button type="button" class="task-action-btn delete-btn" title="Delete task">&times;</button>
       </div>
@@ -610,13 +650,15 @@ function renderDateGroupElement(dateKey, groupTasks) {
     // Date chip & picker
     const dateChip = row.querySelector('.task-date-chip');
     const datePicker = row.querySelector('.task-row-date-picker');
-    dateChip.addEventListener('click', () => {
-      try {
-        datePicker.showPicker();
-      } catch (err) {
-        datePicker.click();
-      }
-    });
+    if (dateChip && datePicker) {
+      dateChip.addEventListener('click', () => {
+        try {
+          if (typeof datePicker.showPicker === 'function') {
+            datePicker.showPicker();
+          }
+        } catch (err) {}
+      });
+    }
 
     datePicker.addEventListener('change', async (e) => {
       if (e.target.value) {
@@ -646,7 +688,10 @@ function renderDateGroupElement(dateKey, groupTasks) {
 function focusInlineAdd(dateKey) {
   state.selectedAddDate = dateKey;
   updateQuickAddDateDisplay();
-  quickAddInput.focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => {
+    quickAddInput.focus();
+  }, 100);
 }
 
 function escapeHtml(text) {

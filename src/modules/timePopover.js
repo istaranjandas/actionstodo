@@ -6,6 +6,8 @@ export function setupTimePopover({
   getState
 }) {
   const timePopover = document.getElementById('timePopover');
+  const popoverBackdrop = document.getElementById('popoverBackdrop');
+  const popoverCloseBtn = document.getElementById('popoverCloseBtn');
   const popoverStartInput = document.getElementById('popoverStartInput');
   const popoverEndInput = document.getElementById('popoverEndInput');
   const popoverDurationBadge = document.getElementById('popoverDurationBadge');
@@ -36,7 +38,7 @@ export function setupTimePopover({
     updatePopoverDuration();
     highlightActiveGridSlot(startVal);
 
-    if (window.innerWidth <= 660) {
+    if (window.innerWidth <= 680) {
       timePopover.style.top = '';
       timePopover.style.left = '';
     } else {
@@ -56,12 +58,18 @@ export function setupTimePopover({
     }
 
     timePopover.classList.add('open');
+    if (popoverBackdrop) {
+      popoverBackdrop.classList.add('open');
+    }
   }
 
   function closeTimePopover() {
     timePopover.classList.remove('open');
     timePopover.style.top = '';
     timePopover.style.left = '';
+    if (popoverBackdrop) {
+      popoverBackdrop.classList.remove('open');
+    }
     activePopoverContext = null;
   }
 
@@ -173,6 +181,20 @@ export function setupTimePopover({
     applyPopoverTime('', '');
     closeTimePopover();
   });
+
+  if (popoverCloseBtn) {
+    popoverCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeTimePopover();
+    });
+  }
+
+  if (popoverBackdrop) {
+    popoverBackdrop.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeTimePopover();
+    });
+  }
 
   document.addEventListener('click', (e) => {
     if (timePopover.classList.contains('open') && !timePopover.contains(e.target)) {
