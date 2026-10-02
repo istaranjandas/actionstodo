@@ -1818,3 +1818,185 @@
     grid-template-columns: repeat(3, 1fr) !important;
   }
 }
+
+/* ==========================================================================
+   Creator Boy Logo Badge & Popup Modal
+   ========================================================================== */
+.creator-badge-dock {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 850;
+}
+
+.creator-boy-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border-bold);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  touch-action: manipulation;
+  padding: 0;
+  color: var(--text);
+}
+
+.creator-boy-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  border-color: var(--text);
+}
+
+.creator-boy-btn:active {
+  transform: scale(0.95);
+}
+
+.creator-popup {
+  position: absolute;
+  bottom: 50px;
+  right: 0;
+  width: 300px;
+  background: var(--bg);
+  border: 1px solid var(--border-bold);
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+  padding: 16px 18px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  animation: creatorFadeUp 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 900;
+}
+
+.creator-popup.open {
+  display: flex;
+}
+
+@keyframes creatorFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.creator-popup-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  touch-action: manipulation;
+}
+
+.creator-popup-close-btn:hover {
+  color: var(--text);
+}
+
+.creator-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.creator-popup-avatar-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+
+.creator-popup-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.creator-popup-subtitle {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.creator-popup-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.creator-contact-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  gap: 8px;
+}
+
+.creator-email-anchor {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+  transition: color 0.1s ease;
+}
+
+.creator-email-anchor:hover {
+  color: var(--text-primary);
+}
+
+.creator-copy-email-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  color: var(--text);
+  padding: 3px 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.12s ease;
+  touch-action: manipulation;
+}
+
+.creator-copy-email-btn:hover {
+  border-color: var(--text);
+}
+
+@media (max-width: 480px) {
+  .creator-badge-dock {
+    bottom: 16px;
+    right: 14px;
+  }
+
+  .creator-popup {
+    right: 0;
+    width: calc(100vw - 28px);
+    max-width: 310px;
+  }
+}
+

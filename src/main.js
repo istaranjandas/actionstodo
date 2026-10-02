@@ -759,4 +759,59 @@ updateQuickAddDateDisplay();
 updateQuickAddTimeDisplay();
 updateViewModeDisplay();
 updateFilterDisplay();
+
+// --- Creator Boy Badge & Popup Modal ---
+const creatorBadgeDock = document.getElementById('creatorBadgeDock');
+const creatorBoyBtn = document.getElementById('creatorBoyBtn');
+const creatorPopup = document.getElementById('creatorPopup');
+const creatorPopupCloseBtn = document.getElementById('creatorPopupCloseBtn');
+const creatorCopyEmailBtn = document.getElementById('creatorCopyEmailBtn');
+const creatorCopyLabel = document.getElementById('creatorCopyLabel');
+
+if (creatorBoyBtn && creatorPopup) {
+  creatorBoyBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    creatorPopup.classList.toggle('open');
+  });
+
+  if (creatorPopupCloseBtn) {
+    creatorPopupCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      creatorPopup.classList.remove('open');
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (creatorPopup.classList.contains('open') && !creatorPopup.contains(e.target) && !creatorBoyBtn.contains(e.target)) {
+      creatorPopup.classList.remove('open');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && creatorPopup.classList.contains('open')) {
+      creatorPopup.classList.remove('open');
+    }
+  });
+}
+
+if (creatorCopyEmailBtn && creatorCopyLabel) {
+  creatorCopyEmailBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const email = 'istaranjandas@gmail.com';
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(email);
+      }
+      creatorCopyLabel.textContent = 'Copied!';
+      setTimeout(() => {
+        creatorCopyLabel.textContent = 'Copy';
+      }, 2000);
+    } catch (err) {
+      creatorCopyLabel.textContent = 'Copied!';
+      setTimeout(() => {
+        creatorCopyLabel.textContent = 'Copy';
+      }, 2000);
+    }
+  });
+}
 renderTasks();
