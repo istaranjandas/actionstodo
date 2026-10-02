@@ -1137,59 +1137,67 @@ let unsubscribeFirestore = null;
       }
     }
 
-    syncFileBtn.addEventListener('click', connectDiskFile);
+    if (syncFileBtn) syncFileBtn.addEventListener('click', connectDiskFile);
 
     // 1-Click JSON Export
-    exportBtn.addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `todo-do-backup-${getLocalISODate()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `todo-do-backup-${getLocalISODate()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
 
     // 1-Click JSON Import
-    importBtn.addEventListener('click', () => {
-      importFileInput.click();
-    });
+    if (importBtn && importFileInput) {
+      importBtn.addEventListener('click', () => {
+        importFileInput.click();
+      });
 
-    importFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const imported = JSON.parse(event.target.result);
-          if (Array.isArray(imported)) {
-            tasks = imported;
-            saveTasks();
-            renderTasks();
-            alert(`Successfully loaded ${imported.length} tasks!`);
-          } else {
-            alert('Invalid backup format: expected an array of tasks.');
+      importFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const imported = JSON.parse(event.target.result);
+            if (Array.isArray(imported)) {
+              tasks = imported;
+              saveTasks();
+              renderTasks();
+              alert(`Successfully loaded ${imported.length} tasks!`);
+            } else {
+              alert('Invalid backup format: expected an array of tasks.');
+            }
+          } catch (err) {
+            alert('Error parsing JSON backup file.');
           }
-        } catch (err) {
-          alert('Error parsing JSON backup file.');
-        }
-      };
-      reader.readAsText(file);
-      importFileInput.value = '';
-    });
+        };
+        reader.readAsText(file);
+        importFileInput.value = '';
+      });
+    }
 
     // --- Footer Actions ---
-    clearCompletedBtn.addEventListener('click', () => {
-      tasks = tasks.filter(t => !t.completed);
-      saveTasks();
-      renderTasks();
-    });
+    if (clearCompletedBtn) {
+      clearCompletedBtn.addEventListener('click', () => {
+        tasks = tasks.filter(t => !t.completed);
+        saveTasks();
+        renderTasks();
+      });
+    }
 
-    resetSampleBtn.addEventListener('click', () => {
-      tasks = getDefaultTasks();
-      saveTasks();
-      renderTasks();
-    });
+    if (resetSampleBtn) {
+      resetSampleBtn.addEventListener('click', () => {
+        tasks = getDefaultTasks();
+        saveTasks();
+        renderTasks();
+      });
+    }
 
     // --- Global Shortcuts ---
     window.addEventListener('keydown', (e) => {
