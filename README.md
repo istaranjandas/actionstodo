@@ -1,96 +1,60 @@
-# ☁️ My Cloud Notes App
+# ✦ Todo - Do
 
-A beautiful, serverless notes application built with React, Firebase, and modern web technologies.
+A minimalist, high-productivity daily task manager and week planner with real-time Firebase Cloud Sync and offline support.
 
 ## 🚀 Features
 
-- ☁️ **Cloud Storage** - Notes saved in Firebase Firestore
-- 🔐 **Google Sign-In** - Secure authentication with zero password management
-- 🔄 **Real-time Sync** - Notes update instantly across all your devices
-- 🎨 **Beautiful UI** - Modern design with animations and glassmorphism
-- 📱 **Responsive** - Works perfectly on mobile, tablet, and desktop
-- 🔒 **Private** - Each user only sees their own notes
+- ⚡ **1-Click Smart Time Range Picker**: Fast preset grid (Morning / Afternoon / Evening), custom duration pills (15m, 30m, 1h, 1.5h), and micro-nudge buttons (`-30m` / `+30m`).
+- ✍️ **Natural Language Parsing**: Type `"Call Alex at 5pm"` or `"Design sprint 2pm to 3:30pm"` to automatically parse and slot time.
+- 📅 **Descending Daily Feed**: Today is always anchored at the top, followed by previous days in descending chronological order.
+- ➔ **Plan Ahead**: Plan tasks for Tomorrow, Day after, Next week, or any custom future date via the quick toolbar dropdown.
+- 📊 **Week Matrix View**: 2D schedule table with time slots down the left and days of the week across the top.
+- ☁️ **Real-Time Firebase Cloud Sync**: Google Sign-In with instant Firestore multi-device synchronization.
+- 💾 **Offline First & Disk Sync**: Seamless offline mode with `localStorage`, direct `.json` disk sync via File System Access API, and 1-click JSON backup import/export.
+- 🎨 **Minimalist Aesthetic**: Clean Notion-style monochrome typography and dark / light mode.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 18 with Vite
-- **Backend/Database**: Firebase (Firestore)
+- **Frontend**: Vanilla JavaScript (ES Modules) + Vite
+- **Cloud Database**: Google Firebase Firestore
 - **Authentication**: Firebase Auth (Google Provider)
-- **Styling**: Vanilla CSS with modern effects
-- **Hosting**: Vercel-ready
+- **Hosting**: Firebase Hosting & Vercel-ready
 
-## 📋 Prerequisites
-
-- Node.js (v16 or higher)
-- npm or yarn
-- A Google account
-- Firebase account (free)
-
-## 🔧 Setup Instructions
+## 🔧 Getting Started
 
 ### 1. Install Dependencies
-
 ```bash
 npm install
 ```
 
-### 2. Configure Firebase
-
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project (or use an existing one)
-3. Enable **Authentication** → **Google** sign-in provider
-4. Create a **Firestore Database** (start in test mode)
-5. Get your Firebase config from **Project Settings** → **Your apps**
-6. Update `src/firebase.js` with your configuration:
-
-```javascript
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-```
-
-### 3. Run Locally
-
+### 2. Run Local Development Server
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-## 🚀 Deployment
-
-### Deploy to Vercel
-
-1. Push your code to GitHub
-2. Import the repository on [Vercel](https://vercel.com/)
-3. Deploy with one click (Vercel auto-detects Vite)
-
-### Or use Vercel CLI
-
+### 3. Build for Production
 ```bash
-npm install -g vercel
-vercel login
-vercel --prod
+npm run build
 ```
 
-## 🔒 Production Security
+### 4. Deploy to Firebase Hosting
+```bash
+firebase deploy
+```
 
-Update Firestore security rules before deploying:
+## 🔒 Security Rules
+
+The Firestore security rules in `firestore.rules` ensure that each user can only read, create, update, and delete their own tasks:
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /notes/{noteId} {
-      allow read, write: if request.auth != null 
-                          && request.auth.uid == resource.data.uid;
-      allow create: if request.auth != null 
-                    && request.auth.uid == request.resource.data.uid;
+    match /tasks/{taskId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
     }
   }
 }
@@ -99,31 +63,14 @@ service cloud.firestore {
 ## 📁 Project Structure
 
 ```
-src/
-├── firebase.js      # Firebase configuration
-├── App.jsx          # Main application component
-├── App.css          # Application styles
-├── index.css        # Global styles
-└── main.jsx         # Entry point
+├── index.html         # Main application markup
+├── src/
+│   ├── firebase.js    # Firebase configuration & Firestore exports
+│   ├── main.js        # Core Todo - Do application logic & cloud sync
+│   └── style.css      # Notion-style monochrome styles & responsive layouts
+├── firebase.json      # Firebase Hosting and Firestore configuration
+├── .firebaserc        # Firebase project binding (leonjarvis-notes)
+├── firestore.rules    # User-isolated Firestore security rules
+├── package.json       # Project dependencies & scripts
+└── vite.config.js     # Vite build configuration
 ```
-
-## 🎨 Design Features
-
-- Vibrant gradient backgrounds
-- Glassmorphism UI elements
-- Smooth animations and transitions
-- Google Material icons integration
-- Inter font family from Google Fonts
-- Responsive grid layout
-
-## 🤝 Contributing
-
-Feel free to fork this project and customize it for your needs!
-
-## 📝 License
-
-MIT License - feel free to use this project however you'd like.
-
----
-
-Built with ❤️ using React, Firebase, and Vite

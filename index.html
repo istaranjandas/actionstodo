@@ -1,19 +1,277 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <title>Notes</title>
+  <title>Todo - Do</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/style.css" />
 </head>
-
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
-</body>
+<div class="app-container">
+    <!-- Minimal Header -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-icon"></div>
+        <span>Todo - Do</span>
+      </div>
+      <div class="top-actions">
+        <button class="icon-button" id="themeToggle" title="Toggle Light/Dark Mode" aria-label="Toggle Theme">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
 
+    <!-- Toolbar: View & Actions -->
+    <nav class="view-toolbar">
+      <div class="toolbar-actions">
+        <!-- Sort by Time Toggle (Default: Enabled) -->
+        <button class="toolbar-btn active" id="sortByTimeBtn" title="Toggle time-based chronological order">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span id="sortByTimeLabel">Time sorted</span>
+        </button>
+
+        <!-- Week Table View Button -->
+        <button class="toolbar-btn active" id="weekTableBtn" title="Toggle Weekly Table view">
+          <svg id="weekTableBtnIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <span id="weekTableBtnLabel">List View</span>
+        </button>
+
+        <!-- Plan Ahead Dropdown Button -->
+        <div class="filter-dropdown-wrap" id="planAheadDropdownWrap">
+          <button type="button" class="toolbar-btn" id="planAheadToolbarBtn" title="Plan upcoming & future days">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"></path>
+              <path d="M12 5l7 7-7 7"></path>
+            </svg>
+            <span id="planAheadToolbarLabel">Plan ahead</span>
+            <svg class="dropdown-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <div class="filter-dropdown-menu" id="planAheadDropdownMenu">
+            <button type="button" class="filter-menu-item" id="planTomorrowBtn">
+              <span class="filter-item-icon">+</span>
+              <span class="filter-item-text" id="planTomorrowLabel">Tomorrow</span>
+            </button>
+            <button type="button" class="filter-menu-item" id="planDayAfterBtn">
+              <span class="filter-item-icon">+</span>
+              <span class="filter-item-text" id="planDayAfterLabel">Day after tomorrow</span>
+            </button>
+            <button type="button" class="filter-menu-item" id="planNextWeekBtn">
+              <span class="filter-item-icon">+</span>
+              <span class="filter-item-text">Next week</span>
+            </button>
+            <button type="button" class="filter-menu-item" id="planPickDateBtn">
+              <span class="filter-item-icon">📅</span>
+              <span class="filter-item-text">Pick future date...</span>
+            </button>
+            <input type="date" id="planPickDateInput" class="hidden-input" />
+            <div style="height: 1px; background: var(--border-subtle); margin: 3px 0;"></div>
+            <button type="button" class="filter-menu-item" id="planViewUpcomingBtn">
+              <span class="filter-item-icon">✦</span>
+              <span class="filter-item-text" id="planViewUpcomingLabel">View upcoming tasks</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Date Filter Picker -->
+        <input type="date" id="dateFilterInput" class="quick-date-picker" title="Filter by specific date" />
+
+        <!-- Filter Dropdown Button -->
+        <div class="filter-dropdown-wrap" id="filterDropdownWrap">
+          <button type="button" class="toolbar-btn" id="filterDropdownBtn" title="Filter tasks">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            <span id="filterBtnLabel">Filter</span>
+            <svg class="dropdown-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <div class="filter-dropdown-menu" id="filterDropdownMenu">
+            <button type="button" class="filter-menu-item active" data-view="all">
+              <span class="filter-item-icon">✓</span>
+              <span class="filter-item-text">All Dates</span>
+            </button>
+            <button type="button" class="filter-menu-item" data-view="today">
+              <span class="filter-item-icon"></span>
+              <span class="filter-item-text">Today</span>
+            </button>
+            <button type="button" class="filter-menu-item" data-view="this-week">
+              <span class="filter-item-icon"></span>
+              <span class="filter-item-text">This Week</span>
+            </button>
+            <button type="button" class="filter-menu-item" data-view="upcoming">
+              <span class="filter-item-icon"></span>
+              <span class="filter-item-text">Upcoming</span>
+            </button>
+            <button type="button" class="filter-menu-item" data-view="completed">
+              <span class="filter-item-icon"></span>
+              <span class="filter-item-text">Completed</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Quick Add Input -->
+    <div class="quick-add-box">
+      <div class="quick-add-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </div>
+      <input 
+        type="text" 
+        id="quickAddInput" 
+        class="quick-add-input" 
+        placeholder="Add a task... Press Enter" 
+        autocomplete="off" 
+      />
+
+      <!-- Quick Add Date -->
+      <div class="picker-chip-wrap">
+        <button type="button" class="chip-btn" id="quickAddDateBtn" title="Select task date">
+          <span id="quickAddDateLabel">Today</span>
+        </button>
+        <input type="date" id="quickAddDateInput" class="hidden-input" />
+      </div>
+
+      <!-- Quick Add Time Range -->
+      <div class="picker-chip-wrap">
+        <button type="button" class="chip-btn" id="quickAddTimeBtn" title="Select planned completion time range (30m default)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span id="quickAddTimeLabel">+ 30m</span>
+        </button>
+        <button type="button" class="clear-chip-btn" id="clearQuickTimeBtn" style="display: none;" title="Remove time">&times;</button>
+      </div>
+
+      <span class="kbd-shortcut">↵ Enter</span>
+    </div>
+
+    <!-- Grouped Task Feed -->
+    <main class="date-groups" id="dateGroupsContainer">
+      <!-- Generated dynamically -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-bar">
+      <div class="footer-status" id="storageStatusText">Auto-saved locally</div>
+      <div class="footer-links">
+        <button class="footer-btn" id="syncFileBtn" title="Sync live changes directly to a .json file on your computer hard drive">Sync to disk</button>
+        <button class="footer-btn" id="exportBtn" title="Download tasks as a JSON backup file">Export</button>
+        <button class="footer-btn" id="importBtn" title="Import tasks from a JSON backup file">Import</button>
+        <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+        <button class="footer-btn" id="clearCompletedBtn">Clear completed</button>
+        <button class="footer-btn" id="resetSampleBtn">Reset</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Shared Intelligent Time Range Popover -->
+  <div class="time-popover" id="timePopover">
+    <div class="popover-header">
+      <span class="popover-title">1-Click Slot Picker</span>
+      <div class="popover-header-actions">
+        <button type="button" class="popover-nudge-btn" id="popoverNudgeBack" title="Nudge back 30 mins">-30m</button>
+        <button type="button" class="popover-nudge-btn" id="popoverNudgeFwd" title="Nudge forward 30 mins">+30m</button>
+      </div>
+    </div>
+
+    <!-- Duration Selection -->
+    <div class="popover-durations-row">
+      <div class="duration-pills">
+        <button type="button" class="duration-pill" data-mins="15">15m</button>
+        <button type="button" class="duration-pill active" data-mins="30">30m</button>
+        <button type="button" class="duration-pill" data-mins="45">45m</button>
+        <button type="button" class="duration-pill" data-mins="60">1h</button>
+        <button type="button" class="duration-pill" data-mins="90">1.5h</button>
+      </div>
+    </div>
+
+    <!-- Fast 1-Click Grid -->
+    <div class="popover-grid-section">
+      <div class="grid-group">
+        <span class="grid-group-label">Morning</span>
+        <div class="grid-slots">
+          <button type="button" class="grid-slot-btn" data-time="08:00">8:00 AM</button>
+          <button type="button" class="grid-slot-btn" data-time="08:30">8:30 AM</button>
+          <button type="button" class="grid-slot-btn" data-time="09:00">9:00 AM</button>
+          <button type="button" class="grid-slot-btn" data-time="09:30">9:30 AM</button>
+          <button type="button" class="grid-slot-btn" data-time="10:00">10:00 AM</button>
+          <button type="button" class="grid-slot-btn" data-time="10:30">10:30 AM</button>
+          <button type="button" class="grid-slot-btn" data-time="11:00">11:00 AM</button>
+          <button type="button" class="grid-slot-btn" data-time="11:30">11:30 AM</button>
+        </div>
+      </div>
+
+      <div class="grid-group">
+        <span class="grid-group-label">Afternoon</span>
+        <div class="grid-slots">
+          <button type="button" class="grid-slot-btn" data-time="12:00">12:00 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="12:30">12:30 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="13:00">1:00 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="13:30">1:30 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="14:00">2:00 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="14:30">2:30 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="15:00">3:00 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="15:30">3:30 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="16:00">4:00 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="16:30">4:30 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="17:00">5:00 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="17:30">5:30 PM</button>
+        </div>
+      </div>
+
+      <div class="grid-group">
+        <span class="grid-group-label">Evening</span>
+        <div class="grid-slots">
+          <button type="button" class="grid-slot-btn" data-time="18:00">6:00 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="18:30">6:30 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="19:00">7:00 PM</button>
+          <button type="button" class="grid-slot-btn" data-time="20:00">8:00 PM</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collapsible Custom Time -->
+    <details class="popover-custom-details">
+      <summary class="popover-custom-summary">Custom precise time...</summary>
+      <div class="popover-inputs" style="margin-top: 8px;">
+        <div class="popover-field">
+          <span class="popover-label">Start</span>
+          <input type="time" class="popover-time-control" id="popoverStartInput" step="300" />
+        </div>
+        <span class="popover-arrow">→</span>
+        <div class="popover-field">
+          <span class="popover-label">End</span>
+          <input type="time" class="popover-time-control" id="popoverEndInput" step="300" />
+        </div>
+      </div>
+    </details>
+
+    <div class="popover-footer">
+      <button type="button" class="popover-clear-btn" id="popoverClearBtn">Remove time</button>
+      <span class="popover-badge" id="popoverDurationBadge">30 mins</span>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
 </html>
