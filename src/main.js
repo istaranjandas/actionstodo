@@ -671,7 +671,8 @@ function renderDateGroupElement(dateKey, groupTasks) {
 
     // Delete
     const delBtn = row.querySelector('.delete-btn');
-    delBtn.addEventListener('click', async () => {
+    delBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       await deleteTaskItem(task.id);
       renderTasks();
     });

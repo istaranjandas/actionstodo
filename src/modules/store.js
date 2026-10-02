@@ -145,28 +145,28 @@ export async function updateTaskItem(taskId, updates) {
   const task = state.tasks.find(t => t.id === taskId);
   if (task) {
     Object.assign(task, updates);
+    saveLocalTasks();
     if (state.currentUser) {
       try {
         await updateDoc(doc(db, 'tasks', taskId), updates);
       } catch (err) {
         console.error('Error updating cloud task:', err);
       }
-    } else {
-      saveLocalTasks();
     }
   }
 }
 
 export async function deleteTaskItem(taskId) {
+  // Optimistically remove from local state immediately
+  state.tasks = state.tasks.filter(t => t.id !== taskId);
+  saveLocalTasks();
+
   if (state.currentUser) {
     try {
       await deleteDoc(doc(db, 'tasks', taskId));
     } catch (err) {
       console.error('Error deleting cloud task:', err);
     }
-  } else {
-    state.tasks = state.tasks.filter(t => t.id !== taskId);
-    saveLocalTasks();
   }
 }
 
@@ -174,15 +174,15 @@ export async function clearCompletedTasks() {
   const completedTasks = state.tasks.filter(t => t.completed);
   if (completedTasks.length === 0) return;
 
+  state.tasks = state.tasks.filter(t => !t.completed);
+  saveLocalTasks();
+
   if (state.currentUser) {
     const batch = writeBatch(db);
     completedTasks.forEach(t => {
       batch.delete(doc(db, 'tasks', t.id));
     });
     await batch.commit();
-  } else {
-    state.tasks = state.tasks.filter(t => !t.completed);
-    saveLocalTasks();
   }
 }
 
@@ -192,32 +192,34 @@ export function initFirestoreSync(user, onSyncUpdate) {
     state.unsubscribeFirestore();
   }
 
+  // One-time migration of un-synced local offline tasks created before login
+  const localOfflineTasks = state.tasks.filter(t => t.id && t.id.startsWith('task_'));
+  if (localOfflineTasks.length > 0) {
+    const batch = writeBatch(db);
+    localOfflineTasks.forEach(localTask => {
+      const newRef = doc(collection(db, 'tasks'));
+      batch.set(newRef, {
+        text: localTask.text,
+        date: localTask.date,
+        startTime: localTask.startTime || '',
+        endTime: localTask.endTime || '',
+        completed: Boolean(localTask.completed),
+        createdAt: localTask.createdAt || Date.now(),
+        uid: user.uid
+      });
+    });
+    state.tasks = state.tasks.filter(t => !t.id.startsWith('task_'));
+    saveLocalTasks();
+    batch.commit().catch(err => console.error('Migration error:', err));
+  }
+
   const q = query(collection(db, 'tasks'), where('uid', '==', user.uid));
 
-  state.unsubscribeFirestore = onSnapshot(q, async (snapshot) => {
+  state.unsubscribeFirestore = onSnapshot(q, (snapshot) => {
     const cloudTasks = snapshot.docs.map(docSnap => ({
       id: docSnap.id,
       ...docSnap.data()
     }));
-
-    // If cloud is empty but local had tasks, migrate them seamlessly
-    if (cloudTasks.length === 0 && state.tasks.length > 0) {
-      const batch = writeBatch(db);
-      state.tasks.forEach(localTask => {
-        const newRef = doc(collection(db, 'tasks'));
-        batch.set(newRef, {
-          text: localTask.text,
-          date: localTask.date,
-          startTime: localTask.startTime || '',
-          endTime: localTask.endTime || '',
-          completed: Boolean(localTask.completed),
-          createdAt: localTask.createdAt || Date.now(),
-          uid: user.uid
-        });
-      });
-      await batch.commit();
-      return;
-    }
 
     state.tasks = cloudTasks;
     saveLocalTasks();
