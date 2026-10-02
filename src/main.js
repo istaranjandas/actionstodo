@@ -237,7 +237,16 @@ if (quickAddSaveBtn) {
 }
 
 // --- View Mode & Table Toggle ---
+export function isNonDesktopDevice() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 1024px), (hover: none) and (pointer: coarse)').matches;
+}
+
 function updateViewModeDisplay() {
+  if (isNonDesktopDevice()) {
+    state.isTableView = false;
+  }
+  if (!weekTableBtn) return;
   if (state.isTableView) {
     weekTableBtn.classList.add('active');
     if (weekTableBtnLabel) weekTableBtnLabel.textContent = 'List View';
@@ -264,10 +273,21 @@ function updateViewModeDisplay() {
   updateFilterDisplay();
 }
 
-weekTableBtn.addEventListener('click', () => {
-  state.isTableView = !state.isTableView;
-  updateViewModeDisplay();
-  renderTasks();
+if (weekTableBtn) {
+  weekTableBtn.addEventListener('click', () => {
+    if (isNonDesktopDevice()) return;
+    state.isTableView = !state.isTableView;
+    updateViewModeDisplay();
+    renderTasks();
+  });
+}
+
+window.addEventListener('resize', () => {
+  if (isNonDesktopDevice() && state.isTableView) {
+    state.isTableView = false;
+    updateViewModeDisplay();
+    renderTasks();
+  }
 });
 
 // --- Sort by Time Toggle ---
@@ -455,7 +475,7 @@ dateFilterInput.addEventListener('change', (e) => {
 
 // --- Main Render Logic ---
 function renderTasks() {
-  if (state.isTableView) {
+  if (state.isTableView && !isNonDesktopDevice()) {
     renderWeekScheduleTable({
       container: dateGroupsContainer,
       tasks: state.tasks,

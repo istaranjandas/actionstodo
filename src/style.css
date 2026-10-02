@@ -2115,16 +2115,16 @@
   border-color: var(--text);
 }
 
-@media (max-width: 480px) {
-  .creator-badge-dock {
-    bottom: 16px;
-    right: 14px;
-  }
-
+/* ==========================================================================
+   Non-Desktop Devices: Mobile & Tablet (<= 1024px or touch-only)
+   Hide Week Table view & button, and Creator boy badge dock
+   ========================================================================== */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+  #weekTableBtn,
+  .week-table-container,
+  .creator-badge-dock,
   .creator-popup {
-    right: 0;
-    width: calc(100vw - 28px);
-    max-width: 310px;
+    display: none !important;
   }
 }
 
