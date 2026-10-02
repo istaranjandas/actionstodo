@@ -36,24 +36,32 @@ export function setupTimePopover({
     updatePopoverDuration();
     highlightActiveGridSlot(startVal);
 
-    const rect = triggerEl.getBoundingClientRect();
-    let top = rect.bottom + 6;
-    let left = rect.left;
+    if (window.innerWidth <= 660) {
+      timePopover.style.top = '';
+      timePopover.style.left = '';
+    } else {
+      const rect = triggerEl.getBoundingClientRect();
+      let top = rect.bottom + 6;
+      let left = rect.left;
 
-    if (left + 330 > window.innerWidth) {
-      left = window.innerWidth - 336;
-    }
-    if (top + 340 > window.innerHeight) {
-      top = Math.max(10, rect.top - 336);
+      if (left + 330 > window.innerWidth) {
+        left = window.innerWidth - 336;
+      }
+      if (top + 340 > window.innerHeight) {
+        top = Math.max(10, rect.top - 336);
+      }
+
+      timePopover.style.top = `${top}px`;
+      timePopover.style.left = `${Math.max(12, left)}px`;
     }
 
-    timePopover.style.top = `${top}px`;
-    timePopover.style.left = `${Math.max(12, left)}px`;
     timePopover.classList.add('open');
   }
 
   function closeTimePopover() {
     timePopover.classList.remove('open');
+    timePopover.style.top = '';
+    timePopover.style.left = '';
     activePopoverContext = null;
   }
 
