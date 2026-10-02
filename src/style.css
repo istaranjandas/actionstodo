@@ -163,7 +163,7 @@
       position: absolute;
       top: calc(100% + 6px);
       left: 0;
-      min-width: 145px;
+      min-width: 155px;
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -172,8 +172,18 @@
       display: none;
       flex-direction: column;
       gap: 2px;
-      z-index: 50;
+      z-index: 100;
       animation: popoverFadeIn 0.12s ease-out;
+    }
+
+    #filterDropdownMenu {
+      right: 0;
+      left: auto;
+    }
+
+    #planAheadDropdownMenu {
+      left: 0;
+      right: auto;
     }
 
     [data-theme="dark"] .filter-dropdown-menu {
@@ -1485,24 +1495,20 @@
     height: 28px;
   }
 
-  /* Toolbar: Touch scrollable horizontal bar */
+  /* Toolbar: Clean responsive wrap with visible overflow for dropdown menus */
   .view-toolbar {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 4px;
-    margin-bottom: 16px;
-  }
-
-  .view-toolbar::-webkit-scrollbar {
-    display: none;
+    overflow: visible !important;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 50;
   }
 
   .toolbar-actions {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 6px;
-    min-width: max-content;
+    width: 100%;
+    align-items: center;
   }
 
   .toolbar-btn {
@@ -1510,12 +1516,7 @@
     font-size: 11px;
     padding: 5px 8px;
     gap: 4px;
-  }
-
-  .quick-date-picker {
-    font-size: 11px;
-    padding: 3px 6px;
-    height: 26px;
+    touch-action: manipulation;
   }
 
   /* Quick Add Form: Clean responsive rows */
@@ -1769,7 +1770,33 @@
 
   /* Dropdown Menus */
   .filter-dropdown-menu {
-    max-width: calc(100vw - 24px);
+    position: absolute;
+    top: calc(100% + 6px);
+    min-width: 175px;
+    max-width: calc(100vw - 32px);
+    background: var(--bg);
+    border: 1px solid var(--border-bold);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    padding: 6px;
+    z-index: 500;
+  }
+
+  #filterDropdownMenu {
+    right: 0;
+    left: auto;
+  }
+
+  #planAheadDropdownMenu {
+    left: 0;
+    right: auto;
+  }
+
+  .filter-menu-item {
+    padding: 8px 10px;
+    font-size: 13px;
+    min-height: 36px;
+    touch-action: manipulation;
   }
 }
 

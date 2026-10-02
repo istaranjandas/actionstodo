@@ -259,6 +259,7 @@ sortByTimeBtn.addEventListener('click', () => {
 if (planAheadToolbarBtn) {
   planAheadToolbarBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (filterDropdownWrap) filterDropdownWrap.classList.remove('open');
     planAheadDropdownWrap.classList.toggle('open');
   });
 }
@@ -375,6 +376,7 @@ function updateFilterDisplay() {
 
 filterDropdownBtn.addEventListener('click', (e) => {
   e.stopPropagation();
+  if (planAheadDropdownWrap) planAheadDropdownWrap.classList.remove('open');
   filterDropdownWrap.classList.toggle('open');
 });
 

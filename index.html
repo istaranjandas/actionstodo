@@ -96,11 +96,13 @@
               <span class="filter-item-icon">+</span>
               <span class="filter-item-text">Next week</span>
             </button>
-            <button type="button" class="filter-menu-item" id="planPickDateBtn">
-              <span class="filter-item-icon">📅</span>
-              <span class="filter-item-text">Pick future date...</span>
-            </button>
-            <input type="date" id="planPickDateInput" class="hidden-input" />
+            <div class="picker-chip-wrap" style="width: 100%; display: flex;">
+              <button type="button" class="filter-menu-item" id="planPickDateBtn" style="width: 100%;" tabindex="-1">
+                <span class="filter-item-icon">📅</span>
+                <span class="filter-item-text">Pick future date...</span>
+              </button>
+              <input type="date" id="planPickDateInput" class="chip-date-input" aria-label="Pick future date" />
+            </div>
             <div style="height: 1px; background: var(--border-subtle); margin: 3px 0;"></div>
             <button type="button" class="filter-menu-item" id="planViewUpcomingBtn">
               <span class="filter-item-icon">✦</span>
