@@ -78,6 +78,7 @@
     }
 
     .brand {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -89,13 +90,140 @@
     }
 
     .brand-icon {
-      width: 20px;
-      height: 20px;
+      width: 26px;
+      height: 26px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: var(--text-primary);
       flex-shrink: 0;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .brand-icon:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-subtle);
+      color: #ef4444;
+      transform: scale(1.1) rotate(-6deg);
+    }
+
+    .brand-icon:active {
+      transform: scale(0.95);
+    }
+
+    /* Devil Warning Popup */
+    .devil-popup {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      width: 260px;
+      background: var(--bg);
+      border: 1px solid var(--border-bold);
+      border-radius: 12px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+      padding: 18px 16px 14px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      z-index: 1000;
+      animation: devilPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      box-sizing: border-box;
+    }
+
+    .devil-popup.open {
+      display: flex;
+    }
+
+    @keyframes devilPop {
+      from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.94);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .devil-popup-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 16px;
+      line-height: 1;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      touch-action: manipulation;
+    }
+
+    .devil-popup-close:hover {
+      color: var(--text-primary);
+    }
+
+    .devil-popup-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: devilPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes devilPulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.08);
+      }
+    }
+
+    .devil-popup-text {
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: var(--text-primary);
+      margin: 0;
+      text-transform: none;
+      letter-spacing: normal;
+      font-family: var(--font-sans);
+    }
+
+    .devil-popup-btn {
+      width: 100%;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: opacity 0.15s ease, transform 0.1s ease;
+      touch-action: manipulation;
+    }
+
+    .devil-popup-btn:hover {
+      opacity: 0.85;
+    }
+
+    .devil-popup-btn:active {
+      transform: scale(0.98);
     }
 
     .top-actions {

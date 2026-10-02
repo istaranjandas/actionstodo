@@ -815,4 +815,43 @@ if (creatorCopyEmailBtn && creatorCopyLabel) {
     }
   });
 }
+// --- Devil Mascot Warning Popup ---
+const devilLogoBtn = document.getElementById('devilLogoBtn');
+const devilPopup = document.getElementById('devilPopup');
+const devilPopupClose = document.getElementById('devilPopupClose');
+const devilPopupAckBtn = document.getElementById('devilPopupAckBtn');
+
+if (devilLogoBtn && devilPopup) {
+  devilLogoBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    devilPopup.classList.toggle('open');
+  });
+
+  if (devilPopupClose) {
+    devilPopupClose.addEventListener('click', (e) => {
+      e.stopPropagation();
+      devilPopup.classList.remove('open');
+    });
+  }
+
+  if (devilPopupAckBtn) {
+    devilPopupAckBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      devilPopup.classList.remove('open');
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (devilPopup.classList.contains('open') && !devilPopup.contains(e.target) && !devilLogoBtn.contains(e.target)) {
+      devilPopup.classList.remove('open');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && devilPopup.classList.contains('open')) {
+      devilPopup.classList.remove('open');
+    }
+  });
+}
+
 renderTasks();
