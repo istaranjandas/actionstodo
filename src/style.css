@@ -3355,3 +3355,132 @@ body.is-table-view .date-groups {
   cursor: text;
   user-select: text;
 }
+
+/* Hover lift only on devices that really hover (avoids sticky hover on phones) */
+@media (hover: none) {
+  .task-row:hover {
+    transform: none;
+    box-shadow: none;
+    background: transparent;
+  }
+}
+
+/* ---------- Tablet & phone: drag slots as a bottom sheet ---------- */
+@media (max-width: 1024px) {
+  .date-group.is-drag-source .drop-slots {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    z-index: 900;
+    margin: 0;
+    padding: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border-card);
+    border-radius: 18px;
+    box-shadow: 0 -12px 40px -12px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Only one sheet at a time; other days accept a drop to change the date */
+  .date-group.is-drag-over:not(.is-drag-source) .drop-slots {
+    display: none;
+  }
+
+  .drop-slots-grid {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+  }
+
+  .drop-slot {
+    font-size: 11px;
+    padding: 7px 0;
+  }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 680px) {
+  /* Header */
+  .brand {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+
+  .brand-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .sidebar-footer {
+    gap: 6px;
+  }
+
+  .user-pill {
+    padding: 5px 8px;
+  }
+
+  .user-display-name {
+    display: none;
+  }
+
+  .auth-signout-btn {
+    white-space: nowrap;
+    height: 30px;
+  }
+
+  .icon-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .main-title {
+    font-size: 20px;
+  }
+
+  .main-subtitle {
+    font-size: 12px;
+  }
+
+  /* Day cards */
+  .date-group {
+    padding: 10px 12px 6px;
+  }
+
+  /* Task rows: line 1 = checkbox + text, line 2 = time + date + delete */
+  .task-row {
+    padding: 8px 2px;
+    gap: 6px 10px;
+  }
+
+  .task-drag-handle,
+  .time-nudge-btn {
+    display: none !important;
+  }
+
+  .task-time-wrap {
+    margin-left: 28px;
+  }
+
+  .task-time-pill {
+    min-width: 0;
+    min-height: 26px;
+    padding: 3px 10px;
+  }
+
+  .task-meta {
+    gap: 4px;
+  }
+
+  .task-date-chip {
+    min-height: 26px;
+    padding: 3px 9px;
+  }
+
+  .task-action-btn.delete-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .drop-slots-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
