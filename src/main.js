@@ -13,11 +13,13 @@ import {
   initFirestoreSync, 
   stopFirestoreSync, 
   THEME_KEY, 
-  TITLE_KEY, 
-  SORT_TIME_KEY 
+  TITLE_KEY
 } from './modules/store.js';
 import { setupTimePopover } from './modules/timePopover.js';
 import { renderWeekScheduleTable } from './modules/weekTable.js';
+import { setupListDragAndDrop, renderDropSlotsHtml } from './modules/listDrag.js';
+import { createMiniCalendar } from './modules/miniCalendar.js';
+import { getWeekDates } from './modules/dateUtils.js';
 
 // DOM Elements
 const dateGroupsContainer = document.getElementById('dateGroupsContainer');
@@ -35,8 +37,6 @@ const quickAddTimeBtn = document.getElementById('quickAddTimeBtn');
 const quickAddTimeLabel = document.getElementById('quickAddTimeLabel');
 const clearQuickTimeBtn = document.getElementById('clearQuickTimeBtn');
 
-const sortByTimeBtn = document.getElementById('sortByTimeBtn');
-const sortByTimeLabel = document.getElementById('sortByTimeLabel');
 
 const weekTableBtn = document.getElementById('weekTableBtn');
 const weekTableBtnLabel = document.getElementById('weekTableBtnLabel');
@@ -183,12 +183,6 @@ async function handleQuickAddSubmit(e) {
   const start = parsed ? parsed.startTime : state.selectedAddStart;
   const end = parsed ? parsed.endTime : state.selectedAddEnd;
 
-  const today = getLocalISODate();
-  if (state.selectedAddDate > today && state.currentView === 'all' && !state.specificDateFilter) {
-    state.currentView = 'upcoming';
-    updateFilterDisplay();
-  }
-
   await addTask(text, state.selectedAddDate, start, end);
   quickAddInput.value = '';
   state.selectedAddStart = '';
@@ -268,24 +262,6 @@ window.addEventListener('resize', () => {
   }
 });
 
-// --- Sort by Time Toggle ---
-function updateSortBtnDisplay() {
-  if (state.sortByTime) {
-    sortByTimeBtn.classList.add('active');
-    sortByTimeLabel.textContent = 'Time sorted';
-  } else {
-    sortByTimeBtn.classList.remove('active');
-    sortByTimeLabel.textContent = 'Sort by time';
-  }
-}
-
-sortByTimeBtn.addEventListener('click', () => {
-  state.sortByTime = !state.sortByTime;
-  localStorage.setItem(SORT_TIME_KEY, state.sortByTime ? 'true' : 'false');
-  updateSortBtnDisplay();
-  renderTasks();
-});
-
 document.addEventListener('click', (e) => {
   if (filterDropdownWrap && !filterDropdownWrap.contains(e.target)) {
     filterDropdownWrap.classList.remove('open');
@@ -334,6 +310,64 @@ function updateFilterDisplay() {
   if (clearDateFilterBtn) {
     clearDateFilterBtn.style.display = (!state.isTableView && state.specificDateFilter) ? 'inline-flex' : 'none';
   }
+
+  updateViewTitle();
+}
+
+// --- Main pane title & sidebar ---
+const viewTitleEl = document.getElementById('viewTitle');
+const viewSubtitleEl = document.getElementById('viewSubtitle');
+const VIEW_TITLES = {
+  all: 'All dates',
+  today: 'Today',
+  'this-week': 'This week',
+  upcoming: 'Upcoming',
+  completed: 'Completed'
+};
+
+function updateViewTitle() {
+  if (!viewTitleEl) return;
+  if (state.specificDateFilter) {
+    const { title, sub } = formatFriendlyDate(state.specificDateFilter);
+    viewTitleEl.textContent = title;
+    viewSubtitleEl.textContent = sub;
+  } else {
+    viewTitleEl.textContent = VIEW_TITLES[state.currentView] || 'Tasks';
+    viewSubtitleEl.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+}
+
+const miniCalendarEl = document.getElementById('miniCalendar');
+const miniCalendar = miniCalendarEl
+  ? createMiniCalendar({
+      container: miniCalendarEl,
+      onPick: (dateStr) => setDateFilter(dateStr === state.specificDateFilter ? null : dateStr)
+    })
+  : null;
+
+const sidebarCounts = {
+  countAll: () => true,
+  countToday: (t, today) => t.date === today,
+  countWeek: (t, today, week) => t.date >= week[0] && t.date <= week[6],
+  countUpcoming: (t, today) => t.date >= today
+};
+
+function updateSidebar() {
+  const today = getLocalISODate();
+  const week = getWeekDates(0);
+  const open = state.tasks.filter(t => !t.completed);
+  Object.entries(sidebarCounts).forEach(([id, match]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const n = open.filter(t => match(t, today, week)).length;
+    el.textContent = n ? String(n) : '';
+  });
+  const doneEl = document.getElementById('countCompleted');
+  if (doneEl) {
+    const n = state.tasks.length - open.length;
+    doneEl.textContent = n ? String(n) : '';
+  }
+  if (miniCalendar) miniCalendar.render({ tasks: state.tasks, selected: state.specificDateFilter });
 }
 
 filterDropdownBtn.addEventListener('click', (e) => {
@@ -400,6 +434,7 @@ if (clearDateFilterBtn) {
 
 // --- Main Render Logic ---
 function renderTasks() {
+  updateSidebar();
   if (state.isTableView && !isNonDesktopDevice()) {
     renderWeekScheduleTable({
       container: dateGroupsContainer,
@@ -496,19 +531,26 @@ function renderTasks() {
 
   // Sort dates:
   // In upcoming / this-week view: ascending forward in time
-  // In all / standard view: descending (Today at top, then yesterday, then earlier days)
+  // In all view: Today first, then upcoming days (ascending), then past days (descending)
+  // Otherwise: descending
+  const dateRank = (d) => (d === today ? 0 : d > today ? 1 : 2);
   const sortedDates = Array.from(dateSet).sort((a, b) => {
     if (a === 'Undated') return 1;
     if (b === 'Undated') return -1;
     if (state.currentView === 'upcoming' || state.currentView === 'this-week') {
       return a.localeCompare(b);
     }
+    if (state.currentView === 'all' && !state.specificDateFilter) {
+      const rankDiff = dateRank(a) - dateRank(b);
+      if (rankDiff !== 0) return rankDiff;
+      return dateRank(a) === 1 ? a.localeCompare(b) : b.localeCompare(a);
+    }
     return b.localeCompare(a);
   });
 
   sortedDates.forEach(dateKey => {
     const groupTasks = groupsMap.get(dateKey) || [];
-    const sortedGroupTasks = sortTaskList(groupTasks, state.sortByTime);
+    const sortedGroupTasks = sortTaskList(groupTasks, true);
     const groupEl = renderDateGroupElement(dateKey, sortedGroupTasks);
     dateGroupsContainer.appendChild(groupEl);
   });
@@ -518,6 +560,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
   const { title, sub } = formatFriendlyDate(dateKey);
   const groupEl = document.createElement('section');
   groupEl.className = 'date-group';
+  groupEl.dataset.date = dateKey;
 
   const completedCount = groupTasks.filter(t => t.completed).length;
 
@@ -530,6 +573,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
       <span class="date-group-count">${completedCount}/${groupTasks.length}</span>
     </div>
     <div class="task-list" id="group-list-${dateKey}"></div>
+    ${dateKey !== 'Undated' ? renderDropSlotsHtml(dateKey, groupTasks) : ''}
     <div class="inline-add-row" data-date="${dateKey}">
       <span class="inline-add-icon">+</span>
       <span>New task</span>
@@ -543,12 +587,15 @@ function renderDateGroupElement(dateKey, groupTasks) {
     const hasTime = Boolean(task.startTime);
     row.className = `task-row ${task.completed ? 'is-completed' : ''}`;
     row.dataset.id = task.id;
+    row.draggable = true;
+    row.title = 'Drag to move · Double-click to edit';
 
     const timeDisplay = hasTime 
       ? formatTimeRangeDisplay(task.startTime, task.endTime) 
       : '+ 30m';
 
     row.innerHTML = `
+      <span class="task-drag-handle" aria-hidden="true">⋮⋮</span>
       <div class="task-checkbox-wrap">
         <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} aria-label="Toggle completed" />
       </div>
@@ -566,7 +613,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
       </div>
 
       <div class="task-main">
-        <span class="task-text" contenteditable="true" spellcheck="false">${escapeHtml(task.text)}</span>
+        <span class="task-text" spellcheck="false">${escapeHtml(task.text)}</span>
       </div>
 
       <div class="task-meta">
@@ -616,9 +663,29 @@ function renderDateGroupElement(dateKey, groupTasks) {
       popover.openTimePopover(timePill, task.startTime, task.endTime, { type: 'task', taskId: task.id });
     });
 
-    // Inline edit text
+    // Inline edit text: double-click to edit (single click + drag moves the task)
     const textEl = row.querySelector('.task-text');
+    let editCancelled = false;
+    row.addEventListener('dblclick', (e) => {
+      if (e.target.closest('button, input') || textEl.isContentEditable) return;
+      editCancelled = false;
+      row.draggable = false;
+      row.classList.add('is-editing');
+      textEl.contentEditable = 'true';
+      textEl.focus();
+      const range = document.createRange();
+      range.selectNodeContents(textEl);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+
     textEl.addEventListener('blur', async () => {
+      textEl.contentEditable = 'false';
+      row.draggable = true;
+      row.classList.remove('is-editing');
+      if (editCancelled) return;
       const newText = textEl.textContent.trim();
       if (newText && newText !== task.text) {
         const parsed = parseTimeFromText(newText);
@@ -638,7 +705,10 @@ function renderDateGroupElement(dateKey, groupTasks) {
       if (e.key === 'Enter') {
         e.preventDefault();
         textEl.blur();
-        focusInlineAdd(dateKey);
+      } else if (e.key === 'Escape') {
+        editCancelled = true;
+        textEl.textContent = task.text;
+        textEl.blur();
       }
     });
 
@@ -669,6 +739,15 @@ function renderDateGroupElement(dateKey, groupTasks) {
 
   return groupEl;
 }
+
+setupListDragAndDrop({
+  container: dateGroupsContainer,
+  getTask: (id) => state.tasks.find(t => t.id === id),
+  onMove: async (taskId, updates) => {
+    await updateTaskItem(taskId, updates);
+    renderTasks();
+  }
+});
 
 function focusInlineAdd(dateKey) {
   state.selectedAddDate = dateKey;
@@ -737,7 +816,6 @@ onAuthStateChanged(auth, (user) => {
 
 // Initial boot
 initTheme();
-updateSortBtnDisplay();
 updateQuickAddDateDisplay();
 updateQuickAddTimeDisplay();
 updateViewModeDisplay();

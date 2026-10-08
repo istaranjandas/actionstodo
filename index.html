@@ -5,11 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Actionstodo</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap" />
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
 <div class="app-container">
-    <!-- Minimal Header -->
+  <!-- Sidebar: brand, views, mini calendar, account -->
+  <aside class="sidebar">
     <header class="top-bar">
       <div class="brand">
         <button type="button" class="brand-icon" id="devilLogoBtn" title="Click me..." aria-label="Devil mascot">
@@ -33,7 +37,42 @@
           <button type="button" class="devil-popup-btn" id="devilPopupAckBtn">I'll do them! 😨</button>
         </div>
       </div>
-      <div class="top-actions">
+    </header>
+
+    <nav class="sidebar-nav" aria-label="Views">
+      <button type="button" class="filter-menu-item sidebar-item active" data-view="all">
+        <svg class="sidebar-item-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+        <span class="sidebar-item-text">All dates</span>
+        <span class="sidebar-count" id="countAll"></span>
+      </button>
+      <button type="button" class="filter-menu-item sidebar-item" data-view="today">
+        <svg class="sidebar-item-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        <span class="sidebar-item-text">Today</span>
+        <span class="sidebar-count" id="countToday"></span>
+      </button>
+      <button type="button" class="filter-menu-item sidebar-item" data-view="this-week">
+        <svg class="sidebar-item-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+        <span class="sidebar-item-text">This week</span>
+        <span class="sidebar-count" id="countWeek"></span>
+      </button>
+      <button type="button" class="filter-menu-item sidebar-item" data-view="upcoming">
+        <svg class="sidebar-item-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+        <span class="sidebar-item-text">Upcoming</span>
+        <span class="sidebar-count" id="countUpcoming"></span>
+      </button>
+      <button type="button" class="filter-menu-item sidebar-item" data-view="completed">
+        <svg class="sidebar-item-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="M22 4 12 14.01l-3-3"></path></svg>
+        <span class="sidebar-item-text">Completed</span>
+        <span class="sidebar-count" id="countCompleted"></span>
+      </button>
+    </nav>
+
+    <section class="sidebar-calendar">
+      <div class="sidebar-label">Calendar</div>
+      <div id="miniCalendar"></div>
+    </section>
+
+      <div class="top-actions sidebar-footer">
         <!-- Google Sign-in / User Profile -->
         <div id="authContainer" class="auth-container">
           <button type="button" class="auth-login-btn" id="googleSignInBtn" title="Sign in with Google to sync across all your devices">
@@ -60,19 +99,20 @@
           </svg>
         </button>
       </div>
-    </header>
+  </aside>
+
+  <!-- Main pane: title + toolbar, add bar, task feed -->
+  <section class="main-pane">
+   <div class="main-top">
+    <div class="main-header">
+      <div class="main-title-wrap">
+        <h1 class="main-title" id="viewTitle">All dates</h1>
+        <span class="main-subtitle" id="viewSubtitle"></span>
+      </div>
 
     <!-- Toolbar: View & Actions -->
     <nav class="view-toolbar">
       <div class="toolbar-actions">
-        <!-- Sort by Time Toggle (Default: Enabled) -->
-        <button class="toolbar-btn active" id="sortByTimeBtn" title="Toggle time-based chronological order">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-          <span id="sortByTimeLabel">Time sorted</span>
-        </button>
 
         <!-- Week Table View Button (Desktop only) -->
         <button class="toolbar-btn" id="weekTableBtn" title="Toggle Weekly Table view">
@@ -138,8 +178,9 @@
         </div>
       </div>
     </nav>
+    </div>
 
-    <!-- Quick Add Input Form -->
+    <!-- Quick Add: one slim bar -->
     <form class="quick-add-box" id="quickAddForm" action="javascript:void(0);">
       <div class="quick-add-input-row">
         <div class="quick-add-icon">
@@ -152,44 +193,52 @@
           type="text" 
           id="quickAddInput" 
           class="quick-add-input" 
-          placeholder="Add a task..." 
+          placeholder="Add a task…  try “Call Alex at 3pm”" 
           autocomplete="off" 
           enterkeyhint="done"
         />
+
+        <div class="quick-add-chips-row">
+          <!-- Quick Add Date -->
+          <div class="picker-chip-wrap">
+            <button type="button" class="chip-btn" id="quickAddDateBtn" title="Select task date" tabindex="-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span id="quickAddDateLabel">Today</span>
+            </button>
+            <input type="date" id="quickAddDateInput" class="chip-date-input" aria-label="Select date" />
+          </div>
+
+          <!-- Quick Add Time Range -->
+          <div class="picker-chip-wrap">
+            <button type="button" class="chip-btn" id="quickAddTimeBtn" title="Select planned completion time range (30m default)">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span id="quickAddTimeLabel">+ 30m</span>
+            </button>
+            <button type="button" class="clear-chip-btn" id="clearQuickTimeBtn" style="display: none;" title="Remove time">&times;</button>
+          </div>
+        </div>
+
         <button type="submit" class="quick-add-save-btn" id="quickAddSaveBtn" title="Add task">
           <span>Add</span>
+          <kbd class="btn-kbd">↵</kbd>
         </button>
       </div>
-
-      <div class="quick-add-chips-row">
-        <!-- Quick Add Date -->
-        <div class="picker-chip-wrap">
-          <button type="button" class="chip-btn" id="quickAddDateBtn" title="Select task date" tabindex="-1">
-            <span id="quickAddDateLabel">Today</span>
-          </button>
-          <input type="date" id="quickAddDateInput" class="chip-date-input" aria-label="Select date" />
-        </div>
-
-        <!-- Quick Add Time Range -->
-        <div class="picker-chip-wrap">
-          <button type="button" class="chip-btn" id="quickAddTimeBtn" title="Select planned completion time range (30m default)">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span id="quickAddTimeLabel">+ 30m</span>
-          </button>
-          <button type="button" class="clear-chip-btn" id="clearQuickTimeBtn" style="display: none;" title="Remove time">&times;</button>
-        </div>
-
-        <span class="kbd-shortcut">↵ Enter</span>
-      </div>
     </form>
+   </div>
 
     <!-- Grouped Task Feed -->
     <main class="date-groups" id="dateGroupsContainer">
       <!-- Generated dynamically -->
     </main>
+  </section>
 
   </div>
 

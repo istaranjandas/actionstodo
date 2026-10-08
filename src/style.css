@@ -1571,6 +1571,398 @@
 }
 
 /* ==========================================================================
+   Premium Theme Layer
+   Soft page surface, elevated cards, refined controls and typography.
+   (Placed before the mobile section so small-screen tuning still applies.)
+   ========================================================================== */
+:root {
+  --bg-page: #f6f6f7;
+  --bg: #ffffff;
+  --bg-subtle: #f7f7f8;
+  --bg-hover: #f2f2f4;
+  --bg-active: #ebebee;
+  --border: #e6e6ea;
+  --border-subtle: #efeff2;
+  --border-bold: #d4d4da;
+  --text: #0f0f12;
+  --text-primary: var(--text);
+  --text-secondary: #5f5f69;
+  --text-tertiary: #9a9aa3;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(16, 16, 24, 0.04), 0 1px 1px rgba(16, 16, 24, 0.02);
+  --shadow-card: 0 1px 2px rgba(16, 16, 24, 0.04), 0 4px 16px -4px rgba(16, 16, 24, 0.06);
+  --shadow-focus: 0 0 0 4px rgba(15, 15, 18, 0.06);
+  --font-sans: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+[data-theme="dark"] {
+  --bg-page: #09090b;
+  --bg: #121215;
+  --bg-subtle: #17171b;
+  --bg-hover: #1c1c21;
+  --bg-active: #232329;
+  --border: #26262c;
+  --border-subtle: #1f1f24;
+  --border-bold: #34343c;
+  --text: #f2f2f4;
+  --text-secondary: #a0a0aa;
+  --text-tertiary: #62626c;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+  --shadow-focus: 0 0 0 4px rgba(255, 255, 255, 0.06);
+}
+
+body {
+  background-color: var(--bg-page);
+  letter-spacing: -0.006em;
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* Header */
+.top-bar {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 28px;
+}
+
+.brand {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--text);
+  color: var(--bg);
+}
+
+.brand-icon:hover {
+  background: var(--text);
+  color: #ef4444;
+}
+
+.icon-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-login-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-login-btn:hover {
+  background: var(--bg);
+  border-color: var(--border-bold);
+  box-shadow: var(--shadow-card);
+}
+
+.user-pill {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-signout-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border-color: var(--border);
+  background: var(--bg);
+  font-size: 12px;
+}
+
+/* Toolbar */
+.view-toolbar {
+  margin-bottom: 16px;
+}
+
+.toolbar-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-btn:hover {
+  border-color: var(--border-bold);
+  color: var(--text);
+  background: var(--bg);
+}
+
+.toolbar-btn.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.25);
+}
+
+.filter-dropdown-menu {
+  border-radius: var(--radius-md);
+  padding: 6px;
+  box-shadow: var(--shadow-card);
+}
+
+.filter-menu-item {
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+/* Quick add card */
+.quick-add-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 14px 12px 18px;
+  gap: 12px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-card);
+}
+
+.quick-add-box:focus-within {
+  background: var(--bg);
+  border-color: var(--border-bold);
+  box-shadow: var(--shadow-card), var(--shadow-focus);
+}
+
+.quick-add-input {
+  font-size: 15px;
+  font-weight: 450;
+}
+
+.quick-add-save-btn {
+  gap: 8px;
+  padding: 8px 12px 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 999px;
+  color: var(--bg);
+  background: var(--text);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.3);
+}
+
+.btn-kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+[data-theme="dark"] .btn-kbd {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.quick-add-chips-row {
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.chip-btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+.chip-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-bold);
+  color: var(--text);
+}
+
+.chip-btn.is-active {
+  background: var(--bg);
+  border-color: var(--text-secondary);
+}
+
+.chip-btn #quickAddTimeLabel {
+  font-variant-numeric: tabular-nums;
+}
+
+.quick-add-tip {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+@media (max-width: 680px) {
+  .quick-add-tip {
+    display: none;
+  }
+
+  .date-group {
+    padding: 12px 14px 8px;
+  }
+}
+
+/* Day cards */
+.date-groups {
+  gap: 20px;
+}
+
+.date-group {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 14px 20px 10px;
+}
+
+.date-group-header {
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 6px;
+}
+
+.date-group-name {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.date-group-subname {
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.date-group-count {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+/* Task rows */
+.task-row {
+  gap: 12px;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: var(--radius-md);
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border-bold);
+}
+
+.task-checkbox:checked::after {
+  width: 5px;
+  height: 9px;
+  border-width: 0 2px 2px 0;
+}
+
+.task-time-pill {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  min-width: 136px;
+}
+
+.task-time-pill.is-set {
+  background: var(--bg-subtle);
+  border-color: var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.task-time-pill:hover {
+  background: var(--bg);
+  border-color: var(--border-bold);
+}
+
+.task-text {
+  font-size: 15px;
+}
+
+.task-date-chip {
+  font-family: var(--font-sans);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.inline-add-row {
+  padding: 8px 10px;
+  margin: 2px -10px 0;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+}
+
+.empty-state {
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+}
+
+/* Popovers & table pick up the same card language */
+.time-popover {
+  border-radius: var(--radius-lg);
+}
+
+.week-table-container {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.matrix-task-item {
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.matrix-time-header,
+.matrix-time-col,
+.matrix-day-date,
+.matrix-task-time,
+.week-range-label,
+.week-today-btn {
+  font-family: var(--font-sans) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.week-date-nav,
+.week-today-btn {
+  border-radius: 999px;
+}
+
+
+/* ==========================================================================
    Comprehensive Mobile & Tablet Responsive Layout
    ========================================================================== */
 @media (max-width: 680px) {
@@ -2129,53 +2521,30 @@
 }
 
 /* ==========================================================================
-   Large Screens: scale the whole app up so it fills wider monitors
-   ========================================================================== */
-@media (min-width: 1100px) {
-  .app-container {
-    max-width: 900px;
-    zoom: 1.15;
-  }
-}
-
-@media (min-width: 1400px) {
-  .app-container {
-    zoom: 1.3;
-  }
-}
-
-@media (min-width: 1700px) {
-  .app-container {
-    zoom: 1.45;
-  }
-}
-
-@media (min-width: 2200px) {
-  .app-container {
-    zoom: 1.7;
-  }
-}
-
-/* ==========================================================================
    Full-Screen Week Table View
-   Only the top bar and the table are shown; the table fills the window.
+   Only the table is shown; it fills the window.
    ========================================================================== */
-body.is-table-view .view-toolbar,
-body.is-table-view .quick-add-box {
-  display: none;
+body.is-table-view .sidebar,
+body.is-table-view .main-top {
+  display: none !important;
 }
 
 body.is-table-view .app-container {
   max-width: none;
-  zoom: 1;
   height: 100vh;
   padding: 16px 24px;
   display: flex;
   flex-direction: column;
 }
 
-body.is-table-view .top-bar {
-  margin-bottom: 12px;
+body.is-table-view .main-pane {
+  height: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: visible;
 }
 
 body.is-table-view .date-groups {
@@ -2363,4 +2732,626 @@ body.is-table-view .matrix-allday-row th {
 body.is-table-view .creator-badge-dock,
 body.is-table-view .creator-popup {
   display: none !important;
+}
+
+/* ==========================================================================
+   List View Drag & Drop
+   ========================================================================== */
+.task-drag-handle {
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--text-tertiary);
+  cursor: grab;
+  opacity: 0;
+  padding: 4px 2px;
+  user-select: none;
+  transition: opacity 0.1s ease;
+}
+
+.task-row:hover .task-drag-handle {
+  opacity: 1;
+}
+
+.task-drag-handle:hover {
+  color: var(--text);
+}
+
+.task-row.is-dragging {
+  opacity: 0.4;
+}
+
+/* Compact one-day slot grid, shown only in the dragged task's day */
+.drop-slots {
+  display: none;
+}
+
+.date-group.is-drag-source .drop-slots {
+  display: block;
+  margin: 8px 0 4px;
+  padding: 12px;
+  border: 1px dashed var(--border-bold);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.drop-slots-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.drop-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 5px;
+}
+
+.drop-slot {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: 6px 2px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background 0.08s ease, color 0.08s ease, border-color 0.08s ease, transform 0.08s ease;
+}
+
+.drop-slot.is-busy {
+  background: var(--bg-hover);
+  color: var(--text-tertiary);
+}
+
+.drop-slot.is-current {
+  border-style: dashed;
+  border-color: var(--text-secondary);
+}
+
+.drop-slot.is-drop-target {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+  transform: scale(1.05);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .task-drag-handle {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Dashboard Layout: sidebar + full-width main pane
+   ========================================================================== */
+:root {
+  --border-card: #d9d9e0;
+}
+
+[data-theme="dark"] {
+  --border-card: #30303a;
+}
+
+/* Crisp outlines on the main boxes */
+.quick-add-box,
+.date-group,
+.week-table-container {
+  border: 1px solid var(--border-card);
+}
+
+.quick-add-box:focus-within {
+  border-color: var(--text-secondary);
+}
+
+.main-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.main-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.main-subtitle {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.sidebar-nav,
+.sidebar-calendar {
+  display: none;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+}
+
+/* ---------- Desktop ---------- */
+@media (min-width: 1025px) {
+  .app-container {
+    max-width: none;
+    width: 100%;
+    height: 100vh;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 264px minmax(0, 1fr);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 20px 14px 16px;
+    background: var(--bg);
+    border-right: 1px solid var(--border-card);
+    min-height: 0;
+  }
+
+  .sidebar .top-bar {
+    margin: 0;
+    padding: 0 6px;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sidebar-item {
+    gap: 10px;
+    padding: 8px 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    background: transparent;
+  }
+
+  .sidebar-item:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+
+  .sidebar-item.active {
+    background: var(--bg-active);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .sidebar-item-icon {
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+
+  .sidebar-count {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-tertiary);
+  }
+
+  .sidebar-calendar {
+    display: block;
+    padding: 14px 10px 10px;
+    border: 1px solid var(--border-card);
+    border-radius: 12px;
+  }
+
+  .sidebar-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin: 0 4px 10px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 14px 4px 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .sidebar-footer .auth-container,
+  .sidebar-footer .auth-user-wrap {
+    min-width: 0;
+  }
+
+  .sidebar-footer .auth-login-btn {
+    font-size: 12.5px;
+    padding: 7px 12px;
+  }
+
+  .sidebar-footer .user-display-name {
+    max-width: 96px;
+  }
+
+  /* Main pane */
+  .main-pane {
+    height: 100vh;
+    overflow-y: auto;
+    padding: 0 32px 40px;
+    min-width: 0;
+  }
+
+  .main-top {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg-page);
+    padding: 20px 0 18px;
+  }
+
+  .main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .view-toolbar {
+    margin: 0;
+  }
+
+  #filterDropdownWrap {
+    display: none;
+  }
+
+  .toolbar-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  /* Slim add bar */
+  .quick-add-box {
+    margin: 0;
+    padding: 7px 7px 7px 16px;
+    border-radius: 12px;
+    gap: 0;
+  }
+
+  .quick-add-input-row {
+    gap: 12px;
+  }
+
+  .quick-add-input {
+    font-size: 14.5px;
+  }
+
+  .quick-add-chips-row {
+    flex-shrink: 0;
+    gap: 6px;
+    padding: 0;
+    border: none;
+  }
+
+  .quick-add-save-btn {
+    padding: 7px 9px 7px 14px;
+  }
+
+  /* Day cards fill the width, side by side */
+  .date-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+
+  .date-group {
+    padding: 12px 16px 8px;
+    border-radius: 12px;
+  }
+
+  .date-group-header {
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+  }
+
+  .date-group-name {
+    font-size: 14px;
+  }
+
+  .date-group-subname {
+    font-size: 12.5px;
+  }
+
+  /* Denser rows */
+  .task-row {
+    gap: 10px;
+    padding: 5px 8px;
+    margin: 0 -8px;
+    border-radius: 8px;
+  }
+
+  .task-checkbox {
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+  }
+
+  .task-checkbox:checked::after {
+    width: 4px;
+    height: 8px;
+  }
+
+  .task-time-pill {
+    font-size: 11.5px;
+    padding: 3px 8px;
+    min-width: 122px;
+  }
+
+  .task-text {
+    font-size: 14px;
+  }
+
+  .inline-add-row {
+    padding: 6px 8px;
+    margin: 2px -8px 0;
+    font-size: 13px;
+  }
+}
+
+/* ---------- Tablet & mobile: sidebar becomes a top bar ---------- */
+@media (max-width: 1024px) {
+  .sidebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .sidebar .top-bar {
+    margin: 0;
+  }
+
+  .main-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .view-toolbar {
+    margin: 0;
+  }
+
+  .quick-add-box {
+    padding: 8px 8px 8px 14px;
+    gap: 0;
+  }
+
+  .quick-add-input-row {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .quick-add-chips-row {
+    order: 3;
+    flex-basis: 100%;
+    padding: 8px 0 2px;
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+/* Mini calendar */
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 4px 8px;
+}
+
+.cal-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cal-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.cal-nav button {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.cal-nav button:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-weekday {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-tertiary);
+  padding-bottom: 4px;
+}
+
+.cal-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.cal-cell.is-empty {
+  cursor: default;
+}
+
+button.cal-cell:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.cal-cell.has-tasks::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+}
+
+.cal-cell.is-today {
+  color: var(--text);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1.5px var(--text);
+}
+
+.cal-cell.is-selected {
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.cal-cell.is-selected::after {
+  background: var(--bg);
+}
+
+/* Table view: the week table is not a card grid */
+body.is-table-view .date-groups {
+  display: block;
+}
+
+/* List drag: hovered day reveals its slots too */
+.date-group.is-drag-over .drop-slots {
+  display: block;
+  margin: 8px 0 4px;
+  padding: 12px;
+  border: 1px dashed var(--border-bold);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.date-group.is-drag-over:not(.is-drag-source) {
+  border-color: var(--text);
+  box-shadow: var(--shadow-card), var(--shadow-focus);
+}
+
+/* Desktop picks dates from the sidebar calendar, so the toolbar date picker is redundant */
+@media (min-width: 1025px) {
+  .view-toolbar .picker-chip-wrap,
+  #clearDateFilterBtn {
+    display: none !important;
+  }
+}
+
+/* Hover a task to grab it; double-click to edit */
+.task-row {
+  cursor: grab;
+  transition: background 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+}
+
+.task-row:hover {
+  background: var(--bg);
+  box-shadow: 0 0 0 1px var(--border-card), 0 4px 14px -6px rgba(16, 16, 24, 0.18);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .task-row:hover {
+  box-shadow: 0 0 0 1px var(--border-card), 0 6px 18px -6px rgba(0, 0, 0, 0.7);
+}
+
+.task-row:active {
+  cursor: grabbing;
+}
+
+.task-row.is-dragging {
+  transform: none;
+  box-shadow: none;
+}
+
+.task-text {
+  cursor: inherit;
+  user-select: none;
+}
+
+.task-row.is-editing {
+  cursor: text;
+  transform: none;
+  background: var(--bg);
+  box-shadow: 0 0 0 1.5px var(--text-secondary), var(--shadow-focus);
+}
+
+.task-row.is-editing .task-text {
+  cursor: text;
+  user-select: text;
+  background: transparent;
+}
+
+.task-row:hover .task-drag-handle {
+  color: var(--text-secondary);
+}
+
+/* Week table chips: same feel */
+.matrix-task-text {
+  cursor: inherit;
+  user-select: none;
+}
+
+.matrix-task-item {
+  transition: box-shadow 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+}
+
+.matrix-task-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -6px rgba(16, 16, 24, 0.25);
+}
+
+.matrix-task-item.is-editing .matrix-task-text {
+  cursor: text;
+  user-select: text;
 }
