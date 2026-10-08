@@ -2128,3 +2128,239 @@
   }
 }
 
+/* ==========================================================================
+   Large Screens: scale the whole app up so it fills wider monitors
+   ========================================================================== */
+@media (min-width: 1100px) {
+  .app-container {
+    max-width: 900px;
+    zoom: 1.15;
+  }
+}
+
+@media (min-width: 1400px) {
+  .app-container {
+    zoom: 1.3;
+  }
+}
+
+@media (min-width: 1700px) {
+  .app-container {
+    zoom: 1.45;
+  }
+}
+
+@media (min-width: 2200px) {
+  .app-container {
+    zoom: 1.7;
+  }
+}
+
+/* ==========================================================================
+   Full-Screen Week Table View
+   Only the top bar and the table are shown; the table fills the window.
+   ========================================================================== */
+body.is-table-view .view-toolbar,
+body.is-table-view .quick-add-box {
+  display: none;
+}
+
+body.is-table-view .app-container {
+  max-width: none;
+  zoom: 1;
+  height: 100vh;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+body.is-table-view .top-bar {
+  margin-bottom: 12px;
+}
+
+body.is-table-view .date-groups {
+  flex: 1;
+  min-height: 0;
+}
+
+body.is-table-view .week-table-container {
+  margin-top: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+body.is-table-view .week-table-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.week-table-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+body.is-table-view .week-range-label {
+  font-size: 13px;
+}
+
+body.is-table-view .matrix-table thead th {
+  top: 0;
+  z-index: 10;
+}
+
+body.is-table-view .matrix-time-header {
+  width: 84px;
+  min-width: 84px;
+  z-index: 20 !important;
+}
+
+body.is-table-view .matrix-time-col {
+  width: 84px;
+  min-width: 84px;
+  font-size: 12px;
+}
+
+body.is-table-view .matrix-day-name {
+  font-size: 13px;
+}
+
+body.is-table-view .matrix-day-date {
+  font-size: 12px;
+}
+
+body.is-table-view .matrix-table td {
+  height: 64px;
+  padding: 6px;
+}
+
+body.is-table-view .matrix-allday-row td,
+body.is-table-view .matrix-allday-row th {
+  background: var(--bg-subtle);
+  height: 52px;
+}
+
+.matrix-cell.is-drop-target {
+  background: var(--bg-hover) !important;
+  outline: 2px dashed var(--text-secondary);
+  outline-offset: -3px;
+}
+
+.matrix-tasks-wrap {
+  min-height: 100%;
+}
+
+/* Task cards inside the grid */
+.matrix-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  padding: 5px 6px;
+  cursor: grab;
+}
+
+.matrix-task-item:active {
+  cursor: grabbing;
+}
+
+.matrix-task-item.is-dragging {
+  opacity: 0.35;
+}
+
+.matrix-task-item.is-editing {
+  cursor: text;
+  border-color: var(--text);
+}
+
+.matrix-task-check {
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.matrix-task-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.matrix-task-text {
+  cursor: text;
+  outline: none;
+  word-break: break-word;
+  user-select: text;
+}
+
+.matrix-task-item.is-completed .matrix-task-text {
+  text-decoration: line-through;
+}
+
+.matrix-task-time {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.matrix-task-time:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.matrix-task-del {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.matrix-task-item:hover .matrix-task-del {
+  opacity: 1;
+}
+
+.matrix-task-del:hover {
+  color: var(--text);
+}
+
+.matrix-add-input {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--text-secondary);
+  border-radius: 4px;
+  padding: 5px 6px;
+  outline: none;
+}
+
+body.is-table-view .matrix-allday-row td,
+body.is-table-view .matrix-allday-row th {
+  position: sticky;
+  top: var(--matrix-head-h, 0px);
+  z-index: 8;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+body.is-table-view .matrix-allday-row th {
+  z-index: 9;
+}
+
+body.is-table-view .creator-badge-dock,
+body.is-table-view .creator-popup {
+  display: none !important;
+}

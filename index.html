@@ -86,47 +86,6 @@
           <span id="weekTableBtnLabel">Week Table</span>
         </button>
 
-        <!-- Plan Ahead Dropdown Button -->
-        <div class="filter-dropdown-wrap" id="planAheadDropdownWrap">
-          <button type="button" class="toolbar-btn" id="planAheadToolbarBtn" title="Plan upcoming & future days">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"></path>
-              <path d="M12 5l7 7-7 7"></path>
-            </svg>
-            <span id="planAheadToolbarLabel">Plan ahead</span>
-            <svg class="dropdown-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-
-          <div class="filter-dropdown-menu" id="planAheadDropdownMenu">
-            <button type="button" class="filter-menu-item" id="planTomorrowBtn">
-              <span class="filter-item-icon">+</span>
-              <span class="filter-item-text" id="planTomorrowLabel">Tomorrow</span>
-            </button>
-            <button type="button" class="filter-menu-item" id="planDayAfterBtn">
-              <span class="filter-item-icon">+</span>
-              <span class="filter-item-text" id="planDayAfterLabel">Day after tomorrow</span>
-            </button>
-            <button type="button" class="filter-menu-item" id="planNextWeekBtn">
-              <span class="filter-item-icon">+</span>
-              <span class="filter-item-text">Next week</span>
-            </button>
-            <div class="picker-chip-wrap" style="width: 100%; display: flex;">
-              <button type="button" class="filter-menu-item" id="planPickDateBtn" style="width: 100%;" tabindex="-1">
-                <span class="filter-item-icon">📅</span>
-                <span class="filter-item-text">Pick future date...</span>
-              </button>
-              <input type="date" id="planPickDateInput" class="chip-date-input" aria-label="Pick future date" />
-            </div>
-            <div style="height: 1px; background: var(--border-subtle); margin: 3px 0;"></div>
-            <button type="button" class="filter-menu-item" id="planViewUpcomingBtn">
-              <span class="filter-item-icon">✦</span>
-              <span class="filter-item-text" id="planViewUpcomingLabel">View upcoming tasks</span>
-            </button>
-          </div>
-        </div>
-
         <!-- Date Filter Picker -->
         <div class="picker-chip-wrap" title="Filter by specific date">
           <button type="button" class="toolbar-btn" id="dateFilterBtn" tabindex="-1">
@@ -140,6 +99,7 @@
           </button>
           <input type="date" id="dateFilterInput" class="chip-date-input" aria-label="Filter by date" />
         </div>
+        <button type="button" class="clear-chip-btn" id="clearDateFilterBtn" style="display: none;" title="Show all dates" aria-label="Clear picked date">&times;</button>
 
         <!-- Filter Dropdown Button -->
         <div class="filter-dropdown-wrap" id="filterDropdownWrap">

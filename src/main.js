@@ -1,6 +1,6 @@
 // Main Application Bootstrapper & UI Coordinator
 import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
-import { getLocalISODate, addDays, formatShortDate, formatFriendlyDate } from './modules/dateUtils.js';
+import { getLocalISODate, formatShortDate, formatFriendlyDate } from './modules/dateUtils.js';
 import { addMinutesToTime, formatTimeRangeDisplay, parseTimeFromText, getNextSmartSlot } from './modules/timeUtils.js';
 import { 
   state, 
@@ -29,7 +29,6 @@ const googleSignOutBtn = document.getElementById('googleSignOutBtn');
 const quickAddForm = document.getElementById('quickAddForm');
 const quickAddInput = document.getElementById('quickAddInput');
 const quickAddSaveBtn = document.getElementById('quickAddSaveBtn');
-const quickAddDateBtn = document.getElementById('quickAddDateBtn');
 const quickAddDateLabel = document.getElementById('quickAddDateLabel');
 const quickAddDateInput = document.getElementById('quickAddDateInput');
 const quickAddTimeBtn = document.getElementById('quickAddTimeBtn');
@@ -43,22 +42,9 @@ const weekTableBtn = document.getElementById('weekTableBtn');
 const weekTableBtnLabel = document.getElementById('weekTableBtnLabel');
 const weekTableBtnIcon = document.getElementById('weekTableBtnIcon');
 
-const planAheadDropdownWrap = document.getElementById('planAheadDropdownWrap');
-const planAheadToolbarBtn = document.getElementById('planAheadToolbarBtn');
-const planAheadToolbarLabel = document.getElementById('planAheadToolbarLabel');
-const planTomorrowBtn = document.getElementById('planTomorrowBtn');
-const planTomorrowLabel = document.getElementById('planTomorrowLabel');
-const planDayAfterBtn = document.getElementById('planDayAfterBtn');
-const planDayAfterLabel = document.getElementById('planDayAfterLabel');
-const planNextWeekBtn = document.getElementById('planNextWeekBtn');
-const planPickDateBtn = document.getElementById('planPickDateBtn');
-const planPickDateInput = document.getElementById('planPickDateInput');
-const planViewUpcomingBtn = document.getElementById('planViewUpcomingBtn');
-const planViewUpcomingLabel = document.getElementById('planViewUpcomingLabel');
-
 const dateFilterInput = document.getElementById('dateFilterInput');
-const dateFilterBtn = document.getElementById('dateFilterBtn');
 const dateFilterLabel = document.getElementById('dateFilterLabel');
+const clearDateFilterBtn = document.getElementById('clearDateFilterBtn');
 const filterDropdownWrap = document.getElementById('filterDropdownWrap');
 const filterDropdownBtn = document.getElementById('filterDropdownBtn');
 const filterBtnLabel = document.getElementById('filterBtnLabel');
@@ -151,16 +137,6 @@ if (quickAddDateInput) {
   });
 }
 
-if (quickAddDateBtn && quickAddDateInput) {
-  quickAddDateBtn.addEventListener('click', () => {
-    try {
-      if (typeof quickAddDateInput.showPicker === 'function') {
-        quickAddDateInput.showPicker();
-      }
-    } catch (e) {}
-  });
-}
-
 function updateQuickAddTimeDisplay() {
   const parsed = parseTimeFromText(quickAddInput.value);
   if (parsed) {
@@ -208,7 +184,7 @@ async function handleQuickAddSubmit(e) {
   const end = parsed ? parsed.endTime : state.selectedAddEnd;
 
   const today = getLocalISODate();
-  if (state.selectedAddDate > today && state.currentView === 'all') {
+  if (state.selectedAddDate > today && state.currentView === 'all' && !state.specificDateFilter) {
     state.currentView = 'upcoming';
     updateFilterDisplay();
   }
@@ -246,6 +222,8 @@ function updateViewModeDisplay() {
   if (isNonDesktopDevice()) {
     state.isTableView = false;
   }
+  // Table view is full-screen: CSS hides the toolbar and quick-add box
+  document.body.classList.toggle('is-table-view', state.isTableView);
   if (!weekTableBtn) return;
   if (state.isTableView) {
     weekTableBtn.classList.add('active');
@@ -308,80 +286,7 @@ sortByTimeBtn.addEventListener('click', () => {
   renderTasks();
 });
 
-// --- Plan Ahead Toolbar Dropdown ---
-if (planAheadToolbarBtn) {
-  planAheadToolbarBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (filterDropdownWrap) filterDropdownWrap.classList.remove('open');
-    planAheadDropdownWrap.classList.toggle('open');
-  });
-}
-
-if (planTomorrowBtn) {
-  planTomorrowBtn.addEventListener('click', () => {
-    const today = getLocalISODate();
-    state.selectedAddDate = addDays(today, 1);
-    updateQuickAddDateDisplay();
-    planAheadDropdownWrap.classList.remove('open');
-    quickAddInput.focus();
-  });
-}
-
-if (planDayAfterBtn) {
-  planDayAfterBtn.addEventListener('click', () => {
-    const today = getLocalISODate();
-    state.selectedAddDate = addDays(today, 2);
-    updateQuickAddDateDisplay();
-    planAheadDropdownWrap.classList.remove('open');
-    quickAddInput.focus();
-  });
-}
-
-if (planNextWeekBtn) {
-  planNextWeekBtn.addEventListener('click', () => {
-    const today = getLocalISODate();
-    state.selectedAddDate = addDays(today, 7);
-    updateQuickAddDateDisplay();
-    planAheadDropdownWrap.classList.remove('open');
-    quickAddInput.focus();
-  });
-}
-
-if (planPickDateBtn && planPickDateInput) {
-  planPickDateBtn.addEventListener('click', () => {
-    try {
-      planPickDateInput.showPicker();
-    } catch (e) {
-      planPickDateInput.click();
-    }
-  });
-
-  planPickDateInput.addEventListener('change', (e) => {
-    if (e.target.value) {
-      state.selectedAddDate = e.target.value;
-      updateQuickAddDateDisplay();
-      planAheadDropdownWrap.classList.remove('open');
-      quickAddInput.focus();
-    }
-  });
-}
-
-if (planViewUpcomingBtn) {
-  planViewUpcomingBtn.addEventListener('click', () => {
-    state.isTableView = false;
-    state.currentView = 'upcoming';
-    state.specificDateFilter = null;
-    planAheadDropdownWrap.classList.remove('open');
-    updateViewModeDisplay();
-    updateFilterDisplay();
-    renderTasks();
-  });
-}
-
 document.addEventListener('click', (e) => {
-  if (planAheadDropdownWrap && !planAheadDropdownWrap.contains(e.target)) {
-    planAheadDropdownWrap.classList.remove('open');
-  }
   if (filterDropdownWrap && !filterDropdownWrap.contains(e.target)) {
     filterDropdownWrap.classList.remove('open');
   }
@@ -425,11 +330,14 @@ function updateFilterDisplay() {
     filterDropdownBtn.classList.remove('active');
     if (dateFilterLabel) dateFilterLabel.textContent = 'Pick date';
   }
+
+  if (clearDateFilterBtn) {
+    clearDateFilterBtn.style.display = (!state.isTableView && state.specificDateFilter) ? 'inline-flex' : 'none';
+  }
 }
 
 filterDropdownBtn.addEventListener('click', (e) => {
   e.stopPropagation();
-  if (planAheadDropdownWrap) planAheadDropdownWrap.classList.remove('open');
   filterDropdownWrap.classList.toggle('open');
 });
 
@@ -437,6 +345,11 @@ filterMenuItems.forEach(btn => {
   btn.addEventListener('click', () => {
     state.isTableView = false;
     state.currentView = btn.dataset.view;
+    if (state.specificDateFilter) {
+      state.selectedAddDate = getLocalISODate();
+      updateQuickAddDateDisplay();
+      updateQuickAddTimeDisplay();
+    }
     state.specificDateFilter = null;
     dateFilterInput.value = '';
     if (dateFilterLabel) dateFilterLabel.textContent = 'Pick date';
@@ -447,31 +360,43 @@ filterMenuItems.forEach(btn => {
   });
 });
 
-if (dateFilterBtn && dateFilterInput) {
-  dateFilterBtn.addEventListener('click', () => {
-    try {
-      if (typeof dateFilterInput.showPicker === 'function') {
-        dateFilterInput.showPicker();
-      }
-    } catch (e) {}
-  });
+// Transparent date inputs sit on top of their chip buttons, so clicks land on the input.
+// Open the native calendar from there (otherwise Chrome only focuses the hidden field).
+document.addEventListener('click', (e) => {
+  const input = e.target.closest && e.target.closest('.chip-date-input');
+  if (!input) return;
+  try {
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+    }
+  } catch (err) {}
+});
+
+// Picking a date shows that day's tasks and makes new tasks go to that day
+function setDateFilter(dateStr) {
+  if (dateStr) {
+    state.isTableView = false;
+    state.specificDateFilter = dateStr;
+    state.selectedAddDate = dateStr;
+  } else {
+    state.specificDateFilter = null;
+    state.selectedAddDate = getLocalISODate();
+    dateFilterInput.value = '';
+  }
+  updateQuickAddDateDisplay();
+  updateQuickAddTimeDisplay();
+  updateViewModeDisplay();
+  renderTasks();
+  if (dateStr) quickAddInput.focus();
 }
 
 dateFilterInput.addEventListener('change', (e) => {
-  if (e.target.value) {
-    state.isTableView = false;
-    state.specificDateFilter = e.target.value;
-    if (dateFilterLabel) dateFilterLabel.textContent = formatShortDate(e.target.value);
-    updateViewModeDisplay();
-    updateFilterDisplay();
-    renderTasks();
-  } else {
-    state.specificDateFilter = null;
-    if (dateFilterLabel) dateFilterLabel.textContent = 'Pick date';
-    updateFilterDisplay();
-    renderTasks();
-  }
+  setDateFilter(e.target.value);
 });
+
+if (clearDateFilterBtn) {
+  clearDateFilterBtn.addEventListener('click', () => setDateFilter(null));
+}
 
 // --- Main Render Logic ---
 function renderTasks() {
@@ -492,42 +417,54 @@ function renderTasks() {
         currentWeekOffset = 0;
         renderTasks();
       },
-      onCellClick: (dateStr, start, end) => {
-        state.selectedAddDate = dateStr;
-        state.selectedAddStart = start || '';
-        state.selectedAddEnd = end || '';
-        updateQuickAddDateDisplay();
-        updateQuickAddTimeDisplay();
-        quickAddInput.focus();
+      onExitTable: () => {
+        state.isTableView = false;
+        updateViewModeDisplay();
+        renderTasks();
       },
-      onTaskClick: (taskId) => {
-        const t = state.tasks.find(x => x.id === taskId);
-        if (t) {
-          updateTaskItem(taskId, { completed: !t.completed });
-          renderTasks();
+      onAddTask: async (text, dateStr, start, end) => {
+        const parsed = parseTimeFromText(text);
+        if (parsed) {
+          await addTask(parsed.cleanText, dateStr, parsed.startTime, parsed.endTime);
+        } else {
+          await addTask(text, dateStr, start, end);
         }
+        renderTasks();
+      },
+      onToggleComplete: async (taskId, completed) => {
+        await updateTaskItem(taskId, { completed });
+        renderTasks();
+      },
+      onEditText: async (taskId, newText) => {
+        if (!newText) {
+          await deleteTaskItem(taskId);
+        } else {
+          const parsed = parseTimeFromText(newText);
+          if (parsed) {
+            await updateTaskItem(taskId, { text: parsed.cleanText, startTime: parsed.startTime, endTime: parsed.endTime });
+          } else {
+            await updateTaskItem(taskId, { text: newText });
+          }
+        }
+        renderTasks();
+      },
+      onDeleteTask: async (taskId) => {
+        await deleteTaskItem(taskId);
+        renderTasks();
+      },
+      onMoveTask: async (taskId, dateStr, start, end) => {
+        await updateTaskItem(taskId, { date: dateStr, startTime: start, endTime: end });
+        renderTasks();
+      },
+      onTimeClick: (triggerEl, task) => {
+        popover.openTimePopover(triggerEl, task.startTime, task.endTime, { type: 'task', taskId: task.id });
       }
     });
     return;
   }
 
   const today = getLocalISODate();
-  const tomorrow = addDays(today, 1);
   const filtered = getFilteredTasks();
-
-  // Future task count for Plan ahead button
-  const futureTasks = state.tasks.filter(t => t.date && t.date > today);
-  if (planAheadToolbarLabel) {
-    planAheadToolbarLabel.textContent = futureTasks.length > 0 
-      ? `Plan ahead (${futureTasks.length})` 
-      : 'Plan ahead';
-  }
-
-  if (planTomorrowLabel) planTomorrowLabel.textContent = `Tomorrow (${formatShortDate(tomorrow)})`;
-  if (planDayAfterLabel) planDayAfterLabel.textContent = `Day after (${formatShortDate(addDays(today, 2))})`;
-  if (planViewUpcomingLabel) planViewUpcomingLabel.textContent = futureTasks.length > 0 
-    ? `View upcoming (${futureTasks.length})` 
-    : 'View upcoming tasks';
 
   dateGroupsContainer.innerHTML = '';
 
@@ -541,7 +478,10 @@ function renderTasks() {
 
   // Collect unique dates
   const dateSet = new Set(groupsMap.keys());
-  if ((state.currentView === 'all' || state.currentView === 'today') && !state.specificDateFilter) {
+  if (state.specificDateFilter) {
+    // Always show the picked day, even when empty, so tasks can be added to it
+    dateSet.add(state.specificDateFilter);
+  } else if (state.currentView === 'all' || state.currentView === 'today') {
     dateSet.add(today);
   }
 
@@ -702,19 +642,8 @@ function renderDateGroupElement(dateKey, groupTasks) {
       }
     });
 
-    // Date chip & picker
-    const dateChip = row.querySelector('.task-date-chip');
+    // Date picker (calendar opens via the shared .chip-date-input click handler)
     const datePicker = row.querySelector('.task-row-date-picker');
-    if (dateChip && datePicker) {
-      dateChip.addEventListener('click', () => {
-        try {
-          if (typeof datePicker.showPicker === 'function') {
-            datePicker.showPicker();
-          }
-        } catch (err) {}
-      });
-    }
-
     datePicker.addEventListener('change', async (e) => {
       if (e.target.value) {
         await updateTaskItem(task.id, { date: e.target.value });
