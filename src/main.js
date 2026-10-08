@@ -815,6 +815,9 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // Initial boot
+if (window.matchMedia('(max-width: 680px)').matches) {
+  quickAddInput.placeholder = 'Add a task…';
+}
 initTheme();
 updateQuickAddDateDisplay();
 updateQuickAddTimeDisplay();
