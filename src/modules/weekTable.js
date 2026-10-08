@@ -1,6 +1,6 @@
 // Week Matrix Schedule Table View
 // Full-screen hourly grid: days across the top, hours down the left.
-// Supports add (click a cell), edit (click task text), complete (checkbox),
+// Supports add (click a cell), edit (double-click task text), complete (checkbox),
 // delete (×), re-time (click time pill) and drag & drop between days/hours.
 import { getLocalISODate, getWeekDates, formatWeekRangeLabel } from './dateUtils.js';
 import { addMinutesToTime, formatTimeRangeDisplay, getDurationMinutes } from './timeUtils.js';
@@ -100,7 +100,7 @@ export function renderWeekScheduleTable({
             <button type="button" class="week-nav-btn" id="weekNextBtn" title="Next Week">›</button>
             <button type="button" class="week-today-btn" id="weekThisWeekBtn">This Week</button>
           </div>
-          <span class="week-table-hint">Click a cell to add · Click a task to edit · Drag to move</span>
+          <span class="week-table-hint">Click a cell to add · Double-click a task to edit · Drag to move</span>
         </div>
         <button type="button" class="toolbar-btn" id="weekExitBtn" title="Back to list view">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -223,7 +223,7 @@ export function renderWeekScheduleTable({
     // Inline text editing
     const textEl = chip.querySelector('.matrix-task-text');
     let cancelled = false;
-    textEl.addEventListener('click', (e) => {
+    textEl.addEventListener('dblclick', (e) => {
       e.stopPropagation();
       if (textEl.isContentEditable) return;
       cancelled = false;
@@ -273,7 +273,7 @@ function renderTaskChip(t) {
     <div class="matrix-task-item ${t.completed ? 'is-completed' : ''}" data-id="${t.id}" draggable="true">
       <input type="checkbox" class="matrix-task-check" ${t.completed ? 'checked' : ''} aria-label="Toggle completed" />
       <div class="matrix-task-body">
-        <span class="matrix-task-text" spellcheck="false" title="Click to edit">${escapeHtml(t.text)}</span>
+        <span class="matrix-task-text" spellcheck="false" title="Double-click to edit">${escapeHtml(t.text)}</span>
         ${timeLabel ? `<button type="button" class="matrix-task-time" title="Change time">${timeLabel}</button>` : ''}
       </div>
       <button type="button" class="matrix-task-del" title="Delete task" aria-label="Delete task">&times;</button>

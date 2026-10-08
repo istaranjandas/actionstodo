@@ -31,7 +31,7 @@ export const state = {
   selectedAddDate: getLocalISODate(),
   selectedAddStart: '',
   selectedAddEnd: '',
-  sortByTime: localStorage.getItem(SORT_TIME_KEY) !== 'false',
+  sortByTime: true,
   isTableView: false,
   unsubscribeFirestore: null
 };
@@ -106,7 +106,7 @@ export function getFilteredTasks() {
       return state.tasks.filter(t => t.completed);
     case 'all':
     default:
-      return state.tasks.filter(t => !t.date || t.date <= today);
+      return state.tasks;
   }
 }
 
