@@ -1,6 +1,6 @@
 // Main Application Bootstrapper & UI Coordinator
 import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
-import { getLocalISODate, formatShortDate, formatFriendlyDate } from './modules/dateUtils.js';
+import { getLocalISODate, formatShortDate, formatFriendlyDate, getWeekDates } from './modules/dateUtils.js';
 import { addMinutesToTime, formatTimeRangeDisplay, parseTimeFromText, getNextSmartSlot } from './modules/timeUtils.js';
 import { 
   state, 
@@ -19,7 +19,11 @@ import { setupTimePopover } from './modules/timePopover.js';
 import { renderWeekScheduleTable } from './modules/weekTable.js';
 import { setupListDragAndDrop, renderDropSlotsHtml } from './modules/listDrag.js';
 import { createMiniCalendar } from './modules/miniCalendar.js';
-import { getWeekDates } from './modules/dateUtils.js';
+import { soundFx } from './modules/audioFx.js';
+import { setupInteractiveEffects } from './modules/interactiveEffects.js';
+
+// Initialize interactive 3D vector effects (mouse follower, trailing sparks, click bursts, 3D card tilt)
+const interactiveEffects = setupInteractiveEffects();
 
 // DOM Elements
 const dateGroupsContainer = document.getElementById('dateGroupsContainer');
@@ -37,7 +41,6 @@ const quickAddTimeBtn = document.getElementById('quickAddTimeBtn');
 const quickAddTimeLabel = document.getElementById('quickAddTimeLabel');
 const clearQuickTimeBtn = document.getElementById('clearQuickTimeBtn');
 
-
 const weekTableBtn = document.getElementById('weekTableBtn');
 const weekTableBtnLabel = document.getElementById('weekTableBtnLabel');
 const weekTableBtnIcon = document.getElementById('weekTableBtnIcon');
@@ -50,14 +53,68 @@ const filterDropdownBtn = document.getElementById('filterDropdownBtn');
 const filterBtnLabel = document.getElementById('filterBtnLabel');
 const filterMenuItems = document.querySelectorAll('.filter-menu-item');
 const themeToggle = document.getElementById('themeToggle');
+const soundToggle = document.getElementById('soundToggle');
+const soundToggleIcon = document.getElementById('soundToggleIcon');
+
+const scene3dContainer = document.getElementById('scene3dContainer');
+const focusTotal = document.getElementById('focusTotal');
+const focusRemaining = document.getElementById('focusRemaining');
+const focusCompletion = document.getElementById('focusCompletion');
+const focusProgressText = document.getElementById('focusProgressText');
 
 let currentWeekOffset = 0;
+
+// Dynamically initialize the compact architectural focus scene without blocking interaction.
+let threeScene = null;
+if (scene3dContainer) {
+  import('./modules/threeScene.js')
+    .then(({ createThreeScene }) => {
+      threeScene = createThreeScene(scene3dContainer);
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      if (threeScene) {
+        threeScene.setTheme(currentTheme);
+        updateTelemetryHUD();
+      }
+    })
+    .catch((err) => {
+      console.warn('Three.js scene deferred load fallback:', err);
+    });
+}
+
+// --- Audio FX Toggle Management ---
+function updateSoundIcon(enabled) {
+  if (!soundToggle || !soundToggleIcon) return;
+  if (enabled) {
+    soundToggle.classList.remove('is-muted');
+    soundToggle.setAttribute('title', 'Audio FX: Enabled');
+    soundToggleIcon.innerHTML = `
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+    `;
+  } else {
+    soundToggle.classList.add('is-muted');
+    soundToggle.setAttribute('title', 'Audio FX: Muted');
+    soundToggleIcon.innerHTML = `
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <line x1="23" y1="9" x2="17" y2="15"></line>
+      <line x1="17" y1="9" x2="23" y2="15"></line>
+    `;
+  }
+}
+
+if (soundToggle) {
+  updateSoundIcon(soundFx.isEnabled());
+  soundToggle.addEventListener('click', () => {
+    const isNowOn = soundFx.toggle();
+    updateSoundIcon(isNowOn);
+  });
+}
 
 // --- Theme Management ---
 function updateThemeIcon(theme) {
   if (!themeToggle) return;
   if (theme === 'dark') {
-    themeToggle.setAttribute('title', 'Switch to Light Mode');
+    themeToggle.setAttribute('title', 'Switch to Light mode');
     themeToggle.setAttribute('aria-label', 'Switch to Light Mode');
     themeToggle.innerHTML = `
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -73,7 +130,7 @@ function updateThemeIcon(theme) {
       </svg>
     `;
   } else {
-    themeToggle.setAttribute('title', 'Switch to Dark Mode');
+    themeToggle.setAttribute('title', 'Switch to Dark mode');
     themeToggle.setAttribute('aria-label', 'Switch to Dark Mode');
     themeToggle.innerHTML = `
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -85,14 +142,17 @@ function updateThemeIcon(theme) {
 
 function initTheme() {
   const savedTheme = localStorage.getItem(THEME_KEY);
-  let activeTheme = 'light';
+  let activeTheme = 'dark'; // AAA Game cinematic default
   if (savedTheme) {
     activeTheme = savedTheme;
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    activeTheme = 'dark';
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    activeTheme = 'light';
   }
   document.documentElement.setAttribute('data-theme', activeTheme);
   updateThemeIcon(activeTheme);
+  if (threeScene) {
+    threeScene.setTheme(activeTheme);
+  }
 }
 
 function toggleTheme() {
@@ -101,16 +161,40 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem(THEME_KEY, next);
   updateThemeIcon(next);
+  if (threeScene) {
+    threeScene.setTheme(next);
+  }
+  soundFx.playClick();
 }
 
 if (themeToggle) {
   themeToggle.addEventListener('click', toggleTheme);
 }
 
+// --- Honest task summary for the focus window ---
+function updateTelemetryHUD() {
+  const allTasks = state.tasks || [];
+  const total = allTasks.length;
+  const completed = allTasks.filter(t => t.completed).length;
+  const active = total - completed;
+  const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  if (focusTotal) focusTotal.textContent = String(total);
+  if (focusRemaining) focusRemaining.textContent = String(active);
+  if (focusCompletion) focusCompletion.textContent = `${rate}%`;
+  if (focusProgressText) {
+    focusProgressText.textContent = total ? `${completed} of ${total} completed` : 'No tasks yet';
+  }
+  if (threeScene && typeof threeScene.updateProgress === 'function') {
+    threeScene.updateProgress(completed, total);
+  }
+}
+
 // --- Time Popover Setup ---
 const popover = setupTimePopover({
   getState: () => state,
   onTimeApplied: (start, end, context) => {
+    soundFx.playClick();
     if (context.type === 'quick') {
       state.selectedAddStart = start;
       state.selectedAddEnd = end;
@@ -133,6 +217,7 @@ if (quickAddDateInput) {
     if (e.target.value) {
       state.selectedAddDate = e.target.value;
       updateQuickAddDateDisplay();
+      soundFx.playClick();
     }
   });
 }
@@ -159,6 +244,7 @@ quickAddInput.addEventListener('input', updateQuickAddTimeDisplay);
 
 clearQuickTimeBtn.addEventListener('click', (e) => {
   e.stopPropagation();
+  soundFx.playClick();
   state.selectedAddStart = '';
   state.selectedAddEnd = '';
   updateQuickAddTimeDisplay();
@@ -166,10 +252,11 @@ clearQuickTimeBtn.addEventListener('click', (e) => {
 
 quickAddTimeBtn.addEventListener('click', (e) => {
   e.stopPropagation();
+  soundFx.playClick();
   popover.openTimePopover(quickAddTimeBtn, state.selectedAddStart, state.selectedAddEnd, { type: 'quick' });
 });
 
-// Quick Add Submit (Supports tap button, mobile keyboard Done/Go, and Enter key)
+// Quick Add Submit (Supports click, keyboard Done/Go, and Enter key)
 async function handleQuickAddSubmit(e) {
   if (e) {
     e.preventDefault();
@@ -184,6 +271,15 @@ async function handleQuickAddSubmit(e) {
   const end = parsed ? parsed.endTime : state.selectedAddEnd;
 
   await addTask(text, state.selectedAddDate, start, end);
+  soundFx.playAdd();
+  if (threeScene) {
+    threeScene.triggerPulse();
+  }
+  if (interactiveEffects) {
+    const rect = quickAddInput.getBoundingClientRect();
+    interactiveEffects.spawnBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, true);
+  }
+
   quickAddInput.value = '';
   state.selectedAddStart = '';
   state.selectedAddEnd = '';
@@ -216,7 +312,6 @@ function updateViewModeDisplay() {
   if (isNonDesktopDevice()) {
     state.isTableView = false;
   }
-  // Table view is full-screen: CSS hides the toolbar and quick-add box
   document.body.classList.toggle('is-table-view', state.isTableView);
   if (!weekTableBtn) return;
   if (state.isTableView) {
@@ -248,6 +343,7 @@ function updateViewModeDisplay() {
 if (weekTableBtn) {
   weekTableBtn.addEventListener('click', () => {
     if (isNonDesktopDevice()) return;
+    soundFx.playClick();
     state.isTableView = !state.isTableView;
     updateViewModeDisplay();
     renderTasks();
@@ -330,10 +426,11 @@ function updateViewTitle() {
   if (state.specificDateFilter) {
     const { title, sub } = formatFriendlyDate(state.specificDateFilter);
     viewTitleEl.textContent = title;
-    viewSubtitleEl.textContent = sub;
+    viewSubtitleEl.textContent = sub || '';
   } else {
     viewTitleEl.textContent = VIEW_TITLES[state.currentView] || 'Tasks';
-    viewSubtitleEl.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    const dateFormatted = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    viewSubtitleEl.textContent = dateFormatted;
   }
 }
 
@@ -341,7 +438,10 @@ const miniCalendarEl = document.getElementById('miniCalendar');
 const miniCalendar = miniCalendarEl
   ? createMiniCalendar({
       container: miniCalendarEl,
-      onPick: (dateStr) => setDateFilter(dateStr === state.specificDateFilter ? null : dateStr)
+      onPick: (dateStr) => {
+        soundFx.playClick();
+        setDateFilter(dateStr === state.specificDateFilter ? null : dateStr);
+      }
     })
   : null;
 
@@ -368,15 +468,18 @@ function updateSidebar() {
     doneEl.textContent = n ? String(n) : '';
   }
   if (miniCalendar) miniCalendar.render({ tasks: state.tasks, selected: state.specificDateFilter });
+  updateTelemetryHUD();
 }
 
 filterDropdownBtn.addEventListener('click', (e) => {
   e.stopPropagation();
+  soundFx.playClick();
   filterDropdownWrap.classList.toggle('open');
 });
 
 filterMenuItems.forEach(btn => {
   btn.addEventListener('click', () => {
+    soundFx.playClick();
     state.isTableView = false;
     state.currentView = btn.dataset.view;
     if (state.specificDateFilter) {
@@ -394,8 +497,7 @@ filterMenuItems.forEach(btn => {
   });
 });
 
-// Transparent date inputs sit on top of their chip buttons, so clicks land on the input.
-// Open the native calendar from there (otherwise Chrome only focuses the hidden field).
+// Transparent date inputs trigger native picker
 document.addEventListener('click', (e) => {
   const input = e.target.closest && e.target.closest('.chip-date-input');
   if (!input) return;
@@ -406,7 +508,6 @@ document.addEventListener('click', (e) => {
   } catch (err) {}
 });
 
-// Picking a date shows that day's tasks and makes new tasks go to that day
 function setDateFilter(dateStr) {
   if (dateStr) {
     state.isTableView = false;
@@ -425,39 +526,51 @@ function setDateFilter(dateStr) {
 }
 
 dateFilterInput.addEventListener('change', (e) => {
+  soundFx.playClick();
   setDateFilter(e.target.value);
 });
 
 if (clearDateFilterBtn) {
-  clearDateFilterBtn.addEventListener('click', () => setDateFilter(null));
+  clearDateFilterBtn.addEventListener('click', () => {
+    soundFx.playClick();
+    setDateFilter(null);
+  });
 }
 
 // --- Main Render Logic ---
 function renderTasks() {
   updateSidebar();
+  const focusWindowEl = document.getElementById('focusWindow');
   if (state.isTableView && !isNonDesktopDevice()) {
+    if (focusWindowEl) focusWindowEl.style.display = 'none';
     renderWeekScheduleTable({
       container: dateGroupsContainer,
       tasks: state.tasks,
       weekOffset: currentWeekOffset,
       onPrevWeek: () => {
+        soundFx.playClick();
         currentWeekOffset -= 1;
         renderTasks();
       },
       onNextWeek: () => {
+        soundFx.playClick();
         currentWeekOffset += 1;
         renderTasks();
       },
       onThisWeek: () => {
+        soundFx.playClick();
         currentWeekOffset = 0;
         renderTasks();
       },
       onExitTable: () => {
+        soundFx.playClick();
         state.isTableView = false;
         updateViewModeDisplay();
         renderTasks();
       },
       onAddTask: async (text, dateStr, start, end) => {
+        soundFx.playAdd();
+        if (threeScene) threeScene.triggerPulse();
         const parsed = parseTimeFromText(text);
         if (parsed) {
           await addTask(parsed.cleanText, dateStr, parsed.startTime, parsed.endTime);
@@ -467,13 +580,24 @@ function renderTasks() {
         renderTasks();
       },
       onToggleComplete: async (taskId, completed) => {
+        if (completed) {
+          soundFx.playComplete();
+          if (threeScene) threeScene.triggerPulse();
+          if (interactiveEffects) {
+            interactiveEffects.spawnCelebration(window.innerWidth / 2, 280);
+          }
+        } else {
+          soundFx.playClick();
+        }
         await updateTaskItem(taskId, { completed });
         renderTasks();
       },
       onEditText: async (taskId, newText) => {
         if (!newText) {
+          soundFx.playDelete();
           await deleteTaskItem(taskId);
         } else {
+          soundFx.playClick();
           const parsed = parseTimeFromText(newText);
           if (parsed) {
             await updateTaskItem(taskId, { text: parsed.cleanText, startTime: parsed.startTime, endTime: parsed.endTime });
@@ -484,19 +608,24 @@ function renderTasks() {
         renderTasks();
       },
       onDeleteTask: async (taskId) => {
+        soundFx.playDelete();
         await deleteTaskItem(taskId);
         renderTasks();
       },
       onMoveTask: async (taskId, dateStr, start, end) => {
+        soundFx.playClick();
         await updateTaskItem(taskId, { date: dateStr, startTime: start, endTime: end });
         renderTasks();
       },
       onTimeClick: (triggerEl, task) => {
+        soundFx.playClick();
         popover.openTimePopover(triggerEl, task.startTime, task.endTime, { type: 'task', taskId: task.id });
       }
     });
     return;
   }
+
+  if (focusWindowEl) focusWindowEl.style.display = 'none';
 
   const today = getLocalISODate();
   const filtered = getFilteredTasks();
@@ -514,7 +643,6 @@ function renderTasks() {
   // Collect unique dates
   const dateSet = new Set(groupsMap.keys());
   if (state.specificDateFilter) {
-    // Always show the picked day, even when empty, so tasks can be added to it
     dateSet.add(state.specificDateFilter);
   } else if (state.currentView === 'all' || state.currentView === 'today') {
     dateSet.add(today);
@@ -523,16 +651,12 @@ function renderTasks() {
   if (dateSet.size === 0) {
     dateGroupsContainer.innerHTML = `
       <div class="empty-state">
-        No tasks found for this view. Press Enter in the input above to create one.
+        No tasks found. Add a task above to get started.
       </div>
     `;
     return;
   }
 
-  // Sort dates:
-  // In upcoming / this-week view: ascending forward in time
-  // In all view: Today first, then upcoming days (ascending), then past days (descending)
-  // Otherwise: descending
   const dateRank = (d) => (d === today ? 0 : d > today ? 1 : 2);
   const sortedDates = Array.from(dateSet).sort((a, b) => {
     if (a === 'Undated') return 1;
@@ -570,7 +694,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
         <span class="date-group-name">${title}</span>
         <span class="date-group-subname">${sub}</span>
       </div>
-      <span class="date-group-count">${completedCount}/${groupTasks.length}</span>
+      <span class="date-group-count">${completedCount} of ${groupTasks.length}</span>
     </div>
     <div class="task-list" id="group-list-${dateKey}"></div>
     ${dateKey !== 'Undated' ? renderDropSlotsHtml(dateKey, groupTasks) : ''}
@@ -628,7 +752,18 @@ function renderDateGroupElement(dateKey, groupTasks) {
     // Event: Toggle completed
     const checkbox = row.querySelector('.task-checkbox');
     checkbox.addEventListener('change', async () => {
-      await updateTaskItem(task.id, { completed: checkbox.checked });
+      const isChecked = checkbox.checked;
+      if (isChecked) {
+        soundFx.playComplete();
+        if (threeScene) threeScene.triggerPulse();
+        if (interactiveEffects) {
+          const rect = checkbox.getBoundingClientRect();
+          interactiveEffects.spawnCelebration(rect.left + rect.width / 2, rect.top - 12);
+        }
+      } else {
+        soundFx.playClick();
+      }
+      await updateTaskItem(task.id, { completed: isChecked });
       renderTasks();
     });
 
@@ -636,6 +771,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
     const nudgePrev = row.querySelector('.nudge-prev');
     nudgePrev.addEventListener('click', async (e) => {
       e.stopPropagation();
+      soundFx.playClick();
       const baseStart = task.startTime || '09:00';
       const duration = (task.startTime && task.endTime) ? (parseInt(task.endTime.split(':')[0]) * 60 + parseInt(task.endTime.split(':')[1]) - (parseInt(baseStart.split(':')[0]) * 60 + parseInt(baseStart.split(':')[1]))) : 30;
       const newStart = addMinutesToTime(baseStart, -30);
@@ -648,6 +784,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
     const nudgeNext = row.querySelector('.nudge-next');
     nudgeNext.addEventListener('click', async (e) => {
       e.stopPropagation();
+      soundFx.playClick();
       const baseStart = task.startTime || '09:00';
       const duration = (task.startTime && task.endTime) ? (parseInt(task.endTime.split(':')[0]) * 60 + parseInt(task.endTime.split(':')[1]) - (parseInt(baseStart.split(':')[0]) * 60 + parseInt(baseStart.split(':')[1]))) : 30;
       const newStart = addMinutesToTime(baseStart, 30);
@@ -660,14 +797,16 @@ function renderDateGroupElement(dateKey, groupTasks) {
     const timePill = row.querySelector('.task-time-pill');
     timePill.addEventListener('click', (e) => {
       e.stopPropagation();
+      soundFx.playClick();
       popover.openTimePopover(timePill, task.startTime, task.endTime, { type: 'task', taskId: task.id });
     });
 
-    // Inline edit text: double-click to edit (single click + drag moves the task)
+    // Inline edit text: double-click to edit
     const textEl = row.querySelector('.task-text');
     let editCancelled = false;
     row.addEventListener('dblclick', (e) => {
       if (e.target.closest('button, input') || textEl.isContentEditable) return;
+      soundFx.playClick();
       editCancelled = false;
       row.draggable = false;
       row.classList.add('is-editing');
@@ -688,6 +827,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
       if (editCancelled) return;
       const newText = textEl.textContent.trim();
       if (newText && newText !== task.text) {
+        soundFx.playClick();
         const parsed = parseTimeFromText(newText);
         if (parsed) {
           await updateTaskItem(task.id, { text: parsed.cleanText, startTime: parsed.startTime, endTime: parsed.endTime });
@@ -696,6 +836,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
         }
         renderTasks();
       } else if (!newText) {
+        soundFx.playDelete();
         await deleteTaskItem(task.id);
         renderTasks();
       }
@@ -712,10 +853,11 @@ function renderDateGroupElement(dateKey, groupTasks) {
       }
     });
 
-    // Date picker (calendar opens via the shared .chip-date-input click handler)
+    // Date picker
     const datePicker = row.querySelector('.task-row-date-picker');
     datePicker.addEventListener('change', async (e) => {
       if (e.target.value) {
+        soundFx.playClick();
         await updateTaskItem(task.id, { date: e.target.value });
         renderTasks();
       }
@@ -725,6 +867,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
     const delBtn = row.querySelector('.delete-btn');
     delBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
+      soundFx.playDelete();
       await deleteTaskItem(task.id);
       renderTasks();
     });
@@ -734,6 +877,7 @@ function renderDateGroupElement(dateKey, groupTasks) {
 
   const inlineAdd = groupEl.querySelector('.inline-add-row');
   inlineAdd.addEventListener('click', () => {
+    soundFx.playClick();
     focusInlineAdd(dateKey);
   });
 
@@ -744,6 +888,7 @@ setupListDragAndDrop({
   container: dateGroupsContainer,
   getTask: (id) => state.tasks.find(t => t.id === id),
   onMove: async (taskId, updates) => {
+    soundFx.playClick();
     await updateTaskItem(taskId, updates);
     renderTasks();
   }
@@ -780,6 +925,7 @@ function updateAuthUI() {
 
 if (googleSignInBtn) {
   googleSignInBtn.addEventListener('click', async () => {
+    soundFx.playClick();
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
@@ -793,6 +939,7 @@ if (googleSignInBtn) {
 
 if (googleSignOutBtn) {
   googleSignOutBtn.addEventListener('click', async () => {
+    soundFx.playClick();
     try {
       await signOut(auth);
     } catch (err) {
@@ -824,7 +971,7 @@ updateQuickAddTimeDisplay();
 updateViewModeDisplay();
 updateFilterDisplay();
 
-// --- Creator Boy Badge & Popup Modal ---
+// --- Creator Dossier Dock & Modal ---
 const creatorBadgeDock = document.getElementById('creatorBadgeDock');
 const creatorBoyBtn = document.getElementById('creatorBoyBtn');
 const creatorPopup = document.getElementById('creatorPopup');
@@ -835,12 +982,14 @@ const creatorCopyLabel = document.getElementById('creatorCopyLabel');
 if (creatorBoyBtn && creatorPopup) {
   creatorBoyBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    soundFx.playClick();
     creatorPopup.classList.toggle('open');
   });
 
   if (creatorPopupCloseBtn) {
     creatorPopupCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      soundFx.playClick();
       creatorPopup.classList.remove('open');
     });
   }
@@ -861,6 +1010,7 @@ if (creatorBoyBtn && creatorPopup) {
 if (creatorCopyEmailBtn && creatorCopyLabel) {
   creatorCopyEmailBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
+    soundFx.playClick();
     const email = 'istaranjandas@gmail.com';
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -878,7 +1028,8 @@ if (creatorCopyEmailBtn && creatorCopyLabel) {
     }
   });
 }
-// --- Devil Mascot Warning Popup ---
+
+// --- Friendly reminder modal ---
 const devilLogoBtn = document.getElementById('devilLogoBtn');
 const devilPopup = document.getElementById('devilPopup');
 const devilPopupClose = document.getElementById('devilPopupClose');
@@ -887,12 +1038,14 @@ const devilPopupAckBtn = document.getElementById('devilPopupAckBtn');
 if (devilLogoBtn && devilPopup) {
   devilLogoBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    soundFx.playClick();
     devilPopup.classList.toggle('open');
   });
 
   if (devilPopupClose) {
     devilPopupClose.addEventListener('click', (e) => {
       e.stopPropagation();
+      soundFx.playClick();
       devilPopup.classList.remove('open');
     });
   }
@@ -900,6 +1053,7 @@ if (devilLogoBtn && devilPopup) {
   if (devilPopupAckBtn) {
     devilPopupAckBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      soundFx.playClick();
       devilPopup.classList.remove('open');
     });
   }

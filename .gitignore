@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Test scripts & artifacts
+*.png
+*.jpg
+verify-*.js
+public/models/
+
