@@ -1,27 +1,27 @@
 // Date Utility Functions
 
-export function getLocalISODate(d = new Date()) {
+export function getLocalISODate(d: Date = new Date()): string {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-export function addDays(isoStr, count) {
+export function addDays(isoStr: string, count: number): string {
   const parts = isoStr.split('-').map(Number);
   const d = new Date(parts[0], parts[1] - 1, parts[2]);
   d.setDate(d.getDate() + count);
   return getLocalISODate(d);
 }
 
-export function getWeekDates(offsetWeeks = 0) {
+export function getWeekDates(offsetWeeks = 0): string[] {
   const now = new Date();
   const dayOfWeek = now.getDay();
   const diffToMon = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
   const monday = new Date(now);
   monday.setDate(now.getDate() + diffToMon + (offsetWeeks * 7));
 
-  const days = [];
+  const days: string[] = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
@@ -30,7 +30,7 @@ export function getWeekDates(offsetWeeks = 0) {
   return days;
 }
 
-export function formatFriendlyDate(isoStr) {
+export function formatFriendlyDate(isoStr: string | null | undefined): { title: string; sub: string } {
   if (!isoStr) return { title: 'No Date', sub: '' };
   const today = getLocalISODate();
   const tomorrow = addDays(today, 1);
@@ -54,7 +54,7 @@ export function formatFriendlyDate(isoStr) {
   }
 }
 
-export function formatShortDate(isoStr) {
+export function formatShortDate(isoStr: string): string {
   const today = getLocalISODate();
   if (isoStr === today) return 'Today';
   if (isoStr === addDays(today, 1)) return 'Tomorrow';
@@ -64,7 +64,7 @@ export function formatShortDate(isoStr) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-export function formatWeekRangeLabel(dates) {
+export function formatWeekRangeLabel(dates: string[]): string {
   if (!dates || dates.length < 7) return '';
   const startParts = dates[0].split('-').map(Number);
   const endParts = dates[6].split('-').map(Number);

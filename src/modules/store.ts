@@ -1,11 +1,7 @@
 // State Management & Firestore Cloud Sync
+import type { User } from 'firebase/auth';
 import { 
-  auth, 
-  googleProvider, 
   db, 
-  signInWithPopup, 
-  signOut, 
-  onAuthStateChanged,
   collection, 
   addDoc, 
   updateDoc, 
@@ -15,18 +11,19 @@ import {
   where, 
   onSnapshot, 
   writeBatch 
-} from '../firebase.js';
-import { getLocalISODate, getWeekDates } from './dateUtils.js';
+} from '../firebase';
+import { getLocalISODate, getWeekDates } from './dateUtils';
+import type { AppState, Task } from '../types';
 
 export const STORAGE_KEY = 'todo_do_tasks_v1';
 export const THEME_KEY = 'notion_minimal_theme';
 export const TITLE_KEY = 'notion_minimal_title';
 export const SORT_TIME_KEY = 'notion_minimal_sort_time_v2';
 
-export const state = {
+export const state: AppState = {
   tasks: loadTasks(),
   currentUser: null,
-  currentView: 'all', // 'all', 'today', 'upcoming', 'completed', 'this-week'
+  currentView: 'all',
   specificDateFilter: null,
   selectedAddDate: getLocalISODate(),
   selectedAddStart: '',
@@ -36,7 +33,30 @@ export const state = {
   unsubscribeFirestore: null
 };
 
-export function loadTasks() {
+// Subscribers re-render React whenever state changes
+const listeners = new Set<() => void>();
+let stateVersion = 0;
+
+export function subscribeStore(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+export function getStoreVersion(): number {
+  return stateVersion;
+}
+
+export function notifyStore(): void {
+  stateVersion += 1;
+  listeners.forEach(listener => listener());
+}
+
+export function setUiState(updates: Partial<AppState>): void {
+  Object.assign(state, updates);
+  notifyStore();
+}
+
+export function loadTasks(): Task[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
@@ -46,7 +66,7 @@ export function loadTasks() {
   return [];
 }
 
-export function saveLocalTasks() {
+export function saveLocalTasks(): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
   } catch (e) {
@@ -55,7 +75,7 @@ export function saveLocalTasks() {
 }
 
 // Sorting logic
-export function sortTaskList(taskList, sortByTime = true) {
+export function sortTaskList(taskList: Task[], sortByTime = true): Task[] {
   return [...taskList].sort((a, b) => {
     if (a.date !== b.date) {
       return a.date.localeCompare(b.date);
@@ -84,7 +104,7 @@ export function sortTaskList(taskList, sortByTime = true) {
 }
 
 // Filtering logic
-export function getFilteredTasks() {
+export function getFilteredTasks(): Task[] {
   const today = getLocalISODate();
 
   if (state.specificDateFilter) {
@@ -111,7 +131,7 @@ export function getFilteredTasks() {
 }
 
 // Cloud & Mutation Operations
-export async function addTask(finalText, targetDate, finalStart = '', finalEnd = '') {
+export async function addTask(finalText: string, targetDate: string, finalStart = '', finalEnd = ''): Promise<void> {
   if (state.currentUser) {
     try {
       await addDoc(collection(db, 'tasks'), {
@@ -127,7 +147,7 @@ export async function addTask(finalText, targetDate, finalStart = '', finalEnd =
       console.error('Error adding cloud task:', err);
     }
   } else {
-    const newTask = {
+    const newTask: Task = {
       id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
       text: finalText,
       date: targetDate,
@@ -136,16 +156,19 @@ export async function addTask(finalText, targetDate, finalStart = '', finalEnd =
       completed: false,
       createdAt: Date.now()
     };
-    state.tasks.push(newTask);
+    state.tasks = [...state.tasks, newTask];
     saveLocalTasks();
+    notifyStore();
   }
 }
 
-export async function updateTaskItem(taskId, updates) {
-  const task = state.tasks.find(t => t.id === taskId);
-  if (task) {
-    Object.assign(task, updates);
+export async function updateTaskItem(taskId: string, updates: Partial<Task>): Promise<void> {
+  const index = state.tasks.findIndex(t => t.id === taskId);
+  if (index !== -1) {
+    state.tasks[index] = { ...state.tasks[index], ...updates };
+    state.tasks = [...state.tasks];
     saveLocalTasks();
+    notifyStore();
     if (state.currentUser) {
       try {
         await updateDoc(doc(db, 'tasks', taskId), updates);
@@ -156,10 +179,11 @@ export async function updateTaskItem(taskId, updates) {
   }
 }
 
-export async function deleteTaskItem(taskId) {
+export async function deleteTaskItem(taskId: string): Promise<void> {
   // Optimistically remove from local state immediately
   state.tasks = state.tasks.filter(t => t.id !== taskId);
   saveLocalTasks();
+  notifyStore();
 
   if (state.currentUser) {
     try {
@@ -170,12 +194,13 @@ export async function deleteTaskItem(taskId) {
   }
 }
 
-export async function clearCompletedTasks() {
+export async function clearCompletedTasks(): Promise<void> {
   const completedTasks = state.tasks.filter(t => t.completed);
   if (completedTasks.length === 0) return;
 
   state.tasks = state.tasks.filter(t => !t.completed);
   saveLocalTasks();
+  notifyStore();
 
   if (state.currentUser) {
     const batch = writeBatch(db);
@@ -187,7 +212,7 @@ export async function clearCompletedTasks() {
 }
 
 // Firestore Realtime Listener
-export function initFirestoreSync(user, onSyncUpdate) {
+export function initFirestoreSync(user: User, onSyncUpdate?: () => void): void {
   if (state.unsubscribeFirestore) {
     state.unsubscribeFirestore();
   }
@@ -210,6 +235,7 @@ export function initFirestoreSync(user, onSyncUpdate) {
     });
     state.tasks = state.tasks.filter(t => !t.id.startsWith('task_'));
     saveLocalTasks();
+    notifyStore();
     batch.commit().catch(err => console.error('Migration error:', err));
   }
 
@@ -219,20 +245,22 @@ export function initFirestoreSync(user, onSyncUpdate) {
     const cloudTasks = snapshot.docs.map(docSnap => ({
       id: docSnap.id,
       ...docSnap.data()
-    }));
+    }) as Task);
 
     state.tasks = cloudTasks;
     saveLocalTasks();
+    notifyStore();
     if (onSyncUpdate) onSyncUpdate();
   }, (err) => {
     console.error('Firestore sync error:', err);
   });
 }
 
-export function stopFirestoreSync() {
+export function stopFirestoreSync(): void {
   if (state.unsubscribeFirestore) {
     state.unsubscribeFirestore();
     state.unsubscribeFirestore = null;
   }
   state.tasks = loadTasks();
+  notifyStore();
 }

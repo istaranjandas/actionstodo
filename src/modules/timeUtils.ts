@@ -1,7 +1,15 @@
 // Time Utility & NLP Parsing Functions
-import { getLocalISODate } from './dateUtils.js';
+import { getLocalISODate } from './dateUtils';
+import type { Task } from '../types';
 
-export function addMinutesToTime(timeStr, minutesToAdd = 30) {
+export interface ParsedTime {
+  cleanText: string;
+  startTime: string;
+  endTime: string;
+  raw: string;
+}
+
+export function addMinutesToTime(timeStr: string, minutesToAdd = 30): string {
   if (!timeStr) return '';
   const [hStr, mStr] = timeStr.split(':');
   let totalMinutes = parseInt(hStr, 10) * 60 + parseInt(mStr, 10) + minutesToAdd;
@@ -11,7 +19,7 @@ export function addMinutesToTime(timeStr, minutesToAdd = 30) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-export function getDurationMinutes(startStr, endStr) {
+export function getDurationMinutes(startStr: string | undefined, endStr: string | undefined): number {
   if (!startStr || !endStr) return 30;
   const [h1, m1] = startStr.split(':').map(Number);
   const [h2, m2] = endStr.split(':').map(Number);
@@ -20,7 +28,7 @@ export function getDurationMinutes(startStr, endStr) {
   return diff;
 }
 
-export function parseTimeComponent(timeStr) {
+export function parseTimeComponent(timeStr: string): { formatted: string; period: string } {
   if (!timeStr) return { formatted: '', period: '' };
   const [hStr, mStr] = timeStr.split(':');
   let h = parseInt(hStr, 10);
@@ -29,7 +37,7 @@ export function parseTimeComponent(timeStr) {
   return { formatted: `${h}:${mStr}`, period };
 }
 
-export function formatTimeRangeDisplay(startTime, endTime) {
+export function formatTimeRangeDisplay(startTime: string | undefined, endTime?: string): string {
   if (!startTime) return '';
   const s = parseTimeComponent(startTime);
   if (!endTime) return `${s.formatted} ${s.period}`;
@@ -41,7 +49,7 @@ export function formatTimeRangeDisplay(startTime, endTime) {
   return `${s.formatted} ${s.period} – ${e.formatted} ${e.period}`;
 }
 
-export function normalizeTimeString(str, hint = '') {
+export function normalizeTimeString(str: string | undefined, hint = ''): string | null {
   if (!str) return null;
   str = str.trim().toLowerCase();
   let isPM = str.includes('pm');
@@ -53,7 +61,7 @@ export function normalizeTimeString(str, hint = '') {
   }
 
   const clean = str.replace(/[a-z]/g, '').trim();
-  let [hStr, mStr] = clean.split(':');
+  const [hStr, mStr] = clean.split(':');
   let h = parseInt(hStr, 10);
   let m = mStr ? parseInt(mStr, 10) : 0;
 
@@ -71,7 +79,7 @@ export function normalizeTimeString(str, hint = '') {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-export function parseTimeFromText(text) {
+export function parseTimeFromText(text: string): ParsedTime | null {
   if (!text) return null;
 
   // Range regex: "10am-11am", "10:00 - 11:30", "2pm to 3:30pm", "9 to 10am", "2-3pm"
@@ -101,7 +109,7 @@ export function parseTimeFromText(text) {
   return null;
 }
 
-export function getNextSmartSlot(dateStr, tasksList = []) {
+export function getNextSmartSlot(dateStr: string, tasksList: Task[] = []): { startTime: string; endTime: string } {
   const dayTasks = tasksList
     .filter(t => t.date === dateStr && t.startTime)
     .sort((a, b) => (a.endTime || a.startTime).localeCompare(b.endTime || b.startTime));
@@ -120,7 +128,7 @@ export function getNextSmartSlot(dateStr, tasksList = []) {
     const now = new Date();
     const curMin = now.getMinutes();
     let nextH = now.getHours();
-    let nextM = curMin < 30 ? 30 : 0;
+    const nextM = curMin < 30 ? 30 : 0;
     if (curMin >= 30) nextH = (nextH + 1) % 24;
     const start = `${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`;
     return {
