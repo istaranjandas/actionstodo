@@ -23,9 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-# Test scripts & artifacts
-*.png
-*.jpg
-verify-*.js
-public/models/
-
+# UI capture output
+.screenshots

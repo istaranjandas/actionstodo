@@ -15,7 +15,8 @@ A minimalist, high-productivity daily task manager and week planner with real-ti
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Vanilla JavaScript (ES Modules) + Vite
+- **Frontend**: React 19 + TypeScript + Vite
+- **3D & Motion**: Three.js, React Three Fiber, Drei, postprocessing, GSAP ScrollTrigger, Lenis
 - **Cloud Database**: Google Firebase Firestore
 - **Authentication**: Firebase Auth (Google Provider)
 - **Hosting**: Firebase Hosting & Vercel-ready
