@@ -2,12 +2,9 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useLivePalette } from './livePalette';
+import type { LivePalette } from './livePalette';
 import { smoothstep } from './noise';
 import { LAKE, TERRAIN_CENTER_Z, TERRAIN_LENGTH, TERRAIN_SEGMENTS_X, TERRAIN_SEGMENTS_Z, TERRAIN_WIDTH, terrainHeight } from './terrainShape';
-
-const VALLEY_COLOR = new THREE.Color('#5b5850');
-const ROCK_COLOR = new THREE.Color('#86827c');
-const SNOW_COLOR = new THREE.Color('#f2f2f0');
 
 // Low-poly faceted terrain (flatShading facets it); colour ramps by altitude and darkens in hollows
 // as a baked ambient shadow. Heights are sampled once into a grid so neighbours are free to read.
@@ -25,8 +22,7 @@ function buildTerrainGeometry(): THREE.BufferGeometry {
 
   const heightAt = (column: number, row: number) =>
     heights[Math.min(TERRAIN_SEGMENTS_Z, Math.max(0, row)) * rowLength + Math.min(TERRAIN_SEGMENTS_X, Math.max(0, column))];
-  const colors = new Float32Array(positions.count * 3);
-  const color = new THREE.Color();
+  const blends = new Float32Array(positions.count * 3);
   for (let i = 0; i < positions.count; i++) {
     const column = i % rowLength;
     const row = Math.floor(i / rowLength);
@@ -34,17 +30,38 @@ function buildTerrainGeometry(): THREE.BufferGeometry {
     const x = positions.getX(i);
     const z = positions.getZ(i);
     const snowLine = 54 + Math.sin(x * 0.07) * 6 + Math.cos(z * 0.05) * 5;
-    color.copy(VALLEY_COLOR).lerp(ROCK_COLOR, smoothstep(1.5, 20, height)).lerp(SNOW_COLOR, smoothstep(snowLine - 6, snowLine + 4, height));
     const neighbourAverage = (heightAt(column + 2, row) + heightAt(column - 2, row) + heightAt(column, row + 2) + heightAt(column, row - 2)) / 4;
     const occlusion = THREE.MathUtils.clamp(0.84 + (height - neighbourAverage) * 0.05, 0.55, 1.08) * (0.72 + 0.28 * smoothstep(-2, 16, height));
-    color.multiplyScalar(occlusion);
-    colors[i * 3] = color.r;
-    colors[i * 3 + 1] = color.g;
-    colors[i * 3 + 2] = color.b;
+    blends[i * 3] = smoothstep(1.5, 20, height);
+    blends[i * 3 + 1] = smoothstep(snowLine - 6, snowLine + 4, height);
+    blends[i * 3 + 2] = occlusion;
   }
-  plane.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  plane.setAttribute('terrainBlend', new THREE.BufferAttribute(blends, 3));
   plane.computeVertexNormals();
   return plane;
+}
+
+const TERRAIN_COLOR_PARS = /* glsl */ `
+  #include <common>
+  attribute vec3 terrainBlend;
+  uniform vec3 valleyColor;
+  uniform vec3 rockColor;
+  uniform vec3 peakColor;
+`;
+
+const TERRAIN_COLOR_VERTEX = /* glsl */ `
+  vColor = mix(mix(valleyColor, rockColor, terrainBlend.x), peakColor, terrainBlend.y) * terrainBlend.z;
+`;
+
+function buildTerrainMaterial(live: LivePalette): THREE.MeshStandardMaterial {
+  const material = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.94, metalness: 0 });
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.valleyColor = { value: live.colors.terrainValley };
+    shader.uniforms.rockColor = { value: live.colors.terrainRock };
+    shader.uniforms.peakColor = { value: live.colors.terrainPeak };
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', TERRAIN_COLOR_PARS).replace('#include <color_vertex>', TERRAIN_COLOR_VERTEX);
+  };
+  return material;
 }
 
 const LAKE_VERTEX = /* glsl */ `
@@ -64,6 +81,7 @@ const LAKE_FRAGMENT = /* glsl */ `
   uniform vec3 uSky;
   uniform vec3 uSun;
   uniform vec3 uSunDirection;
+  uniform float uGlintStrength;
   uniform float uTime;
   varying vec3 vWorldPosition;
   #include <fog_pars_fragment>
@@ -74,7 +92,7 @@ const LAKE_FRAGMENT = /* glsl */ `
     float fresnel = pow(1.0 - max(dot(toCamera, normal), 0.0), 3.0);
     float glint = pow(max(dot(reflect(-toCamera, normal), uSunDirection), 0.0), 140.0);
     // Dark water that mirrors the burning horizon: warm gold at grazing angles, a sun-glint path on top
-    vec3 color = mix(uDeep, uSky, 0.12 + fresnel * 0.7) + uSun * glint * 1.8;
+    vec3 color = mix(uDeep, uSky, 0.12 + fresnel * 0.7) + uSun * glint * uGlintStrength;
     gl_FragColor = vec4(color, 1.0);
     #include <colorspace_fragment>
     #include <fog_fragment>
@@ -84,7 +102,7 @@ const LAKE_FRAGMENT = /* glsl */ `
 export function Terrain({ animate }: { animate: boolean }) {
   const live = useLivePalette();
   const geometry = useMemo(buildTerrainGeometry, []);
-  const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.94, metalness: 0 }), []);
+  const material = useMemo(() => buildTerrainMaterial(live), [live]);
 
   const lakeGeometry = useMemo(() => {
     const circle = new THREE.CircleGeometry(LAKE.radius * 1.35, 48);
@@ -104,6 +122,7 @@ export function Terrain({ animate }: { animate: boolean }) {
             uSky: { value: new THREE.Color() },
             uSun: { value: new THREE.Color() },
             uSunDirection: { value: new THREE.Vector3() },
+            uGlintStrength: { value: 1.8 },
             uTime: { value: 0 }
           }
         ])
@@ -121,12 +140,13 @@ export function Terrain({ animate }: { animate: boolean }) {
     uniforms.uSky.value.copy(live.colors.skyHorizon);
     uniforms.uSun.value.copy(live.colors.sun);
     uniforms.uSunDirection.value.copy(live.sunDirection);
+    uniforms.uGlintStrength.value = live.numbers.waterGlintStrength;
     if (animate) uniforms.uTime.value = clock.elapsedTime;
   });
 
   return (
     <>
-      <mesh geometry={geometry} material={material} />
+      <mesh geometry={geometry} material={material} receiveShadow />
       <mesh geometry={lakeGeometry} material={lakeMaterial} position={[LAKE.x, LAKE.level, LAKE.z]} />
     </>
   );

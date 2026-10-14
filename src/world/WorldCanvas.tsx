@@ -98,15 +98,67 @@ function AdaptiveResolution({ enabled, startStep }: { enabled: boolean; startSte
   return null;
 }
 
+const SHADOW_HALF_EXTENT = 64;
+const SHADOW_MAP_SIZE = 2048;
+const SHADOW_TEXEL = (SHADOW_HALF_EXTENT * 2) / SHADOW_MAP_SIZE;
+const SHADOW_REACH = 28;
+const SHADOW_REACH_PER_HEIGHT = 0.8;
+const SHADOW_LIGHT_DISTANCE = 160;
+const SUN_DISTANCE = 120;
+const WORLD_UP = new THREE.Vector3(0, 1, 0);
+const shadowCentre = new THREE.Vector3();
+const viewDirection = new THREE.Vector3();
+const lightRight = new THREE.Vector3();
+const lightUp = new THREE.Vector3();
+
+function placeShadowFrustum(sun: THREE.DirectionalLight, camera: THREE.Camera, towardSun: THREE.Vector3) {
+  camera.getWorldDirection(viewDirection).setY(0);
+  if (viewDirection.lengthSq() > 1e-6) viewDirection.normalize();
+  shadowCentre.copy(camera.position).addScaledVector(viewDirection, SHADOW_REACH + camera.position.y * SHADOW_REACH_PER_HEIGHT).setY(0);
+  lightRight.crossVectors(WORLD_UP, towardSun).normalize();
+  lightUp.crossVectors(towardSun, lightRight);
+  const across = Math.round(shadowCentre.dot(lightRight) / SHADOW_TEXEL) * SHADOW_TEXEL;
+  const along = Math.round(shadowCentre.dot(lightUp) / SHADOW_TEXEL) * SHADOW_TEXEL;
+  const depth = shadowCentre.dot(towardSun);
+  shadowCentre.copy(lightRight).multiplyScalar(across).addScaledVector(lightUp, along).addScaledVector(towardSun, depth);
+  sun.target.position.copy(shadowCentre);
+  sun.position.copy(shadowCentre).addScaledVector(towardSun, SHADOW_LIGHT_DISTANCE);
+}
+
 function Lighting() {
   const live = useLivePalette();
   const sun = useRef<THREE.DirectionalLight>(null);
   const sky = useRef<THREE.HemisphereLight>(null);
   const fill = useRef<THREE.AmbientLight>(null);
 
-  useFrame(() => {
+  useLayoutEffect(() => {
+    if (!sun.current) return;
+    const shadow = sun.current.shadow;
+    shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+    shadow.bias = -0.0002;
+    shadow.radius = 3;
+    const shadowCamera = shadow.camera;
+    shadowCamera.left = -SHADOW_HALF_EXTENT;
+    shadowCamera.right = SHADOW_HALF_EXTENT;
+    shadowCamera.top = SHADOW_HALF_EXTENT;
+    shadowCamera.bottom = -SHADOW_HALF_EXTENT;
+    shadowCamera.near = 1;
+    shadowCamera.far = SHADOW_LIGHT_DISTANCE * 2;
+    shadowCamera.updateProjectionMatrix();
+  }, []);
+
+  useFrame(({ camera }) => {
     if (sun.current) {
-      sun.current.position.copy(live.sunDirection).multiplyScalar(120);
+      const shadowStrength = live.numbers.shadowStrength;
+      sun.current.castShadow = shadowStrength > 0.01;
+      sun.current.shadow.intensity = shadowStrength;
+      if (sun.current.castShadow) {
+        placeShadowFrustum(sun.current, camera, live.sunDirection);
+      } else {
+        sun.current.position.copy(live.sunDirection).multiplyScalar(SUN_DISTANCE);
+        sun.current.target.position.set(0, 0, 0);
+      }
+      sun.current.target.updateMatrixWorld();
       sun.current.color.copy(live.colors.sun);
       sun.current.intensity = live.numbers.sunIntensity;
     }
@@ -185,6 +237,7 @@ export default function WorldCanvas(props: WorldCanvasProps) {
     <Canvas
       className="world-canvas"
       frameloop="demand"
+      shadows="percentage"
       dpr={Math.min(window.devicePixelRatio || 1, isCompact ? 1 : 1.25)}
       camera={{ fov: 48, near: 0.5, far: 1400, position: initialPose.position }}
       gl={{ antialias: true, alpha: false, stencil: false, powerPreference: 'high-performance' }}

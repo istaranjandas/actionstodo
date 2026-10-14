@@ -24,6 +24,7 @@ const SKY_FRAGMENT = /* glsl */ `
   uniform vec3 uGround;
   uniform vec3 uSun;
   uniform vec3 uSunDirection;
+  uniform float uRimHorizonMinimum;
   varying vec3 vDirection;
 
   float dither(vec2 co) {
@@ -39,7 +40,7 @@ const SKY_FRAGMENT = /* glsl */ `
     vec2 sunFlat = uSunDirection.xz;
     float facing = (length(viewFlat) > 0.0001 && length(sunFlat) > 0.0001) ? max(dot(normalize(viewFlat), normalize(sunFlat)), 0.0) : 0.0;
     vec3 rim = mix(uHorizon, uGlow, pow(facing, 6.0));
-    rim = mix(uEmber, rim, 0.3 + 0.7 * pow(facing, 1.6));
+    rim = mix(uEmber, rim, uRimHorizonMinimum + (1.0 - uRimHorizonMinimum) * pow(facing, 1.6));
     float warmBand = 0.07 + 0.11 * pow(facing, 3.0);
 
     vec3 color = mix(rim, uEmber, smoothstep(0.0, warmBand, height));
@@ -126,7 +127,8 @@ export function Sky({ animate }: { animate: boolean }) {
           uGlow: { value: new THREE.Color() },
           uGround: { value: new THREE.Color() },
           uSun: { value: new THREE.Color() },
-          uSunDirection: { value: new THREE.Vector3() }
+          uSunDirection: { value: new THREE.Vector3() },
+          uRimHorizonMinimum: { value: 0.3 }
         }
       }),
     []
@@ -160,6 +162,7 @@ export function Sky({ animate }: { animate: boolean }) {
     uniforms.uGround.value.copy(live.colors.skyGround);
     uniforms.uSun.value.copy(live.colors.sun);
     uniforms.uSunDirection.value.copy(live.sunDirection);
+    uniforms.uRimHorizonMinimum.value = live.numbers.skyRimHorizonMinimum;
     starMaterial.uniforms.uOpacity.value = live.numbers.starOpacity;
     starMaterial.uniforms.uPixelRatio.value = gl.getPixelRatio();
     if (animate) starMaterial.uniforms.uTime.value = clock.elapsedTime;

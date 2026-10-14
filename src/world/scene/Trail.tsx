@@ -13,7 +13,6 @@ const TRAIL_END_Z = -470;
 const TRAIL_STEP = 2;
 const TRAIL_HALF_WIDTH = 1.7;
 const MARKER_SPACING = 9;
-const MARKER_AMBER = new THREE.Color('#f59e0b');
 
 function buildTrailGeometry(): THREE.BufferGeometry {
   const rows = Math.floor((TRAIL_START_Z - TRAIL_END_Z) / TRAIL_STEP) + 1;
@@ -67,7 +66,7 @@ export function Trail({ animate }: { animate: boolean }) {
   const geometry = useMemo(buildTrailGeometry, []);
   const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, flatShading: true }), []);
   // Self-lit and untouched by tone mapping, so the markers read as glowing in the darkest dusk
-  const markerMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: MARKER_AMBER, toneMapped: false }), []);
+  const markerMaterial = useMemo(() => new THREE.MeshBasicMaterial({ toneMapped: false }), []);
 
   const markers = useMemo(() => {
     const placements: [number, number, number][] = [];
@@ -88,6 +87,7 @@ export function Trail({ animate }: { animate: boolean }) {
     const matrix = new THREE.Matrix4();
     markers.forEach((position, index) => mesh.setMatrixAt(index, matrix.makeTranslation(...position)));
     mesh.instanceMatrix.needsUpdate = true;
+    mesh.castShadow = true;
     return mesh;
   }, [markers, markerMaterial]);
 
@@ -103,16 +103,16 @@ export function Trail({ animate }: { animate: boolean }) {
 
   useFrame((_, delta) => {
     pulse.current = Math.max(0, pulse.current - Math.min(delta, 1 / 20) * PULSE_DECAY_PER_SECOND);
-    material.color.copy(live.colors.terrainTint).lerp(live.colors.snow, 0.25);
+    material.color.copy(live.colors.terrainTint).lerp(live.colors.snow, 0.25).lerp(live.colors.roadColor, live.numbers.roadColorBlend);
     material.emissive.copy(live.colors.beacon);
     material.emissiveIntensity = pulse.current * 0.35;
-    const glow = 0.55 + live.numbers.lanternGlow * 0.6 + pulse.current * 1.6;
-    markerMaterial.color.copy(MARKER_AMBER).multiplyScalar(glow);
+    const glow = THREE.MathUtils.lerp(1, 0.55 + live.numbers.lanternGlow * 0.6 + pulse.current * 1.6, live.numbers.markerGlow);
+    markerMaterial.color.copy(live.colors.marker).multiplyScalar(glow);
   });
 
   return (
     <>
-      <mesh geometry={geometry} material={material} />
+      <mesh geometry={geometry} material={material} receiveShadow />
       <primitive object={markerMesh} />
     </>
   );

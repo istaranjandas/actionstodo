@@ -348,6 +348,7 @@ export function DayPosts({ days, animate }: DayPostsProps) {
     materials.glow.uniforms.uColor.value.copy(live.colors.beacon);
     materials.glow.uniforms.uStrength.value = live.numbers.lanternGlow;
     materials.litGlass.color.copy(live.colors.beacon).lerp(WHITE, 0.18);
+    materials.wood.color.copy(live.colors.signpostWood);
     if (animate) materials.glow.uniforms.uTime.value = clock.elapsedTime;
 
     // Ignite lanterns that were just completed
@@ -410,15 +411,15 @@ export function DayPosts({ days, animate }: DayPostsProps) {
       if (focusPoint) {
         focusLight.current.position.set(focusPoint[0], focusPoint[1] - 2.4, focusPoint[2] + 0.8);
         focusLight.current.color.copy(live.colors.beacon);
-        focusLight.current.intensity = (22 + litCount * 9) * live.numbers.lanternGlow;
+        focusLight.current.intensity = (22 + litCount * 9) * live.numbers.lanternGlow * live.numbers.focusLightStrength;
       }
     }
     if (lightPool.current) {
-      lightPool.current.visible = Boolean(focusPoint);
+      lightPool.current.visible = Boolean(focusPoint) && live.numbers.poolStrength > 0.001;
       if (focusPoint) {
         lightPool.current.position.set(focusPoint[0], terrainHeight(focusPoint[0], focusPoint[2]) + 0.14, focusPoint[2]);
         materials.pool.uniforms.uColor.value.copy(live.colors.beacon);
-        materials.pool.uniforms.uStrength.value = (0.42 + Math.min(litCount, 6) * 0.05) * live.numbers.lanternGlow;
+        materials.pool.uniforms.uStrength.value = (0.42 + Math.min(litCount, 6) * 0.05) * live.numbers.lanternGlow * live.numbers.poolStrength;
       }
     }
 
@@ -473,18 +474,20 @@ export function DayPosts({ days, animate }: DayPostsProps) {
       <instancedMesh
         ref={shafts}
         args={[geometries.shaft, materials.wood, MAX_POSTS]}
+        castShadow
         onClick={handlePostClick}
         onPointerOver={() => (document.body.style.cursor = 'pointer')}
         onPointerOut={handleLeave}
       />
-      <instancedMesh ref={bases} args={[geometries.base, materials.stone, MAX_POSTS]} />
-      <instancedMesh ref={finials} args={[geometries.finial, materials.metal, MAX_POSTS]} />
-      <instancedMesh ref={arms} args={[geometries.arm, materials.wood, MAX_POSTS * 2]} />
+      <instancedMesh ref={bases} args={[geometries.base, materials.stone, MAX_POSTS]} castShadow />
+      <instancedMesh ref={finials} args={[geometries.finial, materials.metal, MAX_POSTS]} castShadow />
+      <instancedMesh ref={arms} args={[geometries.arm, materials.wood, MAX_POSTS * 2]} castShadow />
       <instancedMesh ref={strings} args={[geometries.string, materials.metal, MAX_LANTERNS]} />
-      <instancedMesh ref={caps} args={[geometries.cap, materials.metal, MAX_LANTERNS]} />
+      <instancedMesh ref={caps} args={[geometries.cap, materials.metal, MAX_LANTERNS]} castShadow />
       <instancedMesh
         ref={darkLanterns}
         args={[geometries.lantern, materials.darkGlass, MAX_LANTERNS]}
+        castShadow
         onPointerMove={handleHover(() => darkIds.current)}
         onPointerOut={handleLeave}
         onClick={handleOpen(() => darkIds.current)}
@@ -492,6 +495,7 @@ export function DayPosts({ days, animate }: DayPostsProps) {
       <instancedMesh
         ref={litLanterns}
         args={[geometries.lantern, materials.litGlass, MAX_LANTERNS]}
+        castShadow
         onPointerMove={handleHover(() => litIds.current)}
         onPointerOut={handleLeave}
         onClick={handleOpen(() => litIds.current)}
