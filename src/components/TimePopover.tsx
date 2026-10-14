@@ -1,9 +1,9 @@
 // Time Popover Modal Handling (1-Click Presets, Duration Pills, Micro-Nudges)
 import { createContext, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import type { CSSProperties } from 'react';
 import { addMinutesToTime, getDurationMinutes, getNextSmartSlot } from '../modules/timeUtils';
 import { state } from '../modules/store';
 import { playUiSound } from '../audio/uiSounds';
+import { useAnchoredPlacement } from '../hooks/useAnchoredPlacement';
 import type { TimePopoverContext as PopoverTarget } from '../types';
 
 export type OpenTimePopover = (triggerEl: HTMLElement, startVal: string, endVal: string, context: PopoverTarget) => void;
@@ -56,14 +56,15 @@ function formatDurationBadge(mins: number): string {
 export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(function TimePopover({ onTimeApplied }, ref) {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState<CSSProperties>({});
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const position = useAnchoredPlacement(anchorEl, popoverRef);
   const [startValue, setStartValue] = useState('');
   const [endValue, setEndValue] = useState('');
   const activeContext = useRef<PopoverTarget | null>(null);
 
   const closeTimePopover = useCallback(() => {
     setIsOpen(false);
-    setPosition({});
+    setAnchorEl(null);
     activeContext.current = null;
   }, []);
 
@@ -91,23 +92,7 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
       setStartValue(startVal);
       setEndValue(endVal);
 
-      if (window.innerWidth <= 680) {
-        setPosition({});
-      } else {
-        const rect = triggerEl.getBoundingClientRect();
-        let top = rect.bottom + 6;
-        let left = rect.left;
-
-        if (left + 330 > window.innerWidth) {
-          left = window.innerWidth - 336;
-        }
-        if (top + 340 > window.innerHeight) {
-          top = Math.max(10, rect.top - 336);
-        }
-
-        setPosition({ top: `${top}px`, left: `${Math.max(12, left)}px` });
-      }
-
+      setAnchorEl(triggerEl);
       setIsOpen(true);
     }
   }), []);

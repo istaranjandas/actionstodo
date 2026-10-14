@@ -11,6 +11,7 @@ import { useOpenTimePopover } from './TimePopover';
 import { useTaskSelection } from './TaskSelection';
 import { ClockIcon } from './Icons';
 import type { AppState, Task } from '../types';
+import { DatePicker } from './DatePicker';
 
 export type FeedLayout = 'column' | 'grid';
 
@@ -491,15 +492,12 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
       <div className="task-meta">
         <div className="picker-chip-wrap">
           <button type="button" className="task-date-chip" title="Change task date" tabIndex={-1}>{formatShortDate(task.date)}</button>
-          <input
-            type="date"
-            className="chip-date-input task-row-date-picker"
+          <DatePicker
+            className="task-row-date-picker"
             value={task.date}
-            aria-label="Change task date"
+            ariaLabel="Change task date"
             tabIndex={-1}
-            onChange={(e) => {
-              if (e.target.value) moveTask(task.id, { date: e.target.value });
-            }}
+            onChange={(date) => moveTask(task.id, { date })}
           />
         </div>
         <button

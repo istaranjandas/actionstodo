@@ -183,24 +183,6 @@ export function App() {
     });
   }, []);
 
-  // Transparent date inputs sit on top of their chip buttons, so clicks land on the input.
-  // Open the native calendar from there (otherwise Chrome only focuses the hidden field).
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      const input = e.target instanceof Element ? (e.target.closest('.chip-date-input') as HTMLInputElement | null) : null;
-      if (!input) return;
-      try {
-        if (typeof input.showPicker === 'function') {
-          input.showPicker();
-        }
-      } catch {
-        return;
-      }
-    };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
-
   // --- Motion, sound & 3D choreography ---
   useUiSounds();
 
