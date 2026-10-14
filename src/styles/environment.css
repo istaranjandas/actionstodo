@@ -1,0 +1,182 @@
+/* ==========================================================================
+   Environment: the world outside the console
+   Layers move only with transforms; --env-x / --env-y come from the pointer,
+   --env-scroll from the task feed. Each layer's depth sets how far it travels.
+   ========================================================================== */
+.environment {
+  --env-x: 0;
+  --env-y: 0;
+  --env-scroll: 0;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--env-sky-top);
+  /* Golden hour over obsidian, matching the 3D world in both hours: no pale sky, no white haze */
+  --env-sky-top: #07090e;
+  --env-sky-mid: #111622;
+  --env-sky-low: #b45309;
+  --env-sun: rgba(245, 158, 11, 0.5);
+  --env-ridge-far: #1e1b18;
+  --env-ridge-mid: #15161c;
+  --env-ridge-near: #0b0d13;
+  --env-haze: rgba(59, 24, 6, 0.22);
+  --env-rim: rgba(245, 158, 11, 0.55);
+  --env-vignette: rgba(0, 0, 0, 0.6);
+  --env-grain-opacity: 0.05;
+  --env-stars-opacity: 0.8;
+}
+
+[data-theme='light'] .environment {
+  --env-sky-top: #0d1220;
+  --env-sky-mid: #1b2232;
+  --env-sky-low: #d97706;
+  --env-stars-opacity: 0.3;
+}
+
+.environment > * {
+  position: absolute;
+}
+
+.env-sky {
+  inset: 0;
+  background:
+    radial-gradient(130% 70% at 62% 100%, var(--env-sky-low) 0%, transparent 62%),
+    linear-gradient(180deg, var(--env-sky-top) 0%, var(--env-sky-mid) 52%, var(--env-sky-low) 100%);
+}
+
+/* Six offset dot tiles of different sizes read as a random sky, not a grid */
+.env-stars {
+  inset: 0 0 32% 0;
+  opacity: var(--env-stars-opacity);
+  background-image:
+    radial-gradient(1px 1px at 23px 41px, rgba(228, 238, 255, 0.95) 50%, transparent 51%),
+    radial-gradient(1px 1px at 151px 97px, rgba(228, 238, 255, 0.7) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 88px 173px, rgba(255, 236, 214, 0.85) 50%, transparent 51%),
+    radial-gradient(1px 1px at 260px 22px, rgba(228, 238, 255, 0.6) 50%, transparent 51%),
+    radial-gradient(1px 1px at 197px 251px, rgba(228, 238, 255, 0.75) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 330px 140px, rgba(228, 238, 255, 0.9) 50%, transparent 51%);
+  background-size: 197px 211px, 233px 263px, 271px 229px, 311px 293px, 359px 331px, 419px 389px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.55) 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.55) 55%, transparent 100%);
+  transform: translate3d(calc(var(--env-x) * -3px), calc(var(--env-y) * -2px), 0);
+  animation: starsBreathe 11s ease-in-out infinite alternate;
+}
+
+@keyframes starsBreathe {
+  to {
+    opacity: calc(var(--env-stars-opacity) * 0.62);
+  }
+}
+
+/* Low sun (daylight) / last light of dusk: the warm key that rim-lights the ridges */
+.env-sun {
+  inset: 0;
+  background:
+    radial-gradient(26% 20% at 70% 74%, var(--env-sun) 0%, transparent 72%),
+    radial-gradient(60% 34% at 66% 82%, var(--env-sun) 0%, transparent 70%);
+  opacity: 0.9;
+  transform: translate3d(calc(var(--env-x) * -4px), calc(var(--env-scroll) * 0.015px), 0);
+}
+
+.env-ridge {
+  left: -4%;
+  bottom: -48px;
+  width: 108%;
+  display: block;
+  will-change: transform;
+}
+
+/* The ridge line catches the low sun; nearer ridges are backlit less */
+.env-ridge path {
+  fill: currentColor;
+  stroke: var(--env-rim);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.env-ridge-mid path {
+  stroke-opacity: 0.6;
+}
+
+.env-ridge-near path {
+  stroke-opacity: 0.35;
+}
+
+.env-ridge-far {
+  height: calc(54vh + 48px);
+  color: var(--env-ridge-far);
+  transform: translate3d(calc(var(--env-x) * -7px), calc(var(--env-y) * -3px + var(--env-scroll) * 0.025px), 0);
+}
+
+.env-ridge-mid {
+  height: calc(41vh + 48px);
+  color: var(--env-ridge-mid);
+  transform: translate3d(calc(var(--env-x) * -13px), calc(var(--env-y) * -5px + var(--env-scroll) * 0.05px), 0);
+}
+
+.env-ridge-near {
+  height: calc(27vh + 48px);
+  color: var(--env-ridge-near);
+  transform: translate3d(calc(var(--env-x) * -22px), calc(var(--env-y) * -8px + var(--env-scroll) * 0.085px), 0);
+}
+
+/* Fog banks: a tile exactly half the layer wide, so sliding -50% loops seamlessly */
+.env-haze {
+  left: 0;
+  width: 200%;
+  background-image:
+    radial-gradient(38% 58% at 18% 62%, var(--env-haze), transparent 72%),
+    radial-gradient(32% 48% at 58% 44%, var(--env-haze), transparent 72%),
+    radial-gradient(28% 56% at 86% 66%, var(--env-haze), transparent 72%);
+  background-size: 50% 100%;
+  background-repeat: repeat-x;
+  will-change: transform;
+}
+
+.env-haze-far {
+  bottom: 28vh;
+  height: 24vh;
+  animation: hazeDrift 170s linear infinite;
+}
+
+.env-haze-near {
+  bottom: 9vh;
+  height: 22vh;
+  opacity: 0.85;
+  animation: hazeDrift 120s linear infinite reverse;
+}
+
+@keyframes hazeDrift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Film grain gives the light a surface to land on; static, so it costs nothing per frame */
+.env-grain {
+  inset: 0;
+  opacity: var(--env-grain-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.env-vignette {
+  inset: 0;
+  background: radial-gradient(135% 100% at 50% 32%, transparent 52%, var(--env-vignette) 100%);
+}
+
+/* Phones: fewer moving layers keeps scrolling buttery on modest GPUs */
+@media (hover: none) and (pointer: coarse) {
+  .env-haze-far {
+    animation: none;
+  }
+
+  .env-grain {
+    display: none;
+  }
+}

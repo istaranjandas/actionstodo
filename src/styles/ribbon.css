@@ -1,0 +1,686 @@
+/* ==========================================================================
+   Path ribbon: a floating lens bar and, beneath it, the timeline track.
+   Two separate pieces, no shared box; the track fades into the edges and
+   glides the focused day to its centre.
+   ========================================================================== */
+.ribbon {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  width: min(1180px, calc(100% - var(--hud-inset) * 2));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: ribbonRise 600ms var(--ease-out);
+}
+
+.ribbon > * {
+  pointer-events: auto;
+}
+
+@keyframes ribbonRise {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(30px);
+  }
+}
+
+/* ---------- Lens bar ---------- */
+.lens-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 4px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--slate-top-colour), var(--slate-bottom-colour));
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 16px 34px -18px rgba(0, 0, 0, 0.8);
+}
+
+.lens-bar .view-nav-list {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.lens-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+}
+
+.timeline-month {
+  margin-right: 4px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.ribbon-tool,
+.timeline-step {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
+  box-shadow: var(--shadow-key);
+  color: var(--ink-2);
+  transition: transform var(--dur-press) var(--ease-press), color var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
+}
+
+.ribbon-tool {
+  width: 32px;
+  height: 32px;
+}
+
+.ribbon-tool:hover,
+.timeline-step:hover,
+.picker-chip-wrap:hover > .ribbon-tool {
+  color: var(--amber-text);
+  box-shadow: var(--shadow-key-hover);
+}
+
+.ribbon-tool:active,
+.timeline-step:active,
+.picker-chip-wrap:active > .ribbon-tool {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-key-pressed);
+}
+
+/* ---------- Timeline track ---------- */
+.timeline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* The rail the beads sit on */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--amber-line) 20%, var(--amber-line) 80%, transparent);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.timeline-step {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 34px;
+  height: 44px;
+  border-radius: var(--radius-md);
+}
+
+.timeline-track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.timeline-track::-webkit-scrollbar {
+  display: none;
+}
+
+.day-bead {
+  position: relative;
+  flex: 0 0 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 52px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--slate-top-colour), var(--slate-bottom-colour));
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 8px 18px -12px rgba(0, 0, 0, 0.8);
+  color: var(--ink-2);
+  transform-origin: 50% 70%;
+  transition:
+    transform 260ms var(--ease-spring),
+    background var(--dur-quick) ease,
+    color var(--dur-quick) ease,
+    border-color var(--dur-quick) ease,
+    box-shadow var(--dur-quick) ease;
+}
+
+.day-bead:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.day-bead:active {
+  transform: translateY(0) scale(0.95);
+}
+
+.day-bead-weekday {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.day-bead-number {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-bead-marks {
+  display: flex;
+  gap: 2px;
+  height: 5px;
+  align-items: center;
+}
+
+.mark-open {
+  width: 4px;
+  height: 4px;
+  border-radius: 0;
+  background: var(--ink-2);
+}
+
+.mark-done {
+  width: 5px;
+  height: 5px;
+  border-radius: 0;
+  background: var(--amber);
+  box-shadow: 0 0 6px var(--amber-glow);
+}
+
+.day-bead.is-past {
+  opacity: 0.55;
+}
+
+.day-bead.is-weekend .day-bead-weekday {
+  color: var(--ink-faint);
+}
+
+.day-bead.is-month-start {
+  margin-left: 10px;
+}
+
+.day-bead.is-month-start::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: var(--line-strong);
+}
+
+.day-bead.is-today {
+  border-color: var(--amber-line);
+}
+
+.day-bead.is-today .day-bead-number {
+  color: var(--amber-text);
+}
+
+/* Focused day: lifted, enlarged, lit amber, with the weekday read first */
+.day-bead.is-focused {
+  z-index: 2;
+  flex-basis: 58px;
+  margin: 0 6px;
+  opacity: 1;
+  border-color: var(--amber-deep);
+  background: linear-gradient(180deg, var(--amber-hi), var(--amber) 60%, var(--amber-deep));
+  color: var(--amber-ink);
+  box-shadow: var(--shadow-amber), 0 0 22px -2px var(--amber-glow);
+  transform: translateY(-3px) scale(1.12);
+}
+
+.day-bead.is-focused .day-bead-weekday {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--amber-ink);
+}
+
+.day-bead.is-focused .day-bead-number {
+  font-size: 20px;
+  color: var(--amber-ink);
+}
+
+.day-bead.is-focused .mark-open {
+  background: var(--amber-ink);
+}
+
+.day-bead.is-focused .mark-done {
+  background: #fff6e4;
+}
+
+/* ---------- Narrower desktops ---------- */
+@media (min-width: 1025px) and (max-width: 1240px) {
+  .timeline-month {
+    display: none;
+  }
+}
+
+/* ---------- Tablet & phone ---------- */
+@media (max-width: 1024px) {
+  .ribbon {
+    left: 8px;
+    right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    transform: none;
+    gap: 6px;
+    animation-name: drawerRise;
+  }
+
+  .lens-bar {
+    width: 100%;
+  }
+
+  .timeline-month {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .lens-tools {
+    gap: 8px;
+    padding-left: 8px;
+  }
+
+  .ribbon-tool {
+    position: relative;
+    width: 40px;
+    height: 44px;
+  }
+
+  .ribbon-tool::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+
+  /* Phones swipe the track natively; the week steps would only crowd it */
+  .timeline-step {
+    display: none;
+  }
+
+  .timeline::before {
+    left: 0;
+    right: 0;
+  }
+
+  .day-bead {
+    flex-basis: 46px;
+    height: 52px;
+  }
+}
+
+/* ==========================================================================
+   HUD pass: lens tabs and the compass timeline are two distinct instruments.
+   Tabs: a flat strip with an amber underline. Timeline: a ruler band with a
+   centre heading notch; days are ticks, not boxes. While a task is dragged,
+   every day tick becomes an amber drop zone.
+   ========================================================================== */
+.ribbon {
+  gap: 12px;
+}
+
+/* ---------- Lens tabs ---------- */
+.lens-bar {
+  padding: 0 4px 0 0;
+  border-radius: 0;
+  border: 1px solid var(--hud-glass-edge);
+  border-left: 2px solid var(--hud-gold);
+  background: var(--hud-glass);
+  -webkit-backdrop-filter: var(--hud-glass-blur);
+  backdrop-filter: var(--hud-glass-blur);
+  box-shadow: var(--hud-glass-shadow);
+}
+
+.lens-bar .view-nav-list {
+  gap: 0;
+  border-radius: 0;
+}
+
+.lens-bar .view-nav-item {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 0;
+  font-size: 12.5px;
+  letter-spacing: 0.16em;
+}
+
+.lens-bar .view-nav-item + .view-nav-item {
+  box-shadow: inset 1px 0 0 var(--line);
+}
+
+.lens-bar .view-nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.lens-bar .view-nav-item.is-active {
+  color: var(--amber-text);
+}
+
+/* The active tab is marked by a lit underline, not a raised key */
+.lens-bar .view-nav-indicator {
+  top: auto;
+  bottom: 0;
+  height: 2px;
+  border: none;
+  border-radius: 0;
+  background: var(--amber);
+  box-shadow: 0 0 12px var(--amber-glow), 0 -10px 18px -10px var(--amber-glow);
+}
+
+.lens-bar .view-nav-count {
+  border-radius: 0;
+  padding: 0 4px;
+  line-height: 15px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.lens-bar .view-nav-item.is-active .view-nav-count {
+  color: var(--amber-ink);
+  background: var(--amber);
+  box-shadow: none;
+}
+
+.lens-tools {
+  padding-left: 8px;
+}
+
+.timeline-month {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+
+.ribbon-tool,
+.timeline-step {
+  border-radius: 0;
+  border: 1px solid var(--line);
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink-3);
+}
+
+.ribbon-tool:hover,
+.timeline-step:hover,
+.picker-chip-wrap:hover > .ribbon-tool {
+  border-color: var(--amber-line);
+  background: var(--amber-tint);
+  box-shadow: none;
+}
+
+.ribbon-tool:active,
+.timeline-step:active,
+.picker-chip-wrap:active > .ribbon-tool {
+  transform: scale(0.95);
+  box-shadow: none;
+}
+
+/* ---------- Compass timeline ---------- */
+/* Smoked-glass ruler band: dark enough behind the numbers to read over the road, fading out at both ends */
+.timeline {
+  gap: 0;
+  padding: 0 2px;
+  border-top: 1px solid var(--hud-glass-edge);
+  border-bottom: 1px solid var(--hud-glass-edge);
+  background: rgba(8, 10, 15, 0.65);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent);
+}
+
+/* Ruler: fine ticks along the lower edge */
+.timeline::before {
+  top: auto;
+  bottom: 0;
+  left: 36px;
+  right: 36px;
+  height: 5px;
+  background: repeating-linear-gradient(90deg, rgba(232, 237, 242, 0.32) 0 1px, transparent 1px 13px);
+  opacity: 1;
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 15%, black 85%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 15%, black 85%, transparent);
+}
+
+/* Heading notch: marks the centre of the compass, where the focused day glides to */
+.timeline-notch {
+  position: absolute;
+  left: 50%;
+  top: -1px;
+  z-index: 3;
+  width: 14px;
+  height: 7px;
+  transform: translateX(-50%);
+  background: var(--amber);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  filter: drop-shadow(0 0 6px var(--amber-glow));
+  pointer-events: none;
+}
+
+.timeline-step {
+  width: 32px;
+  height: 46px;
+  border: none;
+}
+
+.timeline-track {
+  gap: 2px;
+  padding: 6px 0 8px;
+}
+
+.day-bead {
+  flex-basis: 46px;
+  height: 48px;
+  gap: 1px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #e8edf2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition:
+    background 80ms linear,
+    color 80ms linear,
+    border-color 80ms linear,
+    box-shadow 80ms linear,
+    transform 120ms var(--ease-out);
+}
+
+/* A tick under every day; taller at the start of a week */
+.day-bead::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 1px;
+  height: 5px;
+  background: rgba(232, 237, 242, 0.7);
+  opacity: 1;
+}
+
+.day-bead:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.04);
+  transform: none;
+}
+
+.day-bead:active {
+  transform: scale(0.95);
+}
+
+.day-bead-weekday {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #a3b0bd;
+}
+
+/* Past days recede by colour, not by fading the whole tick */
+.day-bead.is-past {
+  opacity: 1;
+  color: #8a96a3;
+}
+
+.day-bead-number {
+  font-size: 18px;
+}
+
+.mark-open,
+.mark-done {
+  width: 4px;
+  height: 4px;
+  border-radius: 0;
+}
+
+.mark-done {
+  box-shadow: none;
+}
+
+.day-bead.is-month-start::before {
+  top: 4px;
+  bottom: 4px;
+  background: var(--amber-line);
+}
+
+.day-bead.is-today {
+  border-color: transparent;
+}
+
+.day-bead.is-today .day-bead-weekday {
+  color: var(--amber-text);
+}
+
+.day-bead.is-today::after {
+  height: 7px;
+  width: 2px;
+  background: var(--amber);
+  opacity: 1;
+}
+
+/* Focused heading: amber brackets around the day, lit number — no solid key */
+.day-bead.is-focused {
+  flex-basis: 54px;
+  margin: 0 4px;
+  border-color: var(--amber-line);
+  background: linear-gradient(180deg, rgba(235, 162, 69, 0.22), rgba(235, 162, 69, 0.06));
+  box-shadow: inset 0 2px 0 var(--amber), 0 0 22px -6px var(--amber-glow);
+  color: var(--amber-hi);
+  transform: none;
+}
+
+.day-bead.is-focused .day-bead-weekday {
+  font-size: 9.5px;
+  color: var(--amber-text);
+}
+
+.day-bead.is-focused .day-bead-number {
+  font-size: 21px;
+  color: var(--amber-hi);
+}
+
+.day-bead.is-focused .mark-open {
+  background: var(--amber-hi);
+}
+
+.day-bead.is-focused .mark-done {
+  background: var(--teal-hi);
+}
+
+/* ---------- Drag & drop: every day tick is a landing zone ---------- */
+body.is-dragging-task .day-bead {
+  border-color: var(--amber-line);
+  border-style: solid;
+  background: rgba(235, 162, 69, 0.08);
+  color: var(--ink);
+}
+
+body.is-dragging-task .timeline {
+  border-color: var(--amber-line);
+  box-shadow: 0 0 0 1px rgba(235, 162, 69, 0.15), 0 0 30px -10px var(--amber-glow);
+}
+
+.day-bead.is-drop-hover,
+body.is-dragging-task .day-bead.is-drop-hover {
+  z-index: 4;
+  border-color: var(--amber-hi);
+  background: var(--amber);
+  color: var(--amber-ink);
+  box-shadow: 0 0 0 1px var(--amber-hi), 0 0 26px -2px var(--amber-glow);
+  transform: translateY(-3px) scale(1.08);
+}
+
+.day-bead.is-drop-hover .day-bead-weekday,
+.day-bead.is-drop-hover .day-bead-number {
+  color: var(--amber-ink);
+}
+
+.day-bead.is-drop-hover .mark-open,
+.day-bead.is-drop-hover .mark-done {
+  background: var(--amber-ink);
+}
+
+@media (max-width: 1024px) {
+  .lens-bar {
+    clip-path: none;
+  }
+
+  .lens-bar .view-nav-item {
+    padding: 0 6px;
+  }
+}
+
+@media (max-width: 680px) {
+  .lens-bar .view-nav-item {
+    height: 44px;
+    padding: 0 2px;
+  }
+
+  .day-bead {
+    flex-basis: 44px;
+    height: 50px;
+  }
+}

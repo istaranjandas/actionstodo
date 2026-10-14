@@ -6,17 +6,20 @@ A minimalist, high-productivity daily task manager and week planner with real-ti
 
 - ⚡ **1-Click Smart Time Range Picker**: Fast preset grid (Morning / Afternoon / Evening), custom duration pills (15m, 30m, 1h, 1.5h), and micro-nudge buttons (`-30m` / `+30m`).
 - ✍️ **Natural Language Parsing**: Type `"Call Alex at 5pm"` or `"Design sprint 2pm to 3:30pm"` to automatically parse and slot time.
-- 📅 **Descending Daily Feed**: Today is always anchored at the top, followed by previous days in descending chronological order.
-- ➔ **Plan Ahead**: Plan tasks for Tomorrow, Day after, Next week, or any custom future date via the quick toolbar dropdown.
-- 📊 **Week Matrix View**: 2D schedule table with time slots down the left and days of the week across the top.
+- 🏮 **The Lantern Path**: Your days are wayposts along a trail through a living 3D valley; every task is a lantern on its day's post, and completing one lights it. Walk the path with `Q` / `E`, or switch lens (Today, Upcoming, Week, All, Done, Planner) with `1`–`6`.
+- 🗒️ **Day slate & details**: The focused day's tasks float beside its waypost; click a task or its lantern to edit title, date and time on the details slate.
+- 📅 **Path ribbon**: A strip of day beads along the bottom doubles as the calendar; jump a week with `«` `»` or to any date with the dial.
+- 📊 **Planner**: The week matrix (time slots by weekday) opens as a full board over the valley.
+- 🔊 **Sound & music**: Synthesised interface sounds and an optional ambient soundtrack, each with its own switch and volume in the System menu.
 - ☁️ **Real-Time Firebase Cloud Sync**: Google Sign-In with instant Firestore multi-device synchronization.
 - 💾 **Offline First & Disk Sync**: Seamless offline mode with `localStorage`, direct `.json` disk sync via File System Access API, and 1-click JSON backup import/export.
-- 🎨 **Minimalist Aesthetic**: Clean Notion-style monochrome typography and dark / light mode.
+- 🌄 **Dusk & Daylight**: The valley's time of day follows your theme; animation respects the system reduced-motion setting, and the app falls back to a painted valley when WebGL is unavailable.
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 19 + TypeScript + Vite
-- **3D & Motion**: Three.js, React Three Fiber, Drei, postprocessing, GSAP ScrollTrigger, Lenis
+- **3D & Motion**: Three.js, React Three Fiber (lazy-loaded world and Game mode), Drei, Rapier (Game mode), GSAP, Lenis
+- **Audio**: Web Audio API — every sound is generated at runtime, no audio files
 - **Cloud Database**: Google Firebase Firestore
 - **Authentication**: Firebase Auth (Google Provider)
 - **Hosting**: Firebase Hosting & Vercel-ready

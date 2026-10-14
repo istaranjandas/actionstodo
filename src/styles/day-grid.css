@@ -1,0 +1,255 @@
+/* ==========================================================================
+   Multi-day tactical grid: All, Week, Upcoming and Done spread the slate across the viewport as
+   a grid of day cards. Cards grow to fit their tasks; the grid pane scrolls as one surface.
+   Today and a picked date keep the single left-anchored column (see shell.css / feed.css).
+   ========================================================================== */
+
+/* World dimmer behind the multi-day boards (grid and planner) */
+.hud-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none !important;
+  background:
+    radial-gradient(120% 90% at 50% 45%, rgba(6, 10, 14, 0.42), rgba(6, 10, 14, 0.72)),
+    linear-gradient(180deg, rgba(6, 10, 14, 0.3), rgba(6, 10, 14, 0.5));
+  backdrop-filter: blur(5px) saturate(0.85);
+  -webkit-backdrop-filter: blur(5px) saturate(0.85);
+  animation: hudScrimIn 420ms var(--ease-out) both;
+}
+
+@keyframes hudScrimIn {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- The wide slate ---------- */
+/* The cards are the glass here; the frame around them stays clear so panels never nest */
+.slate.is-grid {
+  right: var(--hud-inset);
+  width: auto;
+  border: none;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.slate.is-grid::before {
+  display: none;
+}
+
+.slate.is-grid .slate-header,
+.slate.is-grid .slate-command {
+  border: 1px solid var(--hud-glass-edge);
+  border-left: 2px solid var(--hud-gold);
+  background: var(--hud-glass);
+  -webkit-backdrop-filter: var(--hud-glass-blur);
+  backdrop-filter: var(--hud-glass-blur);
+  box-shadow: var(--hud-glass-shadow);
+  margin: 0 16px;
+}
+
+.game-shell.is-grid-view.has-inspector .slate.is-grid {
+  right: calc(var(--hud-inset) + 344px + 22px);
+}
+
+/* The details slate docks to the right edge instead of beside a narrow column */
+.game-shell.is-grid-view .inspector-slate {
+  left: auto;
+  right: var(--hud-inset);
+}
+
+.slate.is-grid .slate-body {
+  flex: 1 1 auto;
+  padding: 12px 16px 14px;
+}
+
+.slate.is-grid .slate-command > * {
+  max-width: 760px;
+}
+
+/* ---------- Grid of day cards ---------- */
+.slate .date-groups.day-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+}
+
+.slate .day-grid > .empty-state {
+  grid-column: 1 / -1;
+}
+
+.slate.is-grid .date-group.day-card {
+  min-width: 0;
+  padding: 10px 12px 6px;
+  border: 1px solid var(--hud-glass-edge);
+  border-left: 2px solid var(--hud-glass-edge);
+  border-radius: 2px;
+  background: var(--hud-glass);
+  -webkit-backdrop-filter: var(--hud-glass-blur);
+  backdrop-filter: var(--hud-glass-blur);
+  box-shadow: var(--hud-glass-shadow);
+  transition: border-color var(--dur-quick) ease, box-shadow var(--dur-quick) ease, background-color var(--dur-quick) ease;
+}
+
+.slate.is-grid .date-group.day-card + .date-group.day-card {
+  border-top: 1px solid var(--hud-glass-edge);
+}
+
+/* The active card (today) carries the sharp gold edge */
+.slate.is-grid .date-group.day-card.is-today {
+  border-left-color: var(--hud-gold);
+}
+
+.slate.is-grid .date-group.day-card.is-past {
+  opacity: 0.88;
+}
+
+.slate.is-grid .day-card .date-group-header {
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--hud-glass-edge);
+}
+
+/* The card is the date, so a per-row date chip is redundant there; drag to another card instead */
+.slate.is-grid .day-card .task-meta .picker-chip-wrap {
+  display: none;
+}
+
+/* ---------- Drop targets ---------- */
+body.is-dragging-task .slate.is-grid .day-card[data-drop-date]:not(.is-drag-source) {
+  border-color: color-mix(in srgb, var(--amber) 35%, var(--line));
+}
+
+.slate.is-grid .date-group.day-card.is-drop-hover:not(.is-drag-source),
+.slate .date-group.is-drop-hover:not(.is-drag-source):not(.day-card) {
+  border-color: var(--amber);
+  background-color: var(--amber-wash);
+  box-shadow:
+    inset 3px 0 0 var(--amber-hi),
+    0 0 0 1px var(--amber),
+    0 0 22px -4px var(--amber-glow);
+}
+
+.slate.is-grid .date-group.day-card.is-drop-hover:not(.is-drag-source) {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--amber) 16%, transparent), color-mix(in srgb, var(--amber) 6%, transparent));
+}
+
+/* ---------- "+ New task" in a card ---------- */
+.day-card-add,
+.day-card-add-form {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  height: 32px;
+  margin-top: 4px;
+  padding: 0 8px;
+  border-top: 1px solid var(--line);
+}
+
+.day-card-add {
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  opacity: 0.7;
+  transition: color var(--dur-quick) ease, opacity var(--dur-quick) ease, background-color var(--dur-quick) ease;
+}
+
+.day-card:hover .day-card-add,
+.day-card-add:focus-visible {
+  opacity: 1;
+}
+
+.day-card-add:hover {
+  color: var(--amber-text);
+  background: var(--amber-wash);
+}
+
+.day-card-add-form {
+  box-shadow: inset 2px 0 0 var(--amber);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.day-card-add-icon {
+  flex: none;
+  color: var(--amber-text);
+}
+
+.day-card-add-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: none;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.day-card-add-input::placeholder {
+  color: var(--ink-3);
+}
+
+/* ---------- Responsive columns ---------- */
+.game-shell.has-inspector .slate .date-groups.day-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1280px) {
+  .slate .date-groups.day-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1200px) {
+  .game-shell.has-inspector .slate .date-groups.day-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Tablet & phone: the grid takes the space between the area title and the ribbon */
+@media (max-width: 1024px) {
+  .slate.is-grid {
+    left: 8px;
+    right: 8px;
+    max-height: calc(100vh - var(--ribbon-h) - 110px);
+  }
+
+  .slate.is-grid .slate-body {
+    padding: 10px 10px 12px;
+  }
+
+  .slate.is-grid .slate-header,
+  .slate.is-grid .slate-command {
+    margin: 0 10px;
+  }
+
+  /* No backdrop filter here, so a dragged card's fixed time-slot sheet anchors to the viewport */
+  .slate.is-grid .date-group.day-card,
+  .slate.is-grid .slate-header,
+  .slate.is-grid .slate-command {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: linear-gradient(180deg, rgba(13, 16, 23, 0.95) 0%, rgba(9, 11, 16, 0.97) 100%);
+  }
+}
+
+@media (max-width: 680px) {
+  .slate .date-groups.day-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-scrim {
+    animation: none;
+  }
+}

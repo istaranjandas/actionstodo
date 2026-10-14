@@ -48,40 +48,6 @@ export function GoogleIcon() {
   );
 }
 
-export function SunIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" {...strokeProps}>
-      <circle cx="12" cy="12" r="5" />
-      <line x1="12" y1="1" x2="12" y2="3" />
-      <line x1="12" y1="21" x2="12" y2="23" />
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      <line x1="1" y1="12" x2="3" y2="12" />
-      <line x1="21" y1="12" x2="23" y2="12" />
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-    </svg>
-  );
-}
-
-export function MoonIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" {...strokeProps}>
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
-  );
-}
-
-export function MotionIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" {...strokeProps}>
-      <path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" />
-      <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />
-      <path d="M5 16l.6 1.4L7 18l-1.4.6L5 20l-.6-1.4L3 18l1.4-.6z" />
-    </svg>
-  );
-}
-
 export function CalendarIcon({ size = 12 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...strokeProps}>
@@ -111,34 +77,6 @@ export function PlusIcon() {
   );
 }
 
-export function FilterIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" {...strokeProps}>
-      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-    </svg>
-  );
-}
-
-export function ChevronDownIcon() {
-  return (
-    <svg className="dropdown-chevron" width="10" height="10" viewBox="0 0 24 24" {...strokeProps}>
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
-
-export function TableGridIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" {...strokeProps}>
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-      <line x1="3" y1="9" x2="21" y2="9" />
-      <line x1="3" y1="15" x2="21" y2="15" />
-      <line x1="9" y1="3" x2="9" y2="21" />
-      <line x1="15" y1="3" x2="15" y2="21" />
-    </svg>
-  );
-}
-
 export function ListLinesIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" {...strokeProps}>
@@ -147,44 +85,4 @@ export function ListLinesIcon() {
       <line x1="3" y1="18" x2="21" y2="18" />
     </svg>
   );
-}
-
-export function SidebarViewIcon({ view }: { view: string }) {
-  const common = { className: 'sidebar-item-icon', width: 15, height: 15, viewBox: '0 0 24 24', ...strokeProps };
-  switch (view) {
-    case 'today':
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-        </svg>
-      );
-    case 'this-week':
-      return (
-        <svg {...common}>
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M16 2v4M8 2v4M3 10h18" />
-        </svg>
-      );
-    case 'upcoming':
-      return (
-        <svg {...common}>
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
-      );
-    case 'completed':
-      return (
-        <svg {...common}>
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-          <path d="M22 4 12 14.01l-3-3" />
-        </svg>
-      );
-    default:
-      return (
-        <svg {...common}>
-          <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-          <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-        </svg>
-      );
-  }
 }

@@ -17,6 +17,19 @@ export function scrollContentToTop(): void {
 
 export type ScrollerTarget = HTMLElement | Window;
 
+export function readScrollTop(scroller: ScrollerTarget): number {
+  return scroller instanceof Window ? scroller.scrollY : scroller.scrollTop;
+}
+
+// Jump straight to a remembered position (used when returning to a view)
+export function restoreScrollPosition(scroller: ScrollerTarget, top: number): void {
+  if (activeLenis) {
+    activeLenis.scrollTo(top, { immediate: true, force: true });
+    return;
+  }
+  scroller.scrollTo({ top, behavior: 'instant' as ScrollBehavior });
+}
+
 interface SmoothScrollOptions {
   scrollPane: HTMLElement | null;
   usePaneAsScroller: boolean;
@@ -43,7 +56,7 @@ export function useSmoothScroll({ scrollPane, usePaneAsScroller, smoothingEnable
       autoRaf: false,
       lerp: 0.1,
       smoothWheel: true,
-      prevent: (node: HTMLElement) => Boolean(node.closest?.('[data-lenis-prevent], .week-table-scroll, .time-popover'))
+      prevent: (node: HTMLElement) => Boolean(node.closest?.('[data-lenis-prevent], .week-table-scroll, .time-popover, .settings-panel, .side-console'))
     });
     activeLenis = lenis;
 

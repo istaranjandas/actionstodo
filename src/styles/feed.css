@@ -1,0 +1,1808 @@
+/* ==========================================================================
+   Task feed inside the console: day plates, Today board and task rows
+   Layering: console (screen) → day plate (raised) → row (lifts on hover / selection)
+   ========================================================================== */
+.date-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.date-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px 8px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, var(--sheen), transparent 40%),
+    linear-gradient(180deg, var(--plate-top), var(--plate-bottom));
+  box-shadow: var(--shadow-key);
+  animation: plateRise 460ms var(--ease-out) backwards;
+  animation-delay: calc(var(--stagger-index, 0) * 50ms + 60ms);
+  transition: border-color var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
+}
+
+@keyframes plateRise {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) translateY(14px) translateZ(-30px);
+  }
+}
+
+.date-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--groove-dark);
+  box-shadow: 0 1px 0 var(--groove-light);
+}
+
+.date-group-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.date-group-name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.date-group-subname {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.date-group.is-today {
+  border-color: var(--amber-line);
+}
+
+.date-group.is-today .date-group-name {
+  color: var(--amber-text);
+}
+
+.date-group.is-past .date-group-name {
+  color: var(--ink-2);
+}
+
+.date-group-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.date-group-meter {
+  position: relative;
+  width: 64px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.date-group-meter-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal), var(--teal-hi));
+  transition: width 600ms var(--ease-out);
+}
+
+.date-group-count {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.date-group-empty {
+  padding: 8px 2px 6px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ---------- Today board ---------- */
+.today-board {
+  padding: 14px 16px 10px;
+}
+
+.next-up {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'label chevron' 'text chevron' 'meta chevron';
+  align-items: center;
+  gap: 2px 12px;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 12px 14px 12px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--amber-line);
+  background: linear-gradient(90deg, var(--amber-wash), transparent 70%), linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
+  box-shadow: var(--shadow-key), inset 3px 0 0 var(--amber);
+  text-align: left;
+  color: var(--ink);
+  transition: transform var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) ease;
+}
+
+button.next-up:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-key-hover), inset 3px 0 0 var(--amber);
+}
+
+button.next-up:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-key-pressed), inset 3px 0 0 var(--amber);
+}
+
+.next-up.is-clear {
+  display: flex;
+  flex-direction: column;
+  border-color: var(--line);
+  background: linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
+  box-shadow: var(--shadow-key), inset 3px 0 0 var(--teal);
+}
+
+.next-up-label {
+  grid-area: label;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber-text);
+}
+
+.next-up.is-clear .next-up-label {
+  color: var(--teal);
+}
+
+.next-up-text {
+  grid-area: text;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.next-up-meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.next-up-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.next-up-chevron {
+  grid-area: chevron;
+  color: var(--amber-text);
+}
+
+.board-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 2px 4px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.board-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--groove-dark);
+  box-shadow: 0 1px 0 var(--groove-light);
+}
+
+.board-section-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--ink-3);
+}
+
+/* Timeline: "now" cuts across the schedule at the current time */
+.task-list.timeline {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.now-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 22px;
+  margin: 2px 0;
+}
+
+.now-marker::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--amber), transparent);
+  box-shadow: 0 0 10px var(--amber-glow);
+}
+
+.now-marker-label {
+  position: relative;
+  margin-left: 34px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--amber);
+  color: var(--amber-ink);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ---------- Task rows ---------- */
+.task-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  margin: 0 -8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  outline-offset: -2px;
+  transition:
+    background var(--dur-quick) ease,
+    box-shadow var(--dur-quick) ease,
+    transform var(--dur-quick) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .task-row:hover {
+    background: linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
+    box-shadow: var(--shadow-key-hover);
+    transform: translateY(-1px);
+  }
+}
+
+.task-row.is-selected {
+  background: linear-gradient(90deg, var(--amber-wash), transparent 60%), linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
+  box-shadow: var(--shadow-key), inset 3px 0 0 var(--amber);
+}
+
+.task-row.is-dragging {
+  opacity: 0.4;
+  transform: none;
+  box-shadow: none;
+}
+
+.task-row.is-editing {
+  cursor: text;
+  transform: none;
+  background: var(--well);
+  box-shadow: var(--shadow-well), 0 0 0 2px var(--amber-line);
+}
+
+/* Completion acknowledgement: a teal light sweep across the row */
+.task-row::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(100deg, transparent 20%, var(--teal-wash) 45%, rgba(255, 255, 255, 0.14) 50%, var(--teal-wash) 55%, transparent 80%);
+  background-size: 250% 100%;
+}
+
+.task-row.is-just-completed::after {
+  animation: completeSweep 760ms var(--ease-out);
+}
+
+@keyframes completeSweep {
+  0% {
+    opacity: 1;
+    background-position: 100% 0;
+  }
+  100% {
+    opacity: 0;
+    background-position: -20% 0;
+  }
+}
+
+.task-drag-handle {
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 2px;
+  font-size: 12px;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--ink-faint);
+  cursor: grab;
+  opacity: 0;
+  user-select: none;
+  transition: opacity var(--dur-quick) ease;
+}
+
+.task-row:hover .task-drag-handle {
+  opacity: 1;
+}
+
+/* ---------- Checkbox: a small key that lights teal when done ---------- */
+.task-checkbox-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.task-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--line-strong);
+  background: var(--well);
+  box-shadow: inset 0 1px 2px var(--cast-near);
+  cursor: pointer;
+  transition: background var(--dur-quick) ease, border-color var(--dur-quick) ease, box-shadow var(--dur-quick) ease, transform var(--dur-press) var(--ease-press);
+}
+
+.task-checkbox:hover {
+  border-color: var(--teal);
+}
+
+.task-checkbox:active {
+  transform: scale(0.88);
+}
+
+.task-checkbox:checked {
+  border-color: color-mix(in srgb, var(--teal) 70%, black);
+  background: linear-gradient(180deg, var(--teal-hi), var(--teal));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 0 3px var(--teal-wash);
+}
+
+.task-checkbox:checked::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid var(--teal-ink);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-0.5px, -1px);
+}
+
+.task-row.is-just-completed .task-checkbox {
+  animation: checkStamp 380ms var(--ease-spring);
+}
+
+@keyframes checkStamp {
+  0% {
+    transform: scale(0.7);
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- Time pill & nudges ---------- */
+.task-time-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.time-nudge-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--ink-3);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0;
+  user-select: none;
+  transition: opacity var(--dur-quick) ease, background var(--dur-quick) ease, color var(--dur-quick) ease;
+}
+
+.task-row:hover .time-nudge-btn {
+  opacity: 0.7;
+}
+
+.time-nudge-btn:hover {
+  opacity: 1 !important;
+  background: var(--hover);
+  color: var(--amber-text);
+}
+
+.task-time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 152px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: var(--ink-2);
+  transition: color var(--dur-quick) ease, box-shadow var(--dur-quick) ease, opacity var(--dur-quick) ease;
+}
+
+.task-time-pill svg {
+  color: var(--ink-3);
+}
+
+.task-time-pill:hover {
+  color: var(--ink);
+  box-shadow: var(--shadow-well), 0 0 0 1px var(--amber-line);
+}
+
+.task-time-pill:hover svg {
+  color: var(--amber-text);
+}
+
+.task-time-pill.is-set {
+  color: var(--ink);
+}
+
+.task-time-pill.is-empty {
+  color: var(--ink-3);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+  opacity: 0.45;
+}
+
+.task-row:hover .task-time-pill.is-empty {
+  opacity: 1;
+}
+
+.task-row.is-completed .task-time-pill {
+  opacity: 0.5;
+}
+
+/* ---------- Text ---------- */
+.task-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.task-text {
+  flex: 1;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--ink);
+  word-break: break-word;
+  cursor: inherit;
+  user-select: none;
+  border-radius: var(--radius-xs);
+}
+
+.task-row.is-editing .task-text {
+  cursor: text;
+  user-select: text;
+  outline: none;
+}
+
+.task-row.is-completed .task-text {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--teal) 70%, transparent);
+  text-decoration-thickness: 1.5px;
+}
+
+/* ---------- Meta: date chip, delete, details ---------- */
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--dur-quick) ease;
+}
+
+.task-row:hover .task-meta,
+.task-row:focus-visible .task-meta,
+.task-row.is-selected .task-meta {
+  opacity: 1;
+}
+
+.task-date-chip {
+  height: 24px;
+  padding: 0 9px;
+  border-radius: var(--radius-sm);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.task-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink-3);
+  font-size: 16px;
+  line-height: 1;
+  transition: color var(--dur-quick) ease, background var(--dur-quick) ease, transform var(--dur-press) var(--ease-press);
+}
+
+.task-action-btn:hover {
+  color: var(--coral);
+  background: var(--coral-wash);
+}
+
+.task-action-btn:active {
+  transform: scale(0.9);
+}
+
+.task-open-btn {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink-3);
+  opacity: 0.35;
+  transition: opacity var(--dur-quick) ease, color var(--dur-quick) ease, background var(--dur-quick) ease, transform var(--dur-quick) var(--ease-out);
+}
+
+.task-row:hover .task-open-btn,
+.task-row:focus-visible .task-open-btn {
+  opacity: 1;
+}
+
+.task-row.is-selected .task-open-btn {
+  opacity: 1;
+  color: var(--amber-text);
+  transform: translateX(2px);
+}
+
+.task-open-btn:hover {
+  background: var(--hover);
+  color: var(--amber-text);
+}
+
+/* ---------- Inline add ---------- */
+.inline-add-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  margin: 4px -8px 0;
+  border-radius: var(--radius-md);
+  color: var(--ink-3);
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--dur-quick) ease, color var(--dur-quick) ease;
+}
+
+.inline-add-row:hover {
+  background: var(--hover);
+  color: var(--amber-text);
+}
+
+.inline-add-icon {
+  width: 18px;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+}
+
+/* ---------- Empty state ---------- */
+.empty-state {
+  padding: 48px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--line-strong);
+  background: var(--well);
+  box-shadow: var(--shadow-well);
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-2);
+  animation: plateRise 460ms var(--ease-out);
+}
+
+/* ---------- List drag & drop ---------- */
+.drop-slots {
+  display: none;
+}
+
+.date-group.is-drag-source .drop-slots,
+.date-group.is-drag-over .drop-slots {
+  display: block;
+  margin: 8px 0 4px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--well);
+  box-shadow: var(--shadow-well);
+  animation: fadeIn var(--dur-quick) ease-out;
+}
+
+.date-group.is-drag-source,
+.date-group.is-drag-over {
+  transform: none !important;
+}
+
+/* Lift the dragged task's day above its neighbours so its slot sheet is never covered */
+.date-group.is-drag-source {
+  z-index: 10;
+}
+
+.date-group.is-drag-over:not(.is-drag-source) {
+  border-color: var(--amber-line);
+  box-shadow: var(--shadow-key), 0 0 0 3px var(--amber-wash);
+}
+
+.drop-slots-hint {
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.drop-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 5px;
+}
+
+.drop-slot {
+  padding: 6px 2px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
+  box-shadow: var(--shadow-key);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--ink-2);
+  transition: background 80ms ease, color 80ms ease, transform 80ms ease, box-shadow 80ms ease;
+}
+
+.drop-slot.is-busy {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink-3);
+}
+
+.drop-slot.is-current {
+  border-style: dashed;
+  border-color: var(--amber-line);
+}
+
+.drop-slot.is-drop-target {
+  background: linear-gradient(180deg, var(--amber-hi), var(--amber));
+  border-color: var(--amber-deep);
+  color: var(--amber-ink);
+  box-shadow: var(--shadow-amber);
+  transform: scale(1.06);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .task-drag-handle {
+    display: none;
+  }
+
+  .task-meta,
+  .task-open-btn {
+    opacity: 1;
+  }
+}
+
+body.is-table-view .date-groups {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---------- Tablet & phone: drag slots become a bottom sheet ---------- */
+@media (max-width: 1024px) {
+  .date-group.is-drag-source .drop-slots {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    z-index: 900;
+    margin: 0;
+    padding: 12px;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+    border: 1px solid var(--line-strong);
+    box-shadow: var(--shadow-float);
+  }
+
+  .date-group.is-drag-over:not(.is-drag-source) .drop-slots {
+    display: none;
+  }
+
+  .drop-slots-grid {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+  }
+
+  .drop-slot {
+    font-size: 11px;
+    padding: 7px 0;
+  }
+}
+
+/* ==========================================================================
+   Phone: line 1 = checkbox + text + details, line 2 = time + date + delete.
+   Every control gets a 44px touch target without changing its visual size.
+   ========================================================================== */
+@media (max-width: 680px) {
+  .date-group,
+  .today-board {
+    padding: 10px 12px 6px;
+  }
+
+  .date-group-name {
+    font-size: 16px;
+  }
+
+  .date-group-meter {
+    width: 44px;
+  }
+
+  .task-row {
+    flex-wrap: wrap;
+    padding: 9px 2px;
+    margin: 0;
+    gap: 6px 10px;
+    border-radius: 0;
+    border-bottom: 1px solid var(--groove-dark);
+  }
+
+  .task-row:last-child {
+    border-bottom: none;
+  }
+
+  .task-row.is-selected {
+    border-radius: var(--radius-sm);
+  }
+
+  .task-checkbox-wrap {
+    order: 1;
+    flex: 0 0 22px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .task-main {
+    order: 2;
+    flex: 1 1 calc(100% - 38px);
+  }
+
+  /* Tapping the row opens details on phones, so the chevron is not needed */
+  .task-open-btn {
+    display: none;
+  }
+
+  .task-text {
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .task-time-wrap {
+    order: 4;
+    margin-left: 32px;
+    gap: 4px;
+  }
+
+  .task-drag-handle,
+  .time-nudge-btn {
+    display: none !important;
+  }
+
+  .task-time-pill {
+    min-width: 0;
+    height: 28px;
+    padding: 0 10px;
+  }
+
+  .task-meta {
+    order: 5;
+    margin-left: auto;
+    gap: 10px;
+  }
+
+  .task-date-chip {
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .task-action-btn.delete-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+
+  .inline-add-row {
+    min-height: 44px;
+    padding: 10px 2px;
+    margin: 2px 0 0;
+  }
+
+  .drop-slots-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .task-time-pill,
+  .task-date-chip,
+  .task-action-btn,
+  .task-open-btn {
+    position: relative;
+  }
+
+  .task-time-pill::before,
+  .task-date-chip::before,
+  .task-action-btn::before,
+  .task-open-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+
+  /* Checkbox: 44px invisible input; the visible box is drawn by ::before */
+  .task-checkbox {
+    width: 44px;
+    height: 44px;
+    margin: -13px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .task-checkbox::before {
+    content: '';
+    grid-area: 1 / 1;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--line-strong);
+    background: var(--well);
+    box-shadow: inset 0 1px 2px var(--cast-near);
+    transition: background var(--dur-quick) ease, border-color var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
+  }
+
+  .task-checkbox:checked {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .task-checkbox:checked::before {
+    border-color: color-mix(in srgb, var(--teal) 70%, black);
+    background: linear-gradient(180deg, var(--teal-hi), var(--teal));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 0 3px var(--teal-wash);
+  }
+
+  .task-checkbox:checked::after {
+    grid-area: 1 / 1;
+  }
+}
+
+/* ==========================================================================
+   The slate log
+   Every list lives in the day slate, so inside it the plates dissolve: no boxes within boxes,
+   just sections divided by hairlines and single-line rows that slide and press like menu items.
+   (Placed last so it also overrides the generic phone row layout above.)
+   ========================================================================== */
+.slate .date-groups {
+  gap: 0;
+}
+
+.slate .date-group,
+.slate .today-board {
+  padding: 10px 0 6px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  animation-name: logRise;
+}
+
+.slate .date-group + .date-group {
+  border-top: 1px solid var(--line);
+}
+
+.slate .date-group.is-today {
+  border-color: var(--line);
+}
+
+.slate .date-group.is-drag-over:not(.is-drag-source) {
+  background: var(--amber-wash);
+  box-shadow: inset 2px 0 0 var(--amber);
+}
+
+@keyframes logRise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.slate .date-group-header {
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.slate .empty-state {
+  padding: 26px 4px;
+  border: none;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+  color: var(--ink-3);
+}
+
+/* NEXT UP is a line of type, not a box */
+.slate .next-up {
+  margin: 0;
+  padding: 4px 0 12px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transition: transform 140ms var(--ease-out);
+}
+
+.slate .next-up.is-clear {
+  box-shadow: none;
+  background: none;
+}
+
+@media (hover: hover) {
+  .slate button.next-up:hover {
+    transform: translateX(4px);
+    box-shadow: none;
+  }
+}
+
+.slate button.next-up:active {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+/* SCHEDULE / ANYTIME open with a hairline divider instead of a trailing rule */
+.slate .board-section-label {
+  margin: 0 0 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.slate .board-section-label::after {
+  display: none;
+}
+
+/* ---------- Single-line rows: node, title, time; delete slides in on hover ---------- */
+.slate .task-row {
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 6px 6px;
+  margin: 0 -6px;
+  border-bottom: none;
+  border-radius: var(--radius-sm);
+  transition: transform 140ms var(--ease-out), background var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
+}
+
+@media (hover: hover) {
+  .slate .task-row:hover {
+    transform: translateX(4px);
+    background: rgba(255, 255, 255, 0.045);
+    box-shadow: inset 2px 0 0 var(--amber-line);
+  }
+}
+
+.slate .task-row:active {
+  transform: scale(0.98);
+}
+
+.slate .task-row.is-selected {
+  background: var(--amber-wash);
+  box-shadow: inset 2px 0 0 var(--amber);
+}
+
+.slate .task-row.is-editing,
+.slate .task-row.is-dragging {
+  transform: none;
+}
+
+.slate .task-checkbox-wrap {
+  order: 1;
+}
+
+.slate .task-main {
+  order: 2;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.slate .task-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 300ms ease;
+}
+
+.slate .task-row.is-editing .task-text {
+  overflow: visible;
+  white-space: normal;
+}
+
+/* Completion: the strike draws across the title as the row flashes */
+.slate .task-row.is-just-completed .task-text {
+  animation: strikeIn 420ms var(--ease-out);
+}
+
+@keyframes strikeIn {
+  from {
+    text-decoration-color: transparent;
+    color: var(--teal-hi);
+  }
+}
+
+.slate .task-time-wrap {
+  order: 3;
+  margin-left: 0;
+}
+
+.slate .task-time-pill {
+  min-width: 0;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11.5px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.slate .task-time-pill.is-set {
+  color: var(--ink-2);
+}
+
+.slate .task-time-pill.is-empty {
+  opacity: 0;
+}
+
+.slate .task-row:hover .task-time-pill.is-empty,
+.slate .task-row.is-selected .task-time-pill.is-empty {
+  opacity: 0.8;
+}
+
+/* Row click opens details, so these live in the details slate instead */
+.slate .time-nudge-btn,
+.slate .task-drag-handle,
+.slate .task-open-btn,
+.slate .task-meta .picker-chip-wrap {
+  display: none !important;
+}
+
+.slate .task-meta {
+  order: 4;
+  max-width: 0;
+  margin-left: -10px;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-width var(--dur-quick) ease, margin var(--dur-quick) ease, opacity var(--dur-quick) ease;
+}
+
+.slate .task-row:hover .task-meta,
+.slate .task-row:focus-within .task-meta,
+.slate .task-row:focus-visible .task-meta,
+.slate .task-row.is-selected .task-meta {
+  max-width: 32px;
+  margin-left: 0;
+  opacity: 1;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .slate .task-meta {
+    max-width: 32px;
+    margin-left: 0;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 680px) {
+  .slate .date-group,
+  .slate .today-board {
+    padding: 8px 0 4px;
+  }
+
+  .slate .task-row {
+    flex-wrap: nowrap;
+    padding: 8px 2px;
+    margin: 0;
+    gap: 10px;
+    border-radius: var(--radius-sm);
+  }
+
+  .slate .task-main {
+    flex: 1 1 auto;
+  }
+
+  .slate .task-time-wrap {
+    margin-left: 0;
+  }
+
+  .slate .task-time-pill {
+    height: 26px;
+  }
+
+  .slate .task-meta {
+    margin-left: 0;
+  }
+}
+
+/* Slate rows are laid out on a fixed grid so every row aligns: checkbox | title | time | delete.
+   (Placed last so it settles the older two-line and flex row rules above.) */
+.slate .task-row,
+.slate .task-row:hover {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 10px;
+  margin: 0;
+}
+
+.slate .task-checkbox-wrap {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.slate .task-main {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: stretch;
+}
+
+.slate .task-time-wrap {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.slate .task-meta {
+  grid-column: 4;
+  grid-row: 1;
+}
+
+.slate .now-marker-label {
+  margin-left: 30px;
+}
+
+@media (max-width: 680px) {
+  .slate .task-row {
+    grid-template-columns: 22px minmax(0, 1fr) auto auto;
+  }
+
+  /* The 44px checkbox hit area stays centred on its 20px box */
+  .slate .task-checkbox-wrap {
+    justify-self: center;
+  }
+}
+
+/* Rows always span the full slate width (the timeline list must not centre them) */
+.slate .task-list {
+  align-items: stretch;
+}
+
+
+/* ==========================================================================
+   Tactical mission log (HUD pass)
+   Every task is a single-line objective. Hover / selection snaps a full-row highlight bar on
+   instantly (inverted fill, amber left indicator, 4px shift), like a game interaction menu.
+   Applies to every HUD list — the day slate and the multi-day day cards alike.
+   (Placed last so it settles the older plate and slate row rules above.)
+   ========================================================================== */
+.hud-dark .date-group {
+  border-radius: 0;
+  background: var(--hud-glass);
+  border: 1px solid var(--line);
+  border-left: 1px solid var(--line-strong);
+  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.9);
+}
+
+.hud-dark .date-group.is-today {
+  border-left-color: var(--amber);
+}
+
+.hud-dark .slate .date-group,
+.hud-dark .slate .today-board {
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+.hud-dark .slate .date-group + .date-group {
+  border-top: 1px solid var(--line);
+}
+
+.hud-dark .date-group-name {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+}
+
+.hud-dark .date-group-count,
+.hud-dark .board-section-count {
+  padding: 0 5px;
+  border: 1px solid var(--line-strong);
+  font-size: 10.5px;
+  line-height: 16px;
+  color: var(--ink-2);
+}
+
+.hud-dark .date-group-meter {
+  width: 56px;
+  height: 3px;
+  border-radius: 0;
+}
+
+.hud-dark .date-group-meter-fill {
+  border-radius: 0;
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber-glow);
+}
+
+/* Section legends read as console labels: // SCHEDULE */
+.hud-dark .board-section-label {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--ink-3);
+}
+
+.hud-dark .board-section-label > span:first-child::before {
+  content: '// ';
+  color: var(--amber-text);
+  opacity: 0.8;
+}
+
+/* Current objective banner: warm dark-amber glass, same gold story as the rest of the HUD */
+.hud-dark .next-up {
+  border-radius: 0;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-left: 2px solid var(--hud-gold);
+  padding: 9px 12px 10px 12px;
+  margin-bottom: 10px;
+  background: rgba(245, 158, 11, 0.07);
+  box-shadow: none;
+}
+
+.hud-dark button.next-up:hover {
+  background: rgba(245, 158, 11, 0.11);
+}
+
+.hud-dark .next-up.is-clear {
+  border-left-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.07);
+}
+
+.hud-dark .next-up-label,
+.hud-dark .next-up.is-clear .next-up-label {
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  color: var(--hud-gold-hi);
+}
+
+.hud-dark .next-up-chevron {
+  color: var(--hud-gold-hi);
+}
+
+.hud-dark .now-marker::before {
+  height: 1px;
+  border-radius: 0;
+}
+
+.hud-dark .now-marker-label {
+  padding: 1px 10px 1px 6px;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+
+/* ---------- The row ---------- */
+.hud-dark .task-row,
+.hud-dark .slate .task-row,
+.hud-dark .task-row:hover,
+.hud-dark .slate .task-row:hover {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 10px;
+  flex-wrap: nowrap;
+  margin: 0;
+  min-height: 34px;
+  padding: 5px 8px 5px 12px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 1px 0 0 var(--line);
+  transform: none;
+  transition:
+    transform 90ms var(--ease-out),
+    background 60ms linear,
+    box-shadow 60ms linear;
+}
+
+.hud-dark .task-row + .task-row {
+  border-top: 1px solid rgba(150, 185, 210, 0.06);
+}
+
+/* The amber indicator: a solid bar on the left edge, drawn over the 1px accent */
+.hud-dark .task-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--amber);
+  box-shadow: 0 0 10px var(--amber-glow);
+  transform: scaleY(0);
+  transition: transform 90ms var(--ease-out);
+  pointer-events: none;
+}
+
+/* Hover / keyboard focus: interaction-menu highlight — inverted bright fill, dark ink */
+@media (hover: hover) {
+  .hud-dark .task-row:hover:not(.is-editing):not(.is-dragging):not(.is-selected),
+  .hud-dark .slate .task-row:hover:not(.is-editing):not(.is-dragging):not(.is-selected) {
+    --ink: #0b1116;
+    --ink-2: #24323c;
+    --ink-3: #3b4a54;
+    --ink-faint: #5a6872;
+    --line: rgba(0, 0, 0, 0.18);
+    --line-strong: rgba(0, 0, 0, 0.3);
+    --well: rgba(0, 0, 0, 0.1);
+    --hover: rgba(0, 0, 0, 0.08);
+    --amber-text: #8a4c06;
+    --teal: #0b7563;
+    --teal-hi: #13917a;
+    background: #e8eef1;
+    box-shadow: none;
+    transform: translateX(4px);
+  }
+}
+
+.hud-dark .task-row:focus-visible:not(.is-editing):not(.is-selected) {
+  --ink: #0b1116;
+  --ink-2: #24323c;
+  --ink-3: #3b4a54;
+  --line: rgba(0, 0, 0, 0.18);
+  --line-strong: rgba(0, 0, 0, 0.3);
+  --well: rgba(0, 0, 0, 0.1);
+  --amber-text: #8a4c06;
+  background: #e8eef1;
+  box-shadow: none;
+  outline: none;
+  transform: translateX(4px);
+}
+
+.hud-dark .task-row:hover:not(.is-editing):not(.is-dragging)::before,
+.hud-dark .task-row:focus-visible::before,
+.hud-dark .task-row.is-selected::before {
+  transform: scaleY(1);
+}
+
+/* Selected (its details are open): locked-on amber row */
+.hud-dark .task-row.is-selected,
+.hud-dark .slate .task-row.is-selected,
+.hud-dark .task-row.is-selected:hover {
+  --ink: #1a0f02;
+  --ink-2: #3a2405;
+  --ink-3: #5a3a0c;
+  --line: rgba(40, 20, 0, 0.25);
+  --line-strong: rgba(40, 20, 0, 0.35);
+  --well: rgba(40, 20, 0, 0.12);
+  --hover: rgba(40, 20, 0, 0.1);
+  --amber-text: #3a2405;
+  --teal: #0b5f50;
+  --teal-hi: #0f7a66;
+  background: var(--amber-hi);
+  box-shadow: none;
+  outline: none;
+  transform: translateX(4px);
+}
+
+.hud-dark .task-row.is-selected::before {
+  background: #fff6e4;
+  box-shadow: none;
+}
+
+.hud-dark .task-row:active:not(.is-editing) {
+  transform: translateX(4px) scale(0.99);
+}
+
+.hud-dark .task-row.is-editing,
+.hud-dark .slate .task-row.is-editing {
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 0 0 1px var(--amber-line);
+  transform: none;
+}
+
+.hud-dark .task-row.is-dragging,
+.hud-dark .slate .task-row.is-dragging {
+  opacity: 0.35;
+  background: transparent;
+  box-shadow: inset 1px 0 0 var(--amber-line);
+  transform: none;
+}
+
+/* Grid slots: checkbox | objective | time | delete */
+.hud-dark .task-checkbox-wrap {
+  grid-column: 1;
+  grid-row: 1;
+  order: 0;
+}
+
+.hud-dark .task-main {
+  grid-column: 2;
+  grid-row: 1;
+  order: 0;
+  min-width: 0;
+}
+
+.hud-dark .task-time-wrap {
+  grid-column: 3;
+  grid-row: 1;
+  order: 0;
+  margin-left: 0;
+  justify-self: end;
+}
+
+.hud-dark .task-meta {
+  grid-column: 4;
+  grid-row: 1;
+  order: 0;
+}
+
+.hud-dark .task-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.hud-dark .task-row.is-editing .task-text {
+  overflow: visible;
+  white-space: normal;
+}
+
+/* Square check node */
+.hud-dark .task-checkbox {
+  width: 14px;
+  height: 14px;
+  border-radius: 0;
+  border: 1px solid var(--ink-3);
+  background: transparent;
+  box-shadow: none;
+}
+
+.hud-dark .task-checkbox:checked {
+  border-color: var(--teal);
+  background: var(--teal);
+  box-shadow: 0 0 8px -1px var(--teal);
+}
+
+.hud-dark .task-checkbox:checked::after {
+  width: 4px;
+  height: 7px;
+}
+
+/* Time reads as a mono readout, not a pill */
+.hud-dark .task-time-pill,
+.hud-dark .slate .task-time-pill {
+  min-width: 0;
+  height: 20px;
+  padding: 0 0 0 8px;
+  gap: 0;
+  border: none;
+  border-left: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+
+.hud-dark .task-time-pill svg {
+  display: none;
+}
+
+.hud-dark .task-time-pill:hover {
+  color: var(--amber-text);
+  box-shadow: none;
+}
+
+.hud-dark .task-time-pill.is-empty,
+.hud-dark .slate .task-time-pill.is-empty {
+  opacity: 0;
+}
+
+.hud-dark .task-row:hover .task-time-pill.is-empty,
+.hud-dark .task-row:focus-visible .task-time-pill.is-empty,
+.hud-dark .task-row.is-selected .task-time-pill.is-empty {
+  opacity: 0.75;
+}
+
+/* Row click opens details; nudges, handles, chevron and the date chip live there */
+.hud-dark .time-nudge-btn,
+.hud-dark .task-drag-handle,
+.hud-dark .task-open-btn,
+.hud-dark .task-meta .picker-chip-wrap {
+  display: none !important;
+}
+
+.hud-dark .task-meta {
+  max-width: 0;
+  margin-left: -10px;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-width 90ms ease, margin 90ms ease, opacity 90ms ease;
+}
+
+.hud-dark .task-row:hover .task-meta,
+.hud-dark .task-row:focus-within .task-meta,
+.hud-dark .task-row:focus-visible .task-meta,
+.hud-dark .task-row.is-selected .task-meta {
+  max-width: 28px;
+  margin-left: 0;
+  opacity: 1;
+}
+
+.hud-dark .task-action-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 0;
+}
+
+/* ---------- Completion: strike, row flash, gauge pulse ---------- */
+.hud-dark .task-row.is-completed .task-text {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--teal);
+  text-decoration-thickness: 1.5px;
+}
+
+.hud-dark .task-row.is-completed:not(:hover):not(.is-selected) .task-checkbox-wrap,
+.hud-dark .task-row.is-completed:not(:hover):not(.is-selected) .task-time-wrap {
+  opacity: 0.6;
+}
+
+.hud-dark .task-row::after {
+  border-radius: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), var(--teal-wash) 30%, transparent 70%);
+  background-size: 100% 100%;
+  transform-origin: left center;
+}
+
+.hud-dark .task-row.is-just-completed::after {
+  animation: objectiveFlash 520ms var(--ease-out);
+}
+
+.hud-dark .task-row.is-just-completed .task-text,
+.hud-dark .slate .task-row.is-just-completed .task-text {
+  animation: objectiveStrike 420ms var(--ease-out);
+}
+
+@keyframes objectiveFlash {
+  0% {
+    opacity: 1;
+    transform: scaleX(0.2);
+  }
+  35% {
+    opacity: 0.9;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes objectiveStrike {
+  0% {
+    color: #ffffff;
+    text-decoration-color: transparent;
+  }
+  40% {
+    color: var(--teal-hi);
+  }
+}
+
+/* Any objective completing pulses its progress gauges */
+.hud-dark .date-group:has(.task-row.is-just-completed) .date-group-meter-fill,
+.hud-dark .slate:has(.task-row.is-just-completed) .slate-gauge-fill {
+  animation: gaugePulse 700ms var(--ease-out);
+}
+
+@keyframes gaugePulse {
+  0% {
+    filter: brightness(1);
+  }
+  30% {
+    filter: brightness(1.8);
+    box-shadow: 0 0 18px 2px var(--amber-glow);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* ---------- Drag targets ---------- */
+.hud-dark .date-group.is-drag-over:not(.is-drag-source),
+.hud-dark .slate .date-group.is-drag-over:not(.is-drag-source) {
+  border-color: var(--amber-line);
+  background: linear-gradient(90deg, rgba(235, 162, 69, 0.2), rgba(235, 162, 69, 0.06));
+  box-shadow: inset 3px 0 0 var(--amber), inset 0 0 0 1px var(--amber-line);
+}
+
+.hud-dark .date-group.is-drag-source .drop-slots,
+.hud-dark .date-group.is-drag-over .drop-slots {
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.hud-dark .drop-slot {
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: none;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+.hud-dark .drop-slot.is-drop-target {
+  background: var(--amber);
+  border-color: var(--amber-hi);
+  color: var(--amber-ink);
+  box-shadow: 0 0 14px -2px var(--amber-glow);
+  transform: none;
+}
+
+.hud-dark .empty-state {
+  border-radius: 0;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--line-strong);
+  background: var(--hud-glass);
+  box-shadow: none;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.hud-dark .slate .empty-state {
+  border: none;
+  background: none;
+}
+
+.hud-dark .date-group-empty {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .hud-dark .task-meta {
+    max-width: 28px;
+    margin-left: 0;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 680px) {
+  .hud-dark .task-row,
+  .hud-dark .slate .task-row {
+    grid-template-columns: 22px minmax(0, 1fr) auto auto;
+    min-height: 44px;
+    padding: 6px 4px 6px 10px;
+  }
+
+  .hud-dark .task-checkbox-wrap {
+    justify-self: center;
+  }
+
+  /* Phone checkbox draws its visible box on ::before; keep it square */
+  .hud-dark .task-checkbox,
+  .hud-dark .task-checkbox:checked {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .hud-dark .task-checkbox::before {
+    width: 16px;
+    height: 16px;
+    border-radius: 0;
+    border-color: var(--ink-3);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .hud-dark .task-checkbox:checked::before {
+    border-color: var(--teal);
+    background: var(--teal);
+    box-shadow: none;
+  }
+}

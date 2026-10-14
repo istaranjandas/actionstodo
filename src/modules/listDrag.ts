@@ -1,6 +1,6 @@
-// List View Drag & Drop
+// Task Drag & Drop
 // Drag a task from anywhere on its row: its own day, and any day card you hover, reveal time slots.
-// Drop on a slot to set day + time (duration kept), or on a card to change only the day.
+// Drop on a slot to set day + time (duration kept), or on a card or timeline bead to change only the day.
 import { addMinutesToTime, getDurationMinutes } from './timeUtils';
 import type { Task } from '../types';
 
@@ -39,90 +39,116 @@ export function getDropSlots(groupTasks: Task[]): DropSlot[] {
   return slots;
 }
 
-interface ListDragOptions {
-  container: HTMLElement;
+interface TaskDragOptions {
   getTask: (id: string) => Task | undefined;
   onMove: (taskId: string, updates: Partial<Task>) => void;
 }
 
 interface DragState {
   task: Task;
-  row: HTMLElement;
-  group: HTMLElement;
-  overGroup?: HTMLElement;
+  row: HTMLElement | null;
+  group: HTMLElement | null;
+  overZone?: HTMLElement | null;
   overSlot?: HTMLElement | null;
 }
 
-export function setupListDragAndDrop({ container, getTask, onMove }: ListDragOptions): () => void {
+const DROP_ZONE_SELECTOR = '[data-drop-date]';
+const TASK_MIME = 'text/task-id';
+
+// Drop zones live anywhere in the document: day cards in the feed, beads on the timeline ribbon.
+// Any element with data-drop-date="YYYY-MM-DD" accepts a task; .date-group zones also offer time slots.
+// Feed rows start drags here; other draggers (planner chips) only need to set the text/task-id payload.
+export function setupTaskDragAndDrop({ getTask, onMove }: TaskDragOptions): () => void {
   let drag: DragState | null = null;
   const closestFrom = (target: EventTarget | null, selector: string) =>
     target instanceof Element ? (target.closest(selector) as HTMLElement | null) : null;
 
+  const findZone = (target: EventTarget | null): HTMLElement | null => {
+    const zone = closestFrom(target, DROP_ZONE_SELECTOR);
+    return zone && /^\d{4}-\d{2}-\d{2}$/.test(zone.dataset.dropDate || '') ? zone : null;
+  };
+
+  const setHover = (zone: HTMLElement | null) => {
+    if (!drag || drag.overZone === zone) return;
+    drag.overZone?.classList.remove('is-drop-hover', 'is-drag-over');
+    if (zone) {
+      zone.classList.add('is-drop-hover');
+      if (zone.classList.contains('date-group')) zone.classList.add('is-drag-over');
+    }
+    drag.overZone = zone;
+  };
+
+  const setSlot = (slot: HTMLElement | null) => {
+    if (!drag || drag.overSlot === slot) return;
+    drag.overSlot?.classList.remove('is-drop-target');
+    slot?.classList.add('is-drop-target');
+    drag.overSlot = slot;
+  };
+
   // Rows are draggable from anywhere; a row being text-edited (double-click) is not
   const handleDragStart = (e: DragEvent) => {
-    const row = closestFrom(e.target, '.task-row');
-    if (!row || !row.draggable) return;
-    if (row.classList.contains('is-editing')) {
-      e.preventDefault();
-      return;
-    }
-    const task = getTask(row.dataset.id || '');
-    const group = row.closest('.date-group') as HTMLElement | null;
-    if (!task || !group || !e.dataTransfer) return;
+    if (!e.dataTransfer) return;
+    const row = closestFrom(e.target, '.date-groups .task-row');
+    let task: Task | undefined;
+    let group: HTMLElement | null = null;
 
-    e.dataTransfer.setData('text/task-id', task.id);
-    e.dataTransfer.effectAllowed = 'move';
+    if (row) {
+      if (!row.draggable || row.classList.contains('is-editing')) {
+        e.preventDefault();
+        return;
+      }
+      task = getTask(row.dataset.id || '');
+      group = row.closest('.date-group');
+      if (!task) return;
+      e.dataTransfer.setData(TASK_MIME, task.id);
+      e.dataTransfer.effectAllowed = 'move';
+    } else {
+      // Another surface (the planner) already put its task on the payload
+      task = getTask(e.dataTransfer.getData(TASK_MIME));
+      if (!task) return;
+    }
+
     drag = { task, row, group };
 
     // Change layout on the next frame; doing it synchronously can cancel the drag
     requestAnimationFrame(() => {
       if (!drag) return;
-      row.classList.add('is-dragging');
-      group.classList.add('is-drag-source');
-      if (task.startTime) {
-        const current = group.querySelector(`.drop-slot[data-start="${task.startTime}"]`);
-        if (current) current.classList.add('is-current');
+      document.body.classList.add('is-dragging-task');
+      row?.classList.add('is-dragging');
+      group?.classList.add('is-drag-source');
+      if (group && task.startTime) {
+        group.querySelector(`.drop-slot[data-start="${task.startTime}"]`)?.classList.add('is-current');
       }
     });
   };
 
-  const isDroppableGroup = (g: HTMLElement | null): g is HTMLElement =>
-    Boolean(g && g.dataset.date && g.dataset.date !== 'Undated');
-
   const handleDragOver = (e: DragEvent) => {
     if (!drag) return;
-    const group = closestFrom(e.target, '.date-group');
-    if (!isDroppableGroup(group)) return;
+    const zone = findZone(e.target);
+    setHover(zone);
+    if (!zone) {
+      setSlot(null);
+      return;
+    }
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-
-    // Hovered day card reveals its own slots
-    if (drag.overGroup !== group) {
-      if (drag.overGroup) drag.overGroup.classList.remove('is-drag-over');
-      group.classList.add('is-drag-over');
-      drag.overGroup = group;
-    }
-
+    // Time slots only count inside the hovered day card
     const slot = closestFrom(e.target, '.drop-slot');
-    if (slot !== drag.overSlot) {
-      if (drag.overSlot) drag.overSlot.classList.remove('is-drop-target');
-      if (slot) slot.classList.add('is-drop-target');
-      drag.overSlot = slot;
-    }
+    setSlot(slot && zone.contains(slot) ? slot : null);
   };
 
   const handleDrop = (e: DragEvent) => {
     if (!drag) return;
-    const group = closestFrom(e.target, '.date-group');
-    if (!isDroppableGroup(group)) return;
+    const zone = findZone(e.target);
+    if (!zone) return;
     const slot = closestFrom(e.target, '.drop-slot');
     const { task } = drag;
-    const date = group.dataset.date as string;
+    const date = zone.dataset.dropDate as string;
     e.preventDefault();
-    // The dragged row is re-rendered by onMove, so its dragend may never bubble here
+    // The dragged row is re-rendered by onMove, so its dragend may never arrive
     endDrag();
 
-    if (slot) {
+    if (slot && zone.contains(slot)) {
       const start = slot.dataset.start as string;
       if (task.date !== date || task.startTime !== start) {
         onMove(task.id, { date, startTime: start, endTime: addMinutesToTime(start, taskDuration(task)) });
@@ -134,23 +160,25 @@ export function setupListDragAndDrop({ container, getTask, onMove }: ListDragOpt
 
   function endDrag() {
     if (drag) {
-      drag.row.classList.remove('is-dragging');
-      drag.group.classList.remove('is-drag-source');
-      container.querySelectorAll('.is-drag-over').forEach(el => el.classList.remove('is-drag-over'));
-      container.querySelectorAll('.is-drop-target, .is-current').forEach(el => el.classList.remove('is-drop-target', 'is-current'));
+      drag.row?.classList.remove('is-dragging');
+      drag.group?.classList.remove('is-drag-source');
     }
+    document.body.classList.remove('is-dragging-task');
+    document.querySelectorAll('.is-drop-hover, .is-drag-over').forEach(el => el.classList.remove('is-drop-hover', 'is-drag-over'));
+    document.querySelectorAll('.is-drop-target, .drop-slot.is-current').forEach(el => el.classList.remove('is-drop-target', 'is-current'));
     drag = null;
   }
 
-  container.addEventListener('dragstart', handleDragStart);
-  container.addEventListener('dragover', handleDragOver);
-  container.addEventListener('drop', handleDrop);
-  container.addEventListener('dragend', endDrag);
+  document.addEventListener('dragstart', handleDragStart);
+  document.addEventListener('dragover', handleDragOver);
+  document.addEventListener('drop', handleDrop);
+  document.addEventListener('dragend', endDrag);
 
   return () => {
-    container.removeEventListener('dragstart', handleDragStart);
-    container.removeEventListener('dragover', handleDragOver);
-    container.removeEventListener('drop', handleDrop);
-    container.removeEventListener('dragend', endDrag);
+    endDrag();
+    document.removeEventListener('dragstart', handleDragStart);
+    document.removeEventListener('dragover', handleDragOver);
+    document.removeEventListener('drop', handleDrop);
+    document.removeEventListener('dragend', endDrag);
   };
 }

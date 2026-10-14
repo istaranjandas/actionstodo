@@ -193,8 +193,11 @@ async function captureScenario({ name, width, height, mobile, steps }) {
 }
 
 const resetWithDemoData = (theme, viewportMode = 'manual') => `localStorage.setItem('todo_do_tasks_v1', ${JSON.stringify(demoTasksJson)}); localStorage.setItem('notion_minimal_theme', '${theme}'); localStorage.setItem('actionstodo_viewport_mode', '${viewportMode}'); location.reload(); true`;
-const resetEmpty = (theme) => `localStorage.removeItem('todo_do_tasks_v1'); localStorage.setItem('notion_minimal_theme', '${theme}'); location.reload(); true`;
-const desktopScroller = `document.querySelector('.main-pane')`;
+const pressKey = (key) => `window.dispatchEvent(new KeyboardEvent('keydown', { key: '${key}', bubbles: true })); true`;
+// Time of day lives in the System menu: open it, pick Daylight, close it
+const switchToDaylight = `document.querySelector('.system-trigger').click(); setTimeout(() => { document.querySelectorAll('.segmented-option')[1].click(); document.querySelector('.system-trigger').click(); }, 200); true`;
+const WORLD_LOAD_MS = 9000;
+const CAMERA_FLIGHT_MS = 2800;
 
 const scenarios = [
   {
@@ -202,45 +205,40 @@ const scenarios = [
     width: 1920,
     height: 1080,
     mobile: false,
-    steps: async ({ evaluate, sleep, shoot, wheel, hover, audit }) => {
-      await evaluate(resetEmpty('light'));
-      await sleep(6500);
-      await shoot('01-hero-empty-light');
-      await hover([[1500, 560], [1520, 570], [1540, 580]]);
-      await sleep(900);
-      await shoot('02-hero-3d-hover-light');
-      await evaluate(resetWithDemoData('light'));
-      await sleep(6500);
-      await shoot('03-fold-light');
-      await audit('fold-light');
-      await hover([[700, 300], [720, 320]]);
-      await sleep(700);
-      await shoot('04-card-tilt-light');
-      await wheel(1100, 600, 500);
-      await sleep(1800);
-      await shoot('05-mid-scroll-3d-light');
-      await wheel(1100, 600, 2000);
-      await sleep(1800);
-      await shoot('06-bottom-light');
-      await evaluate(`${desktopScroller}.scrollTo(0, 0); document.querySelector('.icon-button').click(); true`);
-      await sleep(2200);
-      await shoot('07-fold-dark');
-      await wheel(1100, 600, 600);
-      await sleep(1800);
-      await shoot('08-mid-scroll-3d-dark');
-      await evaluate(`${desktopScroller}.scrollTo(0, 0); document.querySelectorAll('.task-time-pill')[1].click(); true`);
-      await sleep(700);
-      await shoot('09-time-popover-dark');
-      await evaluate(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); document.querySelector('#weekTableBtn').click(); true`);
-      await sleep(1200);
-      await shoot('10-week-table-dark');
+    steps: async ({ evaluate, sleep, shoot, audit }) => {
+      await evaluate(resetWithDemoData('dark'));
+      await sleep(WORLD_LOAD_MS);
+      await shoot('01-today-dusk');
+      await audit('today-dusk');
+      await evaluate(`document.querySelectorAll('.task-row')[1].click(); true`);
+      await sleep(1000);
+      await shoot('02-task-details-dusk');
+      await evaluate(`document.querySelectorAll('.task-row')[1].querySelector('.task-checkbox').click(); true`);
+      await sleep(420);
+      await shoot('03-lantern-lit-dusk');
+      await evaluate(pressKey('Escape'));
+      await evaluate(pressKey('e'));
+      await sleep(CAMERA_FLIGHT_MS);
+      await shoot('04-tomorrow-dusk');
+      await evaluate(pressKey('2'));
+      await sleep(CAMERA_FLIGHT_MS);
+      await shoot('05-upcoming-dusk');
+      await evaluate(pressKey('5'));
+      await sleep(CAMERA_FLIGHT_MS);
+      await shoot('06-done-dusk');
+      await evaluate(pressKey('6'));
+      await sleep(CAMERA_FLIGHT_MS);
+      await shoot('07-planner-dusk');
+      await evaluate(pressKey('1'));
+      await sleep(400);
+      await evaluate(switchToDaylight);
+      await sleep(3500);
+      await shoot('08-today-daylight');
+      await audit('today-daylight');
       await evaluate(resetWithDemoData('dark', 'game'));
-      await sleep(9000);
-      await shoot('11-game-arena-dark');
-      await audit('game-arena-dark');
-      await evaluate(resetWithDemoData('light', 'game'));
-      await sleep(9000);
-      await shoot('12-game-arena-light');
+      await sleep(WORLD_LOAD_MS);
+      await shoot('09-game-arena-dusk');
+      await audit('game-arena-dusk');
     }
   },
   {
@@ -249,23 +247,22 @@ const scenarios = [
     height: 844,
     mobile: true,
     steps: async ({ evaluate, sleep, shoot, audit }) => {
-      await evaluate(resetWithDemoData('light'));
-      await sleep(6500);
-      await shoot('01-fold-light');
-      await audit('fold-light');
-      await evaluate(`window.scrollTo(0, 900); true`);
-      await sleep(1800);
-      await shoot('02-cards-light');
-      await evaluate(`window.scrollTo(0, 0); document.querySelector('.icon-button').click(); true`);
-      await sleep(2000);
-      await shoot('03-fold-dark');
-      await evaluate(`window.scrollTo(0, 900); true`);
-      await sleep(1800);
-      await shoot('04-cards-dark');
+      await evaluate(resetWithDemoData('dark'));
+      await sleep(WORLD_LOAD_MS);
+      await shoot('01-today-dusk');
+      await audit('today-dusk');
+      await evaluate(`document.querySelectorAll('.task-row')[1].click(); true`);
+      await sleep(1000);
+      await shoot('02-task-details-dusk');
+      await evaluate(pressKey('Escape'));
+      await sleep(500);
+      await evaluate(switchToDaylight);
+      await sleep(3500);
+      await shoot('03-today-daylight');
       await evaluate(resetWithDemoData('dark', 'game'));
-      await sleep(9000);
-      await shoot('05-game-arena-dark');
-      await audit('game-arena-dark');
+      await sleep(WORLD_LOAD_MS);
+      await shoot('04-game-arena-dusk');
+      await audit('game-arena-dusk');
     }
   }
 ];
