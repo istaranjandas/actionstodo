@@ -1,29 +1,57 @@
 // Main Application Shell & UI Coordinator
+// Manual mode: the lantern path — a 3D valley where each day is a waypost and each task a lantern —
+// with a day slate, a details slate and the path ribbon floating in it. Game mode: the quest arena.
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { auth, onAuthStateChanged } from './firebase';
-import { getLocalISODate } from './modules/dateUtils';
-import { getFilteredTasks, initFirestoreSync, setUiState, state, stopFirestoreSync, THEME_KEY, updateTaskItem } from './modules/store';
+import { addDays, formatFriendlyDate, formatWeekRangeLabel, getLocalISODate, getWeekDates } from './modules/dateUtils';
+import { initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, THEME_KEY, updateTaskItem } from './modules/store';
+import { setupTaskDragAndDrop } from './modules/listDrag';
+import { moveTask } from './modules/taskActions';
+import { countForView, daysFromToday, NAV_ITEMS } from './modules/navigation';
+import type { NavKey } from './modules/navigation';
 import { useStore } from './hooks/useStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { DESKTOP_SCROLL_PANE_QUERY, NON_DESKTOP_QUERY, useMotionProfile } from './hooks/useMotionProfile';
-import { scrollContentToTop, useSmoothScroll } from './hooks/useSmoothScroll';
-import { InteractionPolishContext } from './hooks/useInteractionPolish';
-import { setMotionPreference } from './hooks/useMotionPreference';
+import { readScrollTop, restoreScrollPosition, useSmoothScroll } from './hooks/useSmoothScroll';
+import { useUiSounds } from './hooks/useUiSounds';
+import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
+import { usePresence } from './hooks/usePresence';
+import { playUiSound } from './audio/uiSounds';
+import { swellAmbientMusic } from './audio/ambientMusic';
 import { rewardCompletedQuests } from './game/state/gameProgress';
-import { Sidebar } from './components/Sidebar';
-import { MainTop } from './components/MainTop';
+import { WorldStage } from './world/WorldStage';
+import { worldBridge } from './world/worldBridge';
+import type { WorldDay } from './world/worldBridge';
+import { clampDayOffset, FUTURE_DAY_LIMIT, PAST_DAY_LIMIT } from './world/trail';
+import type { WorldLens } from './world/worldViews';
+import { LocationTitle } from './components/LocationTitle';
+import { SystemMenu } from './components/SystemMenu';
+import { DaySlate } from './components/DaySlate';
+import { TimelineRibbon } from './components/TimelineRibbon';
+import { WorldLabels } from './components/WorldLabels';
 import { TaskFeed } from './components/TaskFeed';
+import { TaskInspector } from './components/TaskInspector';
+import { TaskSelectionContext } from './components/TaskSelection';
 import { QuickAddForm } from './components/QuickAddForm';
+import { Sheet } from './components/Sheet';
+import { Toasts } from './components/Toasts';
+import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import type { ViewportMode } from './components/ViewportModeToggle';
 import { WeekTable } from './components/WeekTable';
-import { CreatorBadge } from './components/CreatorBadge';
 import { TimePopover, TimePopoverContext } from './components/TimePopover';
 import type { OpenTimePopover, TimePopoverHandle } from './components/TimePopover';
-import type { Theme, TimePopoverContext as PopoverTarget, ViewName } from './types';
+import type { Task, Theme, TimePopoverContext as PopoverTarget, ViewName } from './types';
 
-const HEADER_CONDENSE_OFFSET = 40;
+const HEADER_CONDENSE_OFFSET = 12;
 const VIEWPORT_MODE_KEY = 'actionstodo_viewport_mode';
 const BULK_SYNC_THRESHOLD = 3;
+
+const LENS_TITLES: Record<Exclude<ViewName, 'today'>, { title: string; subtitle: () => string }> = {
+  upcoming: { title: 'Upcoming', subtitle: () => 'The path ahead' },
+  'this-week': { title: 'This week', subtitle: () => formatWeekRangeLabel(getWeekDates(0)) },
+  all: { title: 'All dates', subtitle: () => 'Every waypost on the path' },
+  completed: { title: 'Done', subtitle: () => 'Lanterns already lit' }
+};
 
 const GameArena = lazy(() => import('./game/GameArena'));
 
@@ -39,52 +67,109 @@ function readInitialTheme(): Theme {
   return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
 }
 
+// Desktop details slate: floats beside the day slate while its lantern is ringed in the world
+function InspectorSlate({ task, onClose }: { task: Task | null; onClose: () => void }) {
+  const lastTask = useRef(task);
+  if (task) lastTask.current = task;
+  const { isMounted, isClosing } = usePresence(Boolean(task), 200);
+  if (!isMounted || !lastTask.current) return null;
+  return (
+    <div className="inspector-slate">
+      <TaskInspector key={lastTask.current.id} task={lastTask.current} isClosing={isClosing} onClose={onClose} />
+    </div>
+  );
+}
+
 export function App() {
   const appState = useStore();
-  const { prefersReducedMotion, systemPrefersReducedMotion, isTouchDevice, hasFinePointer } = useMotionProfile();
+  const { prefersReducedMotion, isTouchDevice, hasFinePointer } = useMotionProfile();
   const isNonDesktop = useMediaQuery(NON_DESKTOP_QUERY);
-  const usesScrollPane = useMediaQuery(DESKTOP_SCROLL_PANE_QUERY);
+  const isWide = useMediaQuery(DESKTOP_SCROLL_PANE_QUERY);
   const isPhone = useMediaQuery('(max-width: 680px)');
+  const isCompact = !isWide;
   const [theme, setTheme] = useState<Theme>(readInitialTheme);
   const [weekOffset, setWeekOffset] = useState(0);
-  const [mainPane, setMainPane] = useState<HTMLElement | null>(null);
-  const [feedContainer, setFeedContainer] = useState<HTMLElement | null>(null);
-  const [isHeaderCondensed, setIsHeaderCondensed] = useState(false);
+  const [scrollPane, setScrollPane] = useState<HTMLElement | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [viewportMode, setViewportMode] = useState<ViewportMode>(readInitialViewportMode);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const hasRewardedInitialQuests = useRef(false);
   const rewardedCompletionCount = useRef(0);
   const quickAddInputRef = useRef<HTMLInputElement>(null);
   const timePopoverRef = useRef<TimePopoverHandle>(null);
+  const scrollMemory = useRef(new Map<string, number>());
 
+  const { tasks, currentView, specificDateFilter } = appState;
+  const today = getLocalISODate();
   const isTableView = appState.isTableView && !isNonDesktop;
+  // A picked date, or the Today lens, focuses one waypost; the other lenses frame a stretch of path
+  const focusDate = isTableView ? null : specificDateFilter ?? (currentView === 'today' ? today : null);
+  // One day reads as a single column beside its waypost; the multi-day lenses spread into a grid of day cards
+  const isGridView = !isTableView && !focusDate;
+  const worldLens: WorldLens = isTableView ? 'planner' : focusDate ? 'day' : (currentView as WorldLens);
+  const focusOffset = focusDate ? clampDayOffset(daysFromToday(focusDate)) : 0;
+  const weekStartOffset = daysFromToday(getWeekDates(0)[0]);
+  const activeLens: NavKey | null = isTableView ? 'planner' : specificDateFilter ? null : currentView;
+  const viewKey = isTableView ? 'planner' : specificDateFilter ? `date:${specificDateFilter}` : currentView;
+  const selectedTask = selectedTaskId ? tasks.find(t => t.id === selectedTaskId) ?? null : null;
+  // Lens badges, the slate header and the day cards all count through summarizeView (store.ts).
+  // `today` is a dependency so every count rolls over together at midnight.
+  const lensCounts = useMemo(() => Object.fromEntries(NAV_ITEMS.map(item => [item.key, countForView(item.key, tasks)])), [tasks, today]);
+  const viewSummary = useMemo(() => summarizeView(tasks, currentView, specificDateFilter), [tasks, currentView, specificDateFilter, today]);
+  const viewTasks = viewSummary.tasks;
 
-  // --- Theme Management ---
+  // Wayposts for every day on the path that has tasks, plus today and the focused day
+  const worldDays = useMemo<WorldDay[]>(() => {
+    const byDate = new Map<string, Task[]>();
+    const isOnPath = (date: string) => {
+      const offset = daysFromToday(date);
+      return offset >= -PAST_DAY_LIMIT && offset <= FUTURE_DAY_LIMIT;
+    };
+    tasks.forEach(task => {
+      if (!task.date || !isOnPath(task.date)) return;
+      if (!byDate.has(task.date)) byDate.set(task.date, []);
+      byDate.get(task.date)!.push(task);
+    });
+    [today, focusDate].forEach(date => {
+      if (date && isOnPath(date) && !byDate.has(date)) byDate.set(date, []);
+    });
+    return Array.from(byDate.entries())
+      .map(([date, dayTasks]) => ({
+        date,
+        offset: daysFromToday(date),
+        tasks: sortTaskList(dayTasks, true).map(task => ({ id: task.id, text: task.text, completed: task.completed }))
+      }))
+      .sort((a, b) => a.offset - b.offset);
+  }, [tasks, today, focusDate]);
+
+  // --- Theme ("time of day") ---
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const toggleTheme = useCallback(() => {
-    setTheme(current => {
-      const next = current === 'dark' ? 'light' : 'dark';
-      localStorage.setItem(THEME_KEY, next);
-      return next;
-    });
+  const applyTheme = useCallback((next: Theme) => {
+    setTheme(next);
+    localStorage.setItem(THEME_KEY, next);
   }, []);
 
-  // --- View Mode & Table Toggle ---
+  // --- Planner (week table) is desktop-only, as before ---
   useEffect(() => {
     if (isNonDesktop && state.isTableView) setUiState({ isTableView: false });
   }, [isNonDesktop]);
 
   useEffect(() => {
-    // Table view is full-screen: CSS hides the toolbar and quick-add box
     document.body.classList.toggle('is-table-view', isTableView);
   }, [isTableView]);
 
-  const toggleTableView = useCallback(() => {
-    if (isNonDesktop) return;
-    setUiState({ isTableView: !state.isTableView });
-  }, [isNonDesktop]);
+  // --- Drag & drop: day cards, the Today log and timeline beads all take dropped tasks ---
+  useEffect(() => {
+    if (viewportMode !== 'manual') return;
+    return setupTaskDragAndDrop({
+      getTask: (id) => state.tasks.find(t => t.id === id),
+      onMove: moveTask
+    });
+  }, [viewportMode]);
 
   // --- Firebase Authentication Lifecycle ---
   useEffect(() => {
@@ -116,7 +201,52 @@ export function App() {
     return () => document.removeEventListener('click', handleClick);
   }, []);
 
-  // --- Filter Navigation ---
+  // --- Motion, sound & 3D choreography ---
+  useUiSounds();
+
+  useEffect(() => {
+    document.body.classList.toggle('is-reduced-motion', prefersReducedMotion);
+  }, [prefersReducedMotion]);
+
+  const motionAllowed = !prefersReducedMotion;
+  const scroller = useSmoothScroll({
+    scrollPane,
+    usePaneAsScroller: true,
+    smoothingEnabled: motionAllowed && !isTouchDevice
+  });
+  useEffect(() => {
+    if (!scroller) return;
+    const handleScroll = () => setIsScrolled(readScrollTop(scroller) > HEADER_CONDENSE_OFFSET);
+    handleScroll();
+    scroller.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scroller.removeEventListener('scroll', handleScroll);
+  }, [scroller]);
+
+  // Each view keeps its own scroll position, so returning to it restores your place
+  const viewKeyRef = useRef(viewKey);
+  const rememberScroll = useCallback(() => {
+    if (scroller) scrollMemory.current.set(viewKeyRef.current, readScrollTop(scroller));
+  }, [scroller]);
+
+  useEffect(() => {
+    viewKeyRef.current = viewKey;
+    if (!scroller) return;
+    const savedTop = scrollMemory.current.get(viewKey) ?? 0;
+    const frame = requestAnimationFrame(() => restoreScrollPosition(scroller, savedTop));
+    return () => cancelAnimationFrame(frame);
+  }, [viewKey, scroller]);
+
+  // Every move along the path is a camera journey: the world flies, the soundtrack breathes with it
+  const journeyKey = `${worldLens}:${focusOffset}`;
+  const previousJourneyKey = useRef(journeyKey);
+  useEffect(() => {
+    if (previousJourneyKey.current === journeyKey) return;
+    previousJourneyKey.current = journeyKey;
+    playUiSound('travel');
+    swellAmbientMusic();
+  }, [journeyKey]);
+
+  // --- Navigation along the path ---
   const selectView = useCallback((view: ViewName) => {
     const updates: Parameters<typeof setUiState>[0] = { isTableView: false, currentView: view, specificDateFilter: null };
     if (state.specificDateFilter) {
@@ -125,23 +255,97 @@ export function App() {
     setUiState(updates);
   }, []);
 
-  // Picking a date shows that day's tasks and makes new tasks go to that day
-  const setDateFilter = useCallback((dateStr: string | null) => {
-    if (dateStr) {
-      setUiState({ isTableView: false, specificDateFilter: dateStr, selectedAddDate: dateStr });
-      quickAddInputRef.current?.focus();
-    } else {
-      setUiState({ specificDateFilter: null, selectedAddDate: getLocalISODate() });
+  const selectLens = useCallback((key: NavKey) => {
+    rememberScroll();
+    if (key === 'planner') {
+      if (!isNonDesktop) setUiState({ isTableView: true });
+      return;
     }
+    selectView(key);
+  }, [isNonDesktop, rememberScroll, selectView]);
+
+  // Focusing a day walks to its waypost; new tasks then go to that day
+  const focusDay = useCallback((date: string) => {
+    rememberScroll();
+    if (date === getLocalISODate()) {
+      setUiState({ isTableView: false, currentView: 'today', specificDateFilter: null, selectedAddDate: date });
+    } else {
+      setUiState({ isTableView: false, specificDateFilter: date, selectedAddDate: date });
+    }
+  }, [rememberScroll]);
+
+  const stepDay = useCallback((step: 1 | -1) => {
+    const base = state.specificDateFilter ?? getLocalISODate();
+    const next = addDays(base, step);
+    if (Math.abs(daysFromToday(next)) > Math.max(PAST_DAY_LIMIT, FUTURE_DAY_LIMIT)) return;
+    playUiSound('select');
+    focusDay(next);
+  }, [focusDay]);
+
+  // Back from a picked date or the planner to the lens underneath, with its scroll intact
+  const returnToLens = useCallback(() => {
+    rememberScroll();
+    setUiState({ isTableView: false, specificDateFilter: null, selectedAddDate: getLocalISODate() });
+  }, [rememberScroll]);
+
+  const focusQuickAdd = useCallback(() => {
+    if (state.isTableView) setUiState({ isTableView: false });
+    window.setTimeout(() => quickAddInputRef.current?.focus(), 60);
   }, []);
 
-  const focusInlineAdd = useCallback((dateKey: string) => {
-    setUiState({ selectedAddDate: dateKey });
-    scrollContentToTop();
-    window.setTimeout(() => {
-      quickAddInputRef.current?.focus();
-    }, 100);
+  // --- Task selection & details ---
+  const openTask = useCallback((taskId: string, viaKeyboard = false) => {
+    setSelectedTaskId(taskId);
+    if (viaKeyboard) requestAnimationFrame(() => document.querySelector<HTMLElement>('.inspector-title')?.focus());
   }, []);
+
+  const closeTask = useCallback(() => {
+    const taskId = selectedTaskId;
+    setSelectedTaskId(null);
+    if (taskId && document.activeElement?.closest('.inspector, .sheet-panel')) {
+      requestAnimationFrame(() => document.querySelector<HTMLElement>(`.task-row[data-id="${taskId}"]`)?.focus());
+    }
+  }, [selectedTaskId]);
+
+  useEffect(() => {
+    if (selectedTaskId && !tasks.some(t => t.id === selectedTaskId)) setSelectedTaskId(null);
+  }, [tasks, selectedTaskId]);
+
+  // The world reads focus and selection directly, and calls back into the interface on clicks
+  useEffect(() => {
+    worldBridge.focusDate = focusDate;
+    worldBridge.selectedTaskId = selectedTaskId;
+    worldBridge.onOpenTask = (taskId) => {
+      playUiSound('open');
+      openTask(taskId);
+    };
+    worldBridge.onFocusDay = focusDay;
+  }, [focusDate, selectedTaskId, openTask, focusDay]);
+
+  const taskSelection = useMemo(() => ({ selectedTaskId, openTask }), [selectedTaskId, openTask]);
+
+  const focusRibbon = useCallback(() => {
+    document.querySelector<HTMLElement>('.day-bead.is-focused, .day-bead.is-today, .day-bead')?.focus();
+  }, []);
+
+  const handleEscape = useCallback(() => {
+    if (isShortcutsOpen) setIsShortcutsOpen(false);
+    else if (selectedTaskId) closeTask();
+    else if (state.specificDateFilter || state.isTableView) returnToLens();
+  }, [isShortcutsOpen, selectedTaskId, closeTask, returnToLens]);
+
+  useGlobalShortcuts(
+    {
+      onSelectNav: selectLens,
+      onStepNav: stepDay,
+      onNewTask: focusQuickAdd,
+      onEscape: handleEscape,
+      onToggleShortcuts: () => setIsShortcutsOpen(open => !open),
+      onFocusCalendar: focusRibbon,
+      onToday: () => focusDay(getLocalISODate())
+    },
+    viewportMode === 'manual'
+  );
 
   // --- Time Popover ---
   const openTimePopover = useCallback<OpenTimePopover>((triggerEl, start, end, context) => {
@@ -155,35 +359,6 @@ export function App() {
       updateTaskItem(context.taskId, { startTime: start, endTime: end });
     }
   }, []);
-
-  // --- Motion & 3D choreography ---
-  const toggleMotion = useCallback(() => {
-    const wantsReducedMotion = !prefersReducedMotion;
-    setMotionPreference(wantsReducedMotion === systemPrefersReducedMotion ? 'auto' : wantsReducedMotion ? 'off' : 'on');
-  }, [prefersReducedMotion, systemPrefersReducedMotion]);
-
-  useEffect(() => {
-    document.body.classList.toggle('is-reduced-motion', prefersReducedMotion);
-  }, [prefersReducedMotion]);
-
-  const motionAllowed = !prefersReducedMotion;
-  const interactionPolish = useMemo(
-    () => ({ tiltEnabled: motionAllowed && hasFinePointer, magneticEnabled: motionAllowed && hasFinePointer }),
-    [motionAllowed, hasFinePointer]
-  );
-  const scroller = useSmoothScroll({
-    scrollPane: mainPane,
-    usePaneAsScroller: usesScrollPane,
-    smoothingEnabled: motionAllowed && !isTouchDevice
-  });
-  useEffect(() => {
-    if (!scroller) return;
-    const readScrollTop = () => (scroller instanceof Window ? scroller.scrollY : scroller.scrollTop);
-    const handleScroll = () => setIsHeaderCondensed(readScrollTop() > HEADER_CONDENSE_OFFSET);
-    handleScroll();
-    scroller.addEventListener('scroll', handleScroll, { passive: true });
-    return () => scroller.removeEventListener('scroll', handleScroll);
-  }, [scroller]);
 
   // --- Quest arena ---
   const changeViewportMode = useCallback((mode: ViewportMode) => {
@@ -213,20 +388,35 @@ export function App() {
     updateTaskItem(taskId, { completed: true });
   }, []);
 
-  const questTasks = useMemo(
-    () => getFilteredTasks(),
-    [appState.tasks, appState.currentView, appState.specificDateFilter]
-  );
+  // --- Where are we: the area title over the world ---
+  let locationTitle: string;
+  let locationSubtitle: string;
+  if (isTableView) {
+    locationTitle = 'Planner';
+    locationSubtitle = formatWeekRangeLabel(getWeekDates(weekOffset));
+  } else if (focusDate) {
+    const [year, month, day] = focusDate.split('-').map(Number);
+    locationTitle = formatFriendlyDate(focusDate).title;
+    locationSubtitle = new Date(year, month - 1, day).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  } else {
+    const lens = LENS_TITLES[currentView as Exclude<ViewName, 'today'>];
+    locationTitle = lens.title;
+    locationSubtitle = lens.subtitle();
+  }
+  const lensLabel = NAV_ITEMS.find(item => item.key === currentView)?.label ?? 'path';
+  const backLabel = specificDateFilter && currentView !== 'today' ? `Back to ${lensLabel}` : specificDateFilter ? 'Back to today' : null;
 
+  const lastSheetTask = useRef<Task | null>(null);
+  if (selectedTask) lastSheetTask.current = selectedTask;
 
   return (
-    <InteractionPolishContext.Provider value={interactionPolish}>
+    <TaskSelectionContext.Provider value={taskSelection}>
       <TimePopoverContext.Provider value={openTimePopover}>
         {viewportMode === 'game' && (
           <div className="arena-fullscreen">
             <Suspense fallback={<div className="game-arena-loading">Summoning the quest arena…</div>}>
               <GameArena
-                tasks={questTasks}
+                tasks={viewTasks}
                 theme={theme}
                 prefersReducedMotion={prefersReducedMotion}
                 isTouchDevice={isTouchDevice}
@@ -242,52 +432,87 @@ export function App() {
         )}
 
         {viewportMode === 'manual' && (
-        <div className="app-container">
-          <Sidebar
-            appState={appState}
-            theme={theme}
-            onToggleTheme={toggleTheme}
-            isMotionEnabled={!prefersReducedMotion}
-            onToggleMotion={toggleMotion}
-            onSelectView={selectView}
-            onPickDate={setDateFilter}
-          />
-
-          <section className="main-pane" ref={setMainPane}>
-            <MainTop
-              appState={appState}
-              isCondensed={isHeaderCondensed}
-              isPhone={isPhone}
-              quickAddInputRef={quickAddInputRef}
-              onSelectView={selectView}
-              onSetDateFilter={setDateFilter}
-              onToggleTableView={toggleTableView}
-              viewportMode={viewportMode}
-              onChangeViewportMode={changeViewportMode}
+          <>
+            <WorldStage
+              lens={worldLens}
+              focusOffset={focusOffset}
+              weekStartOffset={weekStartOffset}
+              days={worldDays}
+              theme={theme}
+              reducedMotion={prefersReducedMotion}
+              hasFinePointer={hasFinePointer}
+              isCompact={isCompact}
+              scroller={scroller}
             />
 
+            <div className={`game-shell hud-dark ${isTableView ? 'is-planner' : ''} ${isGridView ? 'is-grid-view' : ''} ${selectedTask && !isCompact ? 'has-inspector' : ''}`}>
+              <WorldLabels days={worldDays} focusDate={focusDate} today={today} onFocusDay={focusDay} />
+              {/* Multi-day boards dim and soften the world behind them so every row stays legible */}
+              {(isGridView || isTableView) && <div className="hud-scrim" aria-hidden="true" />}
+              <LocationTitle title={locationTitle} subtitle={locationSubtitle} />
+              <SystemMenu
+                appState={appState}
+                theme={theme}
+                onSetTheme={applyTheme}
+                onEnterGameMode={() => changeViewportMode('game')}
+                onOpenControls={() => setIsShortcutsOpen(true)}
+              />
 
-            <main className="date-groups" id="dateGroupsContainer" ref={setFeedContainer}>
               {isTableView ? (
-                <WeekTable
-                  tasks={appState.tasks}
-                  weekOffset={weekOffset}
-                  onPrevWeek={() => setWeekOffset(offset => offset - 1)}
-                  onNextWeek={() => setWeekOffset(offset => offset + 1)}
-                  onThisWeek={() => setWeekOffset(0)}
-                  onExitTable={() => setUiState({ isTableView: false })}
-                />
+                <div className="planner-board">
+                  <WeekTable
+                    tasks={tasks}
+                    weekOffset={weekOffset}
+                    onPrevWeek={() => setWeekOffset(offset => offset - 1)}
+                    onNextWeek={() => setWeekOffset(offset => offset + 1)}
+                    onThisWeek={() => setWeekOffset(0)}
+                    onExitTable={returnToLens}
+                  />
+                </div>
               ) : (
-                <TaskFeed appState={appState} container={feedContainer} onInlineAdd={focusInlineAdd} />
+                <DaySlate
+                  label={`${locationTitle} tasks`}
+                  layout={isGridView ? 'grid' : 'column'}
+                  summary={viewSummary}
+                  isScrolled={isScrolled}
+                  isDoneLens={!focusDate && currentView === 'completed'}
+                  backLabel={backLabel}
+                  onBack={returnToLens}
+                  scrollRef={setScrollPane}
+                  command={<QuickAddForm appState={appState} isPhone={isPhone} quickAddInputRef={quickAddInputRef} />}
+                >
+                  {/* Keyed by view so the log re-deploys whenever you move along the path */}
+                  <TaskFeed key={viewKey} appState={appState} viewTasks={viewTasks} layout={isGridView ? 'grid' : 'column'} />
+                </DaySlate>
               )}
-            </main>
-          </section>
-        </div>
+
+              {!isCompact && !isTableView && <InspectorSlate task={selectedTask} onClose={closeTask} />}
+
+              <TimelineRibbon
+                tasks={tasks}
+                focusDate={focusDate}
+                activeLens={activeLens}
+                lensCounts={lensCounts}
+                showPlanner={!isNonDesktop}
+                isCompact={isCompact}
+                onSelectLens={selectLens}
+                onFocusDay={focusDay}
+              />
+            </div>
+          </>
         )}
 
-        <TimePopover ref={timePopoverRef} onTimeApplied={handleTimeApplied} />
-        <CreatorBadge />
+        <div className="hud-dark hud-portal">
+          {viewportMode === 'manual' && isCompact && (
+            <Sheet isOpen={Boolean(selectedTask)} label="Task details" onClose={closeTask}>
+              {lastSheetTask.current && <TaskInspector key={lastSheetTask.current.id} task={lastSheetTask.current} isClosing={false} onClose={closeTask} />}
+            </Sheet>
+          )}
+          {viewportMode === 'manual' && <ShortcutsOverlay isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />}
+          <Toasts />
+          <TimePopover ref={timePopoverRef} onTimeApplied={handleTimeApplied} />
+        </div>
       </TimePopoverContext.Provider>
-    </InteractionPolishContext.Provider>
+    </TaskSelectionContext.Provider>
   );
 }

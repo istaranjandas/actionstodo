@@ -6,12 +6,8 @@ import { App } from './App';
 
 function applyInitialTheme() {
   const savedTheme = localStorage.getItem(THEME_KEY);
-  let activeTheme = 'light';
-  if (savedTheme) {
-    activeTheme = savedTheme;
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    activeTheme = 'dark';
-  }
+  // Dusk (the obsidian + golden-hour world) is the default; a saved choice still wins
+  const activeTheme = savedTheme === 'light' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', activeTheme);
 }
 

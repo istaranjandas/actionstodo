@@ -22,6 +22,7 @@ export function ViewportModeToggle({ mode, onChange }: ViewportModeToggleProps) 
           role="radio"
           aria-checked={mode === optionMode}
           className={`viewport-mode-option ${mode === optionMode ? 'is-active' : ''}`}
+          data-sfx="select"
           onClick={() => onChange(optionMode)}
         >
           <Icon size={14} strokeWidth={2.2} aria-hidden="true" />

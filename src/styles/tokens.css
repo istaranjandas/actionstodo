@@ -1,0 +1,219 @@
+/* ==========================================================================
+   Design tokens
+   One light source (soft skylight from above) drives every bevel and shadow.
+   Dark theme = "Dusk", light theme = "Daylight". Same console, different hour.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+
+  --font-sans: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: 'Barlow Semi Condensed', 'Geist', 'Segoe UI', sans-serif;
+
+  /* Game HUD geometry: sharp frames, at most a 2px soften. No pills, no rounded cards. */
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius-pill: 1px;
+  /* Corner notch for framed HUD plates (top-right + bottom-left chamfer) */
+  --hud-notch: 8px;
+  --hud-chamfer: polygon(0 0, calc(100% - var(--hud-notch)) 0, 100% var(--hud-notch), 100% 100%, var(--hud-notch) 100%, 0 calc(100% - var(--hud-notch)));
+  /* Smoked obsidian glass: the one material every HUD panel shares */
+  --hud-gold: #f59e0b;
+  --hud-gold-hi: #fbbf24;
+  --hud-glass: linear-gradient(180deg, rgba(13, 16, 23, 0.86) 0%, rgba(9, 11, 16, 0.92) 100%);
+  --hud-glass-strong: var(--hud-glass);
+  --hud-glass-edge: rgba(255, 255, 255, 0.08);
+  --hud-glass-blur: blur(20px) saturate(140%);
+  --hud-glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --ease-press: cubic-bezier(0.3, 0, 0.2, 1);
+  --dur-press: 70ms;
+  --dur-quick: 160ms;
+  --dur-panel: 240ms;
+
+  /* Environment */
+  --env-sky-top: #a7bdc8;
+  --env-sky-mid: #cedbde;
+  --env-sky-low: #ede3d1;
+  --env-sun: rgba(255, 204, 138, 0.62);
+  --env-ridge-far: #c3ced0;
+  --env-ridge-mid: #adbbbe;
+  --env-ridge-near: #95a6aa;
+  --env-haze: rgba(250, 248, 242, 0.6);
+  --env-rim: rgba(255, 249, 236, 0.75);
+  --env-vignette: rgba(72, 62, 46, 0.2);
+  --env-grain-opacity: 0.05;
+  --env-stars-opacity: 0;
+
+  /* Surfaces */
+  --panel-top: #fbfaf6;
+  --panel-bottom: #f1efe8;
+  --panel-solid: #f6f4ef;
+  --plate-top: #fefdfb;
+  --plate-bottom: #f4f2ec;
+  --raised-top: #ffffff;
+  --raised-bottom: #ebe8e0;
+  --well: #e7e4db;
+  --well-deep: #dcd8cd;
+  --hover: rgba(30, 42, 52, 0.05);
+  --press: rgba(30, 42, 52, 0.09);
+  --edge-light: rgba(255, 255, 255, 0.95);
+  --edge-dark: rgba(72, 62, 40, 0.1);
+  --line: rgba(40, 52, 62, 0.13);
+  --line-strong: rgba(40, 52, 62, 0.22);
+  --groove-dark: rgba(40, 52, 62, 0.1);
+  --groove-light: rgba(255, 255, 255, 0.85);
+  --key-base: rgba(40, 52, 62, 0.24);
+  --cast: rgba(52, 46, 34, 0.26);
+  --cast-near: rgba(52, 46, 34, 0.12);
+  --scrim: rgba(36, 42, 48, 0.3);
+  --sheen: rgba(255, 255, 255, 0.5);
+  --glare-tint: rgba(255, 255, 255, 0.7);
+  --hud-scrim: rgba(246, 244, 238, 0.5);
+  --nav-track: rgba(231, 228, 219, 0.92);
+  --bezel: rgba(40, 52, 62, 0.035);
+  --text-halo: 0 1px 0 rgba(255, 255, 255, 0.65), 0 0 20px rgba(255, 255, 255, 0.5);
+
+  /* Ink */
+  --ink: #1a232b;
+  --ink-2: #46535d;
+  --ink-3: #5f6c75;
+  --ink-faint: #929ca3;
+  --ink-inverse: #f7f5f0;
+
+  /* Signals */
+  --amber: #e29a33;
+  --amber-hi: #f5bb66;
+  --amber-deep: #b8731a;
+  --amber-ink: #2a1904;
+  --amber-text: #8f520a;
+  --amber-wash: rgba(226, 154, 51, 0.13);
+  --amber-tint: rgba(226, 154, 51, 0.07);
+  --amber-line: rgba(196, 124, 28, 0.6);
+  --amber-glow: rgba(226, 154, 51, 0.38);
+  --teal: #12917a;
+  --teal-hi: #2db498;
+  --teal-ink: #f2fffb;
+  --teal-wash: rgba(18, 145, 122, 0.13);
+  --coral: #c4533c;
+  --coral-hi: #d8694f;
+  --coral-wash: rgba(196, 83, 60, 0.12);
+  --focus-ring: #c27a0c;
+
+  /* Legacy names still read by inline SVG icons */
+  --bg: var(--panel-solid);
+  --bg-subtle: var(--well);
+  --border: var(--line-strong);
+  --text: var(--ink);
+}
+
+/* Dusk values; .hud-dark applies them to in-game panels in both themes */
+[data-theme="dark"],
+.hud-dark {
+  color-scheme: dark;
+
+  --env-sky-top: #03060a;
+  --env-sky-mid: #0b1620;
+  --env-sky-low: #232a2e;
+  --env-sun: rgba(234, 146, 66, 0.36);
+  --env-ridge-far: #15212a;
+  --env-ridge-mid: #0e171e;
+  --env-ridge-near: #080e13;
+  --env-haze: rgba(128, 158, 178, 0.1);
+  --env-rim: rgba(244, 172, 104, 0.3);
+  --env-vignette: rgba(0, 0, 0, 0.62);
+  --env-grain-opacity: 0.06;
+  --env-stars-opacity: 0.8;
+
+  /* HUD pass: top and bottom stops match, so every former bevel gradient renders as flat glass */
+  --panel-top: #0e161c;
+  --panel-bottom: #0e161c;
+  --panel-solid: #0e161c;
+  --plate-top: #121b22;
+  --plate-bottom: #121b22;
+  --raised-top: #18232b;
+  --raised-bottom: #18232b;
+  --well: #0a1014;
+  --well-deep: #06090c;
+  --hover: rgba(190, 220, 240, 0.05);
+  --press: rgba(190, 220, 240, 0.09);
+  --edge-light: rgba(200, 228, 245, 0.09);
+  --edge-dark: rgba(0, 0, 0, 0.45);
+  --line: rgba(150, 185, 210, 0.12);
+  --line-strong: rgba(150, 185, 210, 0.2);
+  --groove-dark: rgba(0, 0, 0, 0.5);
+  --groove-light: rgba(200, 228, 245, 0.05);
+  --key-base: rgba(0, 0, 0, 0.6);
+  --cast: rgba(0, 0, 0, 0.64);
+  --cast-near: rgba(0, 0, 0, 0.42);
+  --scrim: rgba(2, 5, 8, 0.56);
+  --sheen: rgba(200, 228, 245, 0.06);
+  --glare-tint: rgba(200, 228, 245, 0.1);
+  --hud-scrim: rgba(3, 6, 10, 0.62);
+  --nav-track: rgba(7, 11, 15, 0.84);
+  --bezel: rgba(0, 0, 0, 0.22);
+  --text-halo: 0 1px 0 rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 0, 0, 0.6);
+
+  --ink: #e3eaee;
+  --ink-2: #a0b1bc;
+  --ink-3: #7b8e9b;
+  --ink-faint: #4b5b66;
+  --ink-inverse: #0b1116;
+
+  --amber: #eba245;
+  --amber-hi: #ffc677;
+  --amber-deep: #b5721a;
+  --amber-ink: #231403;
+  --amber-text: #f3b55f;
+  --amber-wash: rgba(235, 162, 69, 0.12);
+  --amber-tint: rgba(235, 162, 69, 0.045);
+  --amber-line: rgba(243, 181, 95, 0.55);
+  --amber-glow: rgba(235, 162, 69, 0.32);
+  --teal: #46c7ab;
+  --teal-hi: #72e1c7;
+  --teal-ink: #04201a;
+  --teal-wash: rgba(70, 199, 171, 0.13);
+  --coral: #ec7b63;
+  --coral-hi: #f4957f;
+  --coral-wash: rgba(236, 123, 99, 0.14);
+  --focus-ring: #ffc677;
+}
+
+/* Composite depth, recomputed wherever the base values change.
+   HUD pass: flat, crisp 1px edges instead of bevelled keys and soft drop shadows. */
+:root,
+.hud-dark {
+  --shadow-panel: inset 0 0 0 1px var(--line), 0 18px 40px -26px var(--cast);
+  --shadow-float: inset 0 0 0 1px var(--line-strong), 0 24px 60px -24px var(--cast);
+  --shadow-key: inset 0 0 0 1px transparent;
+  --shadow-key-hover: inset 0 0 0 1px var(--amber-line);
+  --shadow-key-pressed: inset 0 0 0 1px var(--amber-line), inset 0 0 12px -4px var(--amber-glow);
+  --shadow-well: inset 0 0 0 1px var(--line);
+  --shadow-amber: 0 0 0 1px var(--amber-deep), 0 0 18px -6px var(--amber-glow);
+}
+
+.hud-dark {
+  color: var(--ink);
+}
+
+/* World-facing HUD values: these follow the time of day, not the panel material */
+:root {
+  --slate-top-colour: rgba(26, 37, 46, 0.96);
+  --slate-bottom-colour: rgba(13, 19, 25, 0.97);
+  --world-scrim: rgba(238, 236, 228, 0.42);
+  --location-ink: #13202a;
+  --location-ink-2: #33434e;
+  --location-halo: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 26px rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] {
+  --world-scrim: rgba(3, 6, 10, 0.6);
+  --location-ink: #ffffff;
+  --location-ink-2: #f59e0b;
+  --location-halo: 0 2px 12px rgba(0, 0, 0, 0.6);
+}

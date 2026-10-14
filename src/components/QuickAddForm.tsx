@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import type { RefObject } from 'react';
 import { formatShortDate } from '../modules/dateUtils';
 import { formatTimeRangeDisplay, getNextSmartSlot, parseTimeFromText } from '../modules/timeUtils';
-import { addTask, setUiState } from '../modules/store';
-import { useMagneticPull } from '../hooks/useInteractionPolish';
+import { setUiState } from '../modules/store';
+import { logTask } from '../modules/taskActions';
 import { useOpenTimePopover } from './TimePopover';
-import { CalendarIcon, ClockIcon, PlusIcon } from './Icons';
+import { CalendarIcon, ClockIcon } from './Icons';
 import type { AppState } from '../types';
 
 interface QuickAddFormProps {
@@ -18,8 +18,7 @@ export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFo
   const { selectedAddDate, selectedAddStart, selectedAddEnd, tasks } = appState;
   const openTimePopover = useOpenTimePopover();
   const [quickAddText, setQuickAddText] = useState('');
-  const saveBtnRef = useRef<HTMLButtonElement>(null);
-  useMagneticPull(saveBtnRef, { strength: 0.35 });
+  const [commitCount, setCommitCount] = useState(0);
 
   // --- Quick Add Time & Date Helpers ---
   const parsed = parseTimeFromText(quickAddText);
@@ -49,22 +48,31 @@ export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFo
     const start = parsedInput ? parsedInput.startTime : selectedAddStart;
     const end = parsedInput ? parsedInput.endTime : selectedAddEnd;
 
+    setCommitCount(count => count + 1);
     setQuickAddText('');
     setUiState({ selectedAddStart: '', selectedAddEnd: '' });
-    await addTask(text, selectedAddDate, start, end);
+    await logTask(text, selectedAddDate, start, end);
   };
 
   return (
-    <form className="quick-add-box" onSubmit={handleQuickAddSubmit}>
+    // The command bar: a HUD prompt. T (or Enter from anywhere quiet) focuses it; Enter logs the objective.
+    // Alternating pulse names restart the "objective logged" flash on every submit
+    <form
+      className={`quick-add-box command-bar ${quickAddText ? 'has-text' : ''}`}
+      data-commit-pulse={commitCount ? (commitCount % 2) + 1 : undefined}
+      onSubmit={handleQuickAddSubmit}
+    >
       <div className="quick-add-input-row">
-        <div className="quick-add-icon">
-          <PlusIcon />
+        <div className="quick-add-icon command-prompt" aria-hidden="true">
+          <span className="command-caret">&gt;</span>
         </div>
         <input
           type="text"
           ref={quickAddInputRef}
           className="quick-add-input"
-          placeholder={isPhone ? 'Add a task…' : 'Add a task…  try “Call Alex at 3pm”'}
+          placeholder={isPhone ? 'Log objective…' : 'Log objective… try “Call Alex at 3pm”'}
+          aria-label="Log a new task"
+          aria-keyshortcuts="T"
           autoComplete="off"
           enterKeyHint="done"
           value={quickAddText}
@@ -99,6 +107,7 @@ export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFo
               type="button"
               className={`chip-btn ${timeIsActive ? 'is-active' : ''}`}
               title="Select planned completion time range (30m default)"
+              data-sfx="none"
               onClick={(e) => {
                 e.stopPropagation();
                 openTimePopover(e.currentTarget, selectedAddStart, selectedAddEnd, { type: 'quick' });
@@ -122,9 +131,9 @@ export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFo
           </div>
         </div>
 
-        <button type="submit" className="quick-add-save-btn" title="Add task" ref={saveBtnRef}>
-          <span>Add</span>
-          <kbd className="btn-kbd">↵</kbd>
+        <button type="submit" className="quick-add-save-btn command-submit" title="Log objective (Enter) · press T to focus" aria-label="Add task" data-sfx="none">
+          <span className="command-label">Log</span>
+          <span className="command-key" aria-hidden="true">↵</span>
         </button>
       </div>
     </form>

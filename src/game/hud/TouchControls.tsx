@@ -58,6 +58,7 @@ export function TouchControls() {
         type="button"
         className="touch-jump-button"
         aria-label="Jump"
+        data-sfx="none"
         onPointerDown={(event) => {
           event.stopPropagation();
           gameInput.jumpRequested = true;

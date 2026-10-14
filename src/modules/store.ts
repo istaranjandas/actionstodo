@@ -13,7 +13,7 @@ import {
   writeBatch 
 } from '../firebase';
 import { getLocalISODate, getWeekDates } from './dateUtils';
-import type { AppState, Task } from '../types';
+import type { AppState, Task, ViewName } from '../types';
 
 export const STORAGE_KEY = 'todo_do_tasks_v1';
 export const THEME_KEY = 'notion_minimal_theme';
@@ -23,7 +23,7 @@ export const SORT_TIME_KEY = 'notion_minimal_sort_time_v2';
 export const state: AppState = {
   tasks: loadTasks(),
   currentUser: null,
-  currentView: 'all',
+  currentView: 'today',
   specificDateFilter: null,
   selectedAddDate: getLocalISODate(),
   selectedAddStart: '',
@@ -103,31 +103,58 @@ export function sortTaskList(taskList: Task[], sortByTime = true): Task[] {
   });
 }
 
-// Filtering logic
-export function getFilteredTasks(): Task[] {
+// Filtering logic: the single source of truth for which tasks a view (or a picked date) contains.
+// Lists, header counts and lens badges all derive from this.
+export function filterTasks(tasks: Task[], view: ViewName, specificDate: string | null): Task[] {
   const today = getLocalISODate();
 
-  if (state.specificDateFilter) {
-    return state.tasks.filter(t => t.date === state.specificDateFilter);
+  if (specificDate) {
+    return tasks.filter(t => t.date === specificDate);
   }
 
-  switch (state.currentView) {
+  switch (view) {
     case 'today':
-      return state.tasks.filter(t => t.date === today);
+      return tasks.filter(t => t.date === today);
     case 'this-week': {
       const currentWeekDates = getWeekDates(0);
       const start = currentWeekDates[0];
       const end = currentWeekDates[6];
-      return state.tasks.filter(t => t.date >= start && t.date <= end);
+      return tasks.filter(t => t.date >= start && t.date <= end);
     }
     case 'upcoming':
-      return state.tasks.filter(t => t.date >= today);
+      return tasks.filter(t => t.date >= today);
     case 'completed':
-      return state.tasks.filter(t => t.completed);
+      return tasks.filter(t => t.completed);
     case 'all':
     default:
-      return state.tasks;
+      return tasks;
   }
+}
+
+export function getFilteredTasks(): Task[] {
+  return filterTasks(state.tasks, state.currentView, state.specificDateFilter);
+}
+
+export interface TaskTally {
+  open: number;
+  done: number;
+  total: number;
+}
+
+export function tallyTasks(tasks: Task[]): TaskTally {
+  const done = tasks.filter(t => t.completed).length;
+  return { open: tasks.length - done, done, total: tasks.length };
+}
+
+export interface ViewSummary extends TaskTally {
+  tasks: Task[];
+}
+
+// The one selector for a view: its task list and tally. The slate header, the day cards (which group
+// these same tasks) and the ribbon's lens badges all read from it, so their numbers always agree.
+export function summarizeView(tasks: Task[], view: ViewName, specificDate: string | null): ViewSummary {
+  const viewTasks = filterTasks(tasks, view, specificDate);
+  return { tasks: viewTasks, ...tallyTasks(viewTasks) };
 }
 
 // Cloud & Mutation Operations

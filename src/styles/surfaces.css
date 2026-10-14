@@ -1,0 +1,154 @@
+/* ==========================================================================
+   Surfaces: the three materials the whole console is built from
+   1. Panels  — machined plates lit from above (bevel highlight, cast shadow)
+   2. Keys    — raised caps that travel down when pressed
+   3. Wells   — recessed screens and fields cut into a panel
+   ========================================================================== */
+
+/* ---------- 1. Panels: smoked obsidian glass, crisp 1px frame ---------- */
+.date-group,
+.quick-add-box,
+.week-table-container,
+.empty-state {
+  background: var(--hud-glass);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-panel);
+}
+
+.time-popover,
+.devil-popup {
+  background: var(--hud-glass-strong);
+  border: 1px solid var(--line-strong);
+  border-left: 2px solid var(--amber);
+  box-shadow: var(--shadow-float);
+}
+
+/* ---------- 2. Keys: flat HUD segments; hover lights the frame amber ---------- */
+.toolbar-btn,
+.chip-btn,
+.week-today-btn,
+.popover-nudge-btn,
+.grid-slot-btn,
+.duration-pill,
+.creator-copy-email-btn,
+.task-date-chip {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line-strong);
+  color: var(--ink-2);
+  box-shadow: var(--shadow-key);
+  transition:
+    transform var(--dur-press) var(--ease-press),
+    box-shadow var(--dur-quick) var(--ease-out),
+    color var(--dur-quick) ease,
+    border-color var(--dur-quick) ease,
+    filter var(--dur-quick) ease;
+}
+
+@media (hover: hover) {
+  .toolbar-btn:hover,
+  .chip-btn:hover,
+  .week-today-btn:hover,
+  .popover-nudge-btn:hover,
+  .grid-slot-btn:hover,
+  .duration-pill:hover,
+  .creator-copy-email-btn:hover,
+  .task-date-chip:hover,
+  .picker-chip-wrap:hover > .chip-btn,
+  .picker-chip-wrap:hover > .toolbar-btn,
+  .picker-chip-wrap:hover > .task-date-chip {
+    color: var(--ink);
+    border-color: var(--amber-line);
+    background: var(--amber-tint);
+    box-shadow: var(--shadow-key-hover);
+  }
+}
+
+.toolbar-btn:active,
+.chip-btn:active,
+.week-today-btn:active,
+.popover-nudge-btn:active,
+.grid-slot-btn:active,
+.duration-pill:active,
+.creator-copy-email-btn:active,
+.picker-chip-wrap:active > .chip-btn,
+.picker-chip-wrap:active > .toolbar-btn,
+.picker-chip-wrap:active > .task-date-chip {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-key-pressed);
+  transition-duration: 40ms;
+}
+
+/* Latched toggles sit pressed into the panel with a lit amber legend */
+.toolbar-btn.active {
+  background: var(--well);
+  color: var(--amber-text);
+  box-shadow: var(--shadow-key-pressed);
+  transform: translateY(1px);
+}
+
+/* Primary key: solid amber block, the only saturated surface on screen */
+.quick-add-save-btn,
+.grid-slot-btn.active,
+.duration-pill.active {
+  background: var(--amber);
+  border: 1px solid var(--amber-deep);
+  color: var(--amber-ink);
+  box-shadow: var(--shadow-amber);
+  transition:
+    transform var(--dur-press) var(--ease-press),
+    box-shadow var(--dur-quick) var(--ease-out),
+    filter var(--dur-quick) ease;
+}
+
+@media (hover: hover) {
+  .quick-add-save-btn:hover,
+  .grid-slot-btn.active:hover,
+  .duration-pill.active:hover {
+    color: var(--amber-ink);
+    filter: brightness(1.1);
+    box-shadow: var(--shadow-amber), 0 0 22px -4px var(--amber-glow);
+  }
+}
+
+.quick-add-save-btn:active,
+.grid-slot-btn.active:active,
+.duration-pill.active:active {
+  transform: scale(0.97);
+  filter: brightness(0.94);
+  box-shadow: 0 0 0 1px var(--amber-deep);
+}
+
+:is(.toolbar-btn,
+.chip-btn,
+.quick-add-save-btn):disabled {
+  opacity: 0.45;
+  filter: saturate(0.4);
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+/* ---------- 3. Wells ---------- */
+.task-time-pill,
+.popover-time-control,
+.matrix-add-input,
+.week-date-nav,
+.viewport-mode-toggle,
+.date-group-meter {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-well);
+}
+
+/* Shared micro-label: condensed caps, like stencilled panel legends */
+.popover-title,
+.grid-group-label,
+.settings-section-label,
+.settings-title,
+.drop-slots-hint,
+.matrix-time-header {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

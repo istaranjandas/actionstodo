@@ -1,25 +1,35 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
-import type { CSSProperties } from 'react';
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
+import { ChevronRight, Plus } from 'lucide-react';
 import { formatFriendlyDate, formatShortDate, getLocalISODate } from '../modules/dateUtils';
 import { addMinutesToTime, formatTimeRangeDisplay, parseTimeFromText } from '../modules/timeUtils';
-import { deleteTaskItem, getFilteredTasks, sortTaskList, state, updateTaskItem } from '../modules/store';
-import { getDropSlots, setupListDragAndDrop } from '../modules/listDrag';
+import { sortTaskList, tallyTasks, updateTaskItem } from '../modules/store';
+import { getDropSlots, taskDuration } from '../modules/listDrag';
+import { logTask, moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
 import { useInlineTextEdit } from '../hooks/useInlineTextEdit';
-import { useTiltCard } from '../hooks/useInteractionPolish';
-import { useMasonrySpan } from '../hooks/useMasonrySpan';
 import { useOpenTimePopover } from './TimePopover';
+import { useTaskSelection } from './TaskSelection';
 import { ClockIcon } from './Icons';
 import type { AppState, Task } from '../types';
 
+export type FeedLayout = 'column' | 'grid';
+
 interface TaskFeedProps {
   appState: AppState;
-  container: HTMLElement | null;
-  onInlineAdd: (dateKey: string) => void;
+  // The view's tasks from summarizeView, the same list the slate header and lens badges count
+  viewTasks: Task[];
+  layout: FeedLayout;
 }
 
-export function getSortedDateGroups(appState: AppState): { dateKey: string; tasks: Task[] }[] {
+const EMPTY_MESSAGES: Record<string, string> = {
+  upcoming: 'Nothing scheduled ahead. Add a task and pick a future date.',
+  'this-week': 'Nothing planned for this week yet.',
+  completed: 'No completed tasks yet. Finish one and it lands here.',
+  all: 'No tasks yet. Log one below, or press N.'
+};
+
+export function getSortedDateGroups(appState: AppState, filtered: Task[]): { dateKey: string; tasks: Task[] }[] {
   const today = getLocalISODate();
-  const filtered = getFilteredTasks();
 
   // Group tasks by date
   const groupsMap = new Map<string, Task[]>();
@@ -60,87 +70,280 @@ export function getSortedDateGroups(appState: AppState): { dateKey: string; task
   return sortedDates.map(dateKey => ({ dateKey, tasks: sortTaskList(groupsMap.get(dateKey) || [], true) }));
 }
 
-export function TaskFeed({ appState, container, onInlineAdd }: TaskFeedProps) {
-  const groups = getSortedDateGroups(appState);
+export function TaskFeed({ appState, viewTasks, layout }: TaskFeedProps) {
+  const groups = useMemo(
+    () => getSortedDateGroups(appState, viewTasks),
+    [viewTasks, appState.currentView, appState.specificDateFilter]
+  );
+  const isTodayBoard = appState.currentView === 'today' && !appState.specificDateFilter;
+  const isGrid = layout === 'grid';
+  // Day cards take new tasks inline, except in Done (finished work only)
+  const canAddInCard = isGrid && appState.currentView !== 'completed';
 
-  useEffect(() => {
-    if (!container) return;
-    return setupListDragAndDrop({
-      container,
-      getTask: (id) => state.tasks.find(t => t.id === id),
-      onMove: (taskId, updates) => {
-        updateTaskItem(taskId, updates);
-      }
-    });
-  }, [container]);
+  if (isTodayBoard) {
+    return <TodayBoard tasks={groups[0]?.tasks ?? []} />;
+  }
 
   if (groups.length === 0) {
-    return (
-      <div className="empty-state">
-        No tasks found for this view. Press Enter in the input above to create one.
-      </div>
-    );
+    return <div className="empty-state">{EMPTY_MESSAGES[appState.currentView] ?? 'No tasks found for this view.'}</div>;
   }
 
   return (
     <>
       {groups.map(({ dateKey, tasks }, index) => (
-        <DateGroup key={dateKey} dateKey={dateKey} groupTasks={tasks} onInlineAdd={onInlineAdd} staggerIndex={index} />
+        <DateGroup key={dateKey} dateKey={dateKey} groupTasks={tasks} staggerIndex={index} isCard={isGrid} canAdd={canAddInCard} />
       ))}
     </>
   );
 }
 
+// ---------- Day sections ----------
+
 interface DateGroupProps {
   dateKey: string;
   groupTasks: Task[];
-  onInlineAdd: (dateKey: string) => void;
   staggerIndex: number;
+  isCard: boolean;
+  canAdd: boolean;
 }
 
-const DateGroup = memo(function DateGroup({ dateKey, groupTasks, onInlineAdd, staggerIndex }: DateGroupProps) {
-  const groupRef = useRef<HTMLElement>(null);
-  useTiltCard(groupRef);
-  useMasonrySpan(groupRef);
+function DropSlots({ dateKey, tasks }: { dateKey: string; tasks: Task[] }) {
+  const dropSlots = useMemo(() => (dateKey !== 'Undated' ? getDropSlots(tasks) : []), [dateKey, tasks]);
+  if (dateKey === 'Undated') return null;
+  return (
+    <div className="drop-slots">
+      <div className="drop-slots-hint">Drop on a time slot</div>
+      <div className="drop-slots-grid">
+        {dropSlots.map(slot => (
+          <div key={slot.start} className={`drop-slot ${slot.isBusy ? 'is-busy' : ''}`} data-start={slot.start}>
+            {formatTimeRangeDisplay(slot.start)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const DateGroup = memo(function DateGroup({ dateKey, groupTasks, staggerIndex, isCard, canAdd }: DateGroupProps) {
   const { title, sub } = formatFriendlyDate(dateKey);
-  const completedCount = groupTasks.filter(t => t.completed).length;
-  const dropSlots = useMemo(() => (dateKey !== 'Undated' ? getDropSlots(groupTasks) : []), [dateKey, groupTasks]);
+  const { done: completedCount, total } = tallyTasks(groupTasks);
+  const progressPercent = total ? Math.round((completedCount / total) * 100) : 0;
+  const today = getLocalISODate();
+  const dayTone = dateKey === today ? 'is-today' : dateKey < today ? 'is-past' : '';
+  const isDated = dateKey !== 'Undated';
 
   return (
-    <section className="date-group" data-date={dateKey} ref={groupRef} style={{ '--stagger-index': Math.min(staggerIndex, 8) } as CSSProperties}>
-      <span className="card-glare" aria-hidden="true" />
+    <section
+      className={`date-group ${isCard ? 'day-card' : ''} ${dayTone}`}
+      data-date={dateKey}
+      data-drop-date={isDated ? dateKey : undefined}
+      style={{ '--stagger-index': Math.min(staggerIndex, 8) } as CSSProperties}
+    >
       <div className="date-group-header">
         <div className="date-group-title-wrap">
           <span className="date-group-name">{title}</span>
           <span className="date-group-subname">{sub}</span>
         </div>
-        <span className="date-group-count">{completedCount}/{groupTasks.length}</span>
+        <div className="date-group-progress" title={`${completedCount} of ${total} done`}>
+          <span className="date-group-meter" aria-hidden="true">
+            <span className="date-group-meter-fill" style={{ width: `${progressPercent}%` }} />
+          </span>
+          <span className="date-group-count">{completedCount}/{total}</span>
+        </div>
       </div>
-      <div className="task-list" id={`group-list-${dateKey}`}>
+      <div className="task-list" role="list" id={`group-list-${dateKey}`}>
         {groupTasks.map(task => (
           <TaskRow key={task.id} task={task} />
         ))}
-        {groupTasks.length === 0 && <div className="date-group-empty">Nothing planned yet. Add a task to get started.</div>}
+        {groupTasks.length === 0 && <div className="date-group-empty">{canAdd ? 'Nothing planned yet.' : 'Nothing planned yet. Log a task below.'}</div>}
       </div>
-      {dateKey !== 'Undated' && (
-        <div className="drop-slots">
-          <div className="drop-slots-hint">Drop on a time slot</div>
-          <div className="drop-slots-grid">
-            {dropSlots.map(slot => (
-              <div key={slot.start} className={`drop-slot ${slot.isBusy ? 'is-busy' : ''}`} data-start={slot.start}>
-                {formatTimeRangeDisplay(slot.start)}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="inline-add-row" data-date={dateKey} onClick={() => onInlineAdd(dateKey)}>
-        <span className="inline-add-icon">+</span>
-        <span>New task</span>
-      </div>
+      <DropSlots dateKey={dateKey} tasks={groupTasks} />
+      {canAdd && isDated && <DayCardAdd date={dateKey} dayLabel={title} />}
     </section>
   );
 });
+
+// "+ New task" at the foot of a day card: an inline command line already scoped to that card's day.
+// Stays open after each entry so a day fills in quickly; Escape, or leaving it empty, closes it.
+function DayCardAdd({ date, dayLabel }: { date: string; dayLabel: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [text, setText] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) inputRef.current?.focus();
+  }, [isOpen]);
+
+  const close = () => {
+    setText('');
+    setIsOpen(false);
+  };
+
+  const submit = () => {
+    const raw = text.trim();
+    if (!raw) {
+      close();
+      return;
+    }
+    const parsed = parseTimeFromText(raw);
+    setText('');
+    void logTask(parsed ? parsed.cleanText : raw, date, parsed?.startTime ?? '', parsed?.endTime ?? '');
+  };
+
+  if (!isOpen) {
+    return (
+      <button type="button" className="day-card-add" data-sfx="open" onClick={() => setIsOpen(true)}>
+        <Plus size={13} strokeWidth={2.4} aria-hidden="true" />
+        <span>New task</span>
+      </button>
+    );
+  }
+
+  return (
+    <form
+      className="day-card-add-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+    >
+      <Plus className="day-card-add-icon" size={13} strokeWidth={2.4} aria-hidden="true" />
+      <input
+        ref={inputRef}
+        type="text"
+        className="day-card-add-input"
+        placeholder="New task… try “at 3pm”"
+        aria-label={`New task for ${dayLabel}`}
+        autoComplete="off"
+        enterKeyHint="done"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={() => {
+          if (!text.trim()) close();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            close();
+          }
+        }}
+      />
+    </form>
+  );
+}
+
+// ---------- Today board ----------
+
+const toMinutes = (time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+function useMinuteClock(): number {
+  const read = () => {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  };
+  const [minutes, setMinutes] = useState(read);
+  useEffect(() => {
+    const tick = () => setMinutes(read());
+    const timer = window.setInterval(tick, 30000);
+    document.addEventListener('visibilitychange', tick);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', tick);
+    };
+  }, []);
+  return minutes;
+}
+
+function formatGap(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours} h ${rest} min` : `${hours} h`;
+}
+
+function formatClock(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  return `${hours % 12 || 12}:${String(minutes % 60).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
+}
+
+function TodayBoard({ tasks }: { tasks: Task[] }) {
+  const today = getLocalISODate();
+  const nowMinutes = useMinuteClock();
+  const { openTask } = useTaskSelection();
+  const timed = tasks.filter(t => t.startTime);
+  const anytime = tasks.filter(t => !t.startTime);
+  const nextUp = timed.find(t => !t.completed && toMinutes(t.startTime) + taskDuration(t) > nowMinutes);
+  const markerIndex = timed.findIndex(t => toMinutes(t.startTime) > nowMinutes);
+
+  let nextUpTiming = '';
+  if (nextUp) {
+    const start = toMinutes(nextUp.startTime);
+    nextUpTiming = start > nowMinutes
+      ? `Starts in ${formatGap(start - nowMinutes)}`
+      : `In progress · ends in ${formatGap(start + taskDuration(nextUp) - nowMinutes)}`;
+  }
+
+  const nowMarker = (
+    <div className="now-marker" role="presentation">
+      <span className="now-marker-label">Now · {formatClock(nowMinutes)}</span>
+    </div>
+  );
+
+  return (
+    <section className="date-group today-board is-today" data-date={today} data-drop-date={today}>
+      {nextUp ? (
+        <button type="button" className="next-up" data-sfx="open" onClick={() => openTask(nextUp.id)}>
+          <span className="next-up-label">Next up</span>
+          <span className="next-up-text">{nextUp.text}</span>
+          <span className="next-up-meta">
+            <span className="next-up-time">{formatTimeRangeDisplay(nextUp.startTime, nextUp.endTime)}</span>
+            <span className="next-up-eta">{nextUpTiming}</span>
+          </span>
+          <ChevronRight className="next-up-chevron" size={18} aria-hidden="true" />
+        </button>
+      ) : (
+        <div className="next-up is-clear">
+          <span className="next-up-label">Next up</span>
+          <span className="next-up-text">{timed.length ? 'Schedule clear for the rest of today.' : 'No timed tasks today.'}</span>
+        </div>
+      )}
+
+      <div className="board-section-label">
+        <span>Schedule</span>
+        <span className="board-section-count">{timed.length}</span>
+      </div>
+      <div className="task-list timeline" role="list">
+        {timed.map((task, index) => (
+          <Fragment key={task.id}>
+            {index === markerIndex && nowMarker}
+            <TaskRow task={task} />
+          </Fragment>
+        ))}
+        {timed.length > 0 && markerIndex === -1 && nowMarker}
+        {timed.length === 0 && <div className="date-group-empty">Give a task a time, like “Call Alex at 3pm”, and it appears here.</div>}
+      </div>
+
+      <div className="board-section-label">
+        <span>Anytime</span>
+        <span className="board-section-count">{anytime.length}</span>
+      </div>
+      <div className="task-list" role="list">
+        {anytime.map(task => (
+          <TaskRow key={task.id} task={task} />
+        ))}
+        {anytime.length === 0 && <div className="date-group-empty">Tasks without a time land here.</div>}
+      </div>
+
+      <DropSlots dateKey={today} tasks={tasks} />
+    </section>
+  );
+}
+
+// ---------- Task row ----------
 
 function nudgeTaskTime(task: Task, minutes: number) {
   const baseStart = task.startTime || '09:00';
@@ -150,38 +353,71 @@ function nudgeTaskTime(task: Task, minutes: number) {
   updateTaskItem(task.id, { startTime: newStart, endTime: newEnd });
 }
 
+// Arrow keys walk the visible rows in reading order
+function focusSiblingRow(row: HTMLElement, step: 1 | -1) {
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('.date-groups .task-row'));
+  const next = rows[rows.indexOf(row) + step];
+  if (next) {
+    next.focus();
+    next.scrollIntoView({ block: 'nearest' });
+  }
+}
+
 const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
   const openTimePopover = useOpenTimePopover();
+  const { selectedTaskId, openTask } = useTaskSelection();
+  const [justCompleted, setJustCompleted] = useState(false);
   const hasTime = Boolean(task.startTime);
   const timeDisplay = hasTime ? formatTimeRangeDisplay(task.startTime, task.endTime) : '+ 30m';
+  const isSelected = selectedTaskId === task.id;
 
-  // Inline edit text: double-click to edit (single click + drag moves the task)
+  // Inline edit text: double-click (or F2) to edit; single click opens the details panel; drag moves the task
   const { textRef, isEditing, startEditing, handleBlur, handleKeyDown } = useInlineTextEdit({
     text: task.text,
-    onCommit: (newText) => {
-      if (newText && newText !== task.text) {
-        const parsed = parseTimeFromText(newText);
-        if (parsed) {
-          updateTaskItem(task.id, { text: parsed.cleanText, startTime: parsed.startTime, endTime: parsed.endTime });
-        } else {
-          updateTaskItem(task.id, { text: newText });
-        }
-      } else if (!newText) {
-        deleteTaskItem(task.id);
-      }
-    }
+    onCommit: (newText) => renameTask(task, newText)
   });
+
+  const toggleCompleted = (completed: boolean) => {
+    setJustCompleted(completed);
+    setTaskCompleted(task, completed);
+  };
+
+  const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      openTask(task.id, true);
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      toggleCompleted(!task.completed);
+    } else if (e.key === 'F2') {
+      e.preventDefault();
+      startEditing();
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      focusSiblingRow(e.currentTarget, e.key === 'ArrowDown' ? 1 : -1);
+    }
+  };
 
   return (
     <div
-      className={`task-row ${task.completed ? 'is-completed' : ''} ${isEditing ? 'is-editing' : ''}`}
+      className={`task-row ${task.completed ? 'is-completed' : ''} ${justCompleted && task.completed ? 'is-just-completed' : ''} ${isEditing ? 'is-editing' : ''} ${isSelected ? 'is-selected' : ''}`}
       data-id={task.id}
+      role="listitem"
+      tabIndex={0}
+      aria-label={`${task.text}${hasTime ? `, ${timeDisplay}` : ''}${task.completed ? ', completed' : ''}`}
+      aria-current={isSelected ? 'true' : undefined}
       draggable={!isEditing}
-      title="Drag to move · Double-click to edit"
+      title="Click for details · Double-click to rename · Drag to move"
+      onClick={(e) => {
+        if ((e.target as Element).closest('button, input') || isEditing) return;
+        openTask(task.id);
+      }}
       onDoubleClick={(e) => {
         if ((e.target as Element).closest('button, input') || isEditing) return;
         startEditing();
       }}
+      onKeyDown={handleRowKeyDown}
     >
       <span className="task-drag-handle" aria-hidden="true">⋮⋮</span>
       <div className="task-checkbox-wrap">
@@ -189,8 +425,10 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
           type="checkbox"
           className="task-checkbox"
           checked={task.completed}
-          aria-label="Toggle completed"
-          onChange={(e) => updateTaskItem(task.id, { completed: e.target.checked })}
+          aria-label={task.completed ? 'Mark as not done' : 'Mark as done'}
+          data-sfx="none"
+          tabIndex={-1}
+          onChange={(e) => toggleCompleted(e.target.checked)}
         />
       </div>
 
@@ -199,6 +437,8 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
           type="button"
           className="time-nudge-btn nudge-prev"
           title="Move back 30m (1 click)"
+          aria-label="Move back 30 minutes"
+          tabIndex={-1}
           onClick={(e) => {
             e.stopPropagation();
             nudgeTaskTime(task, -30);
@@ -210,6 +450,8 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
           type="button"
           className={`task-time-pill ${hasTime ? 'is-set' : 'is-empty'}`}
           title="1-click slot picker"
+          data-sfx="none"
+          tabIndex={-1}
           onClick={(e) => {
             e.stopPropagation();
             openTimePopover(e.currentTarget, task.startTime, task.endTime, { type: 'task', taskId: task.id });
@@ -222,6 +464,8 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
           type="button"
           className="time-nudge-btn nudge-next"
           title="Move forward 30m (1 click)"
+          aria-label="Move forward 30 minutes"
+          tabIndex={-1}
           onClick={(e) => {
             e.stopPropagation();
             nudgeTaskTime(task, 30);
@@ -237,7 +481,10 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
           spellCheck={false}
           ref={textRef}
           onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            handleKeyDown(e);
+          }}
         />
       </div>
 
@@ -249,8 +496,9 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
             className="chip-date-input task-row-date-picker"
             value={task.date}
             aria-label="Change task date"
+            tabIndex={-1}
             onChange={(e) => {
-              if (e.target.value) updateTaskItem(task.id, { date: e.target.value });
+              if (e.target.value) moveTask(task.id, { date: e.target.value });
             }}
           />
         </div>
@@ -258,14 +506,32 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
           type="button"
           className="task-action-btn delete-btn"
           title="Delete task"
+          aria-label="Delete task"
+          data-sfx="none"
+          tabIndex={-1}
           onClick={(e) => {
             e.stopPropagation();
-            deleteTaskItem(task.id);
+            removeTask(task);
           }}
         >
           &times;
         </button>
       </div>
+
+      <button
+        type="button"
+        className="task-open-btn"
+        aria-label="Open task details"
+        title="Details (Enter)"
+        data-sfx="open"
+        tabIndex={-1}
+        onClick={(e) => {
+          e.stopPropagation();
+          openTask(task.id);
+        }}
+      >
+        <ChevronRight size={16} strokeWidth={2.2} aria-hidden="true" />
+      </button>
     </div>
   );
 });

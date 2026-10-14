@@ -3,6 +3,7 @@ import { createContext, forwardRef, useCallback, useContext, useEffect, useImper
 import type { CSSProperties } from 'react';
 import { addMinutesToTime, getDurationMinutes, getNextSmartSlot } from '../modules/timeUtils';
 import { state } from '../modules/store';
+import { playUiSound } from '../audio/uiSounds';
 import type { TimePopoverContext as PopoverTarget } from '../types';
 
 export type OpenTimePopover = (triggerEl: HTMLElement, startVal: string, endVal: string, context: PopoverTarget) => void;
@@ -66,8 +67,15 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
     activeContext.current = null;
   }, []);
 
+  // Closing without picking anything gets its own cue; picking a slot already sounds as a selection
+  const dismissTimePopover = useCallback(() => {
+    playUiSound('close');
+    closeTimePopover();
+  }, [closeTimePopover]);
+
   useImperativeHandle(ref, () => ({
     open(triggerEl, startVal, endVal, context) {
+      playUiSound('open');
       activeContext.current = context;
 
       if (!startVal) {
@@ -160,11 +168,11 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
     if (!isOpen) return;
     const handleDocumentClick = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
-        closeTimePopover();
+        dismissTimePopover();
       }
     };
     const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeTimePopover();
+      if (e.key === 'Escape') dismissTimePopover();
     };
     document.addEventListener('click', handleDocumentClick);
     document.addEventListener('keydown', handleKeydown);
@@ -172,7 +180,7 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
       document.removeEventListener('click', handleDocumentClick);
       document.removeEventListener('keydown', handleKeydown);
     };
-  }, [isOpen, closeTimePopover]);
+  }, [isOpen, dismissTimePopover]);
 
   return (
     <>
@@ -181,11 +189,19 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
         id="popoverBackdrop"
         onClick={(e) => {
           e.stopPropagation();
-          closeTimePopover();
+          dismissTimePopover();
         }}
       />
 
-      <div className={`time-popover ${isOpen ? 'open' : ''}`} id="timePopover" ref={popoverRef} style={position} data-lenis-prevent>
+      <div
+        className={`time-popover ${isOpen ? 'open' : ''}`}
+        id="timePopover"
+        role="dialog"
+        aria-label="Pick a time slot"
+        ref={popoverRef}
+        style={position}
+        data-lenis-prevent
+      >
         <div className="popover-header">
           <span className="popover-title">1-Click Slot Picker</span>
           <div className="popover-header-actions">
@@ -196,9 +212,10 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
               className="popover-close-btn"
               title="Close"
               aria-label="Close slot picker"
+              data-sfx="none"
               onClick={(e) => {
                 e.stopPropagation();
-                closeTimePopover();
+                dismissTimePopover();
               }}
             >
               &times;
@@ -213,6 +230,7 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
                 key={pill.mins}
                 type="button"
                 className={`duration-pill ${pill.mins === durationMins ? 'active' : ''}`}
+                data-sfx="select"
                 onClick={() => handleDuration(pill.mins)}
               >
                 {pill.label}
@@ -231,6 +249,7 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
                     key={time}
                     type="button"
                     className={`grid-slot-btn ${time === startValue ? 'active' : ''}`}
+                    data-sfx="select"
                     onClick={() => handleGridSlot(time)}
                   >
                     {label}

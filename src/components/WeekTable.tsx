@@ -6,7 +6,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import type { DragEvent } from 'react';
 import { formatWeekRangeLabel, getLocalISODate, getWeekDates } from '../modules/dateUtils';
 import { addMinutesToTime, formatTimeRangeDisplay, getDurationMinutes, parseTimeFromText } from '../modules/timeUtils';
-import { addTask, deleteTaskItem, updateTaskItem } from '../modules/store';
+import { logTask, moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
 import { useInlineTextEdit } from '../hooks/useInlineTextEdit';
 import { useOpenTimePopover } from './TimePopover';
 import { ListLinesIcon } from './Icons';
@@ -32,22 +32,9 @@ function formatHourLabel(h: number) {
 async function handleAddTask(text: string, dateStr: string, start: string, end: string) {
   const parsed = parseTimeFromText(text);
   if (parsed) {
-    await addTask(parsed.cleanText, dateStr, parsed.startTime, parsed.endTime);
+    await logTask(parsed.cleanText, dateStr, parsed.startTime, parsed.endTime);
   } else {
-    await addTask(text, dateStr, start, end);
-  }
-}
-
-async function handleEditText(taskId: string, newText: string) {
-  if (!newText) {
-    await deleteTaskItem(taskId);
-  } else {
-    const parsed = parseTimeFromText(newText);
-    if (parsed) {
-      await updateTaskItem(taskId, { text: parsed.cleanText, startTime: parsed.startTime, endTime: parsed.endTime });
-    } else {
-      await updateTaskItem(taskId, { text: newText });
-    }
+    await logTask(text, dateStr, start, end);
   }
 }
 
@@ -119,7 +106,7 @@ export function WeekTable({ tasks, weekOffset, onPrevWeek, onNextWeek, onThisWee
     }
 
     if (task.date === date && (task.startTime || '') === start) return;
-    updateTaskItem(task.id, { date, startTime: start, endTime: end });
+    moveTask(task.id, { date, startTime: start, endTime: end });
   };
 
   const clearDropTargets = () => {
@@ -131,14 +118,14 @@ export function WeekTable({ tasks, weekOffset, onPrevWeek, onNextWeek, onThisWee
       <div className="week-table-header">
         <div className="week-table-title-group">
           <div className="week-date-nav">
-            <button type="button" className="week-nav-btn" title="Previous Week" onClick={onPrevWeek}>‹</button>
+            <button type="button" className="week-nav-btn" title="Previous Week" aria-label="Previous week" onClick={onPrevWeek}>‹</button>
             <span className="week-range-label">{formatWeekRangeLabel(weekDates)}</span>
-            <button type="button" className="week-nav-btn" title="Next Week" onClick={onNextWeek}>›</button>
+            <button type="button" className="week-nav-btn" title="Next Week" aria-label="Next week" onClick={onNextWeek}>›</button>
             <button type="button" className="week-today-btn" onClick={onThisWeek}>This Week</button>
           </div>
           <span className="week-table-hint">Click a cell to add · Double-click a task to edit · Drag to move</span>
         </div>
-        <button type="button" className="toolbar-btn" title="Back to list view" onClick={onExitTable}>
+        <button type="button" className="toolbar-btn" title="Back to list view" data-sfx="select" onClick={onExitTable}>
           <ListLinesIcon />
           <span>List View</span>
         </button>
@@ -260,19 +247,20 @@ function InlineAddInput({ onFinish }: { onFinish: (text: string) => void }) {
 
 function MatrixTaskChip({ task, onDragFinished }: { task: Task; onDragFinished: () => void }) {
   const openTimePopover = useOpenTimePopover();
+  const [justCompleted, setJustCompleted] = useState(false);
   const timeLabel = task.startTime ? formatTimeRangeDisplay(task.startTime, task.endTime) : '';
 
   // Inline text editing
   const { textRef, isEditing, startEditing, handleBlur, handleKeyDown } = useInlineTextEdit({
     text: task.text,
     onCommit: (newText) => {
-      if (newText !== task.text) handleEditText(task.id, newText);
+      if (newText !== task.text) renameTask(task, newText);
     }
   });
 
   return (
     <div
-      className={`matrix-task-item ${task.completed ? 'is-completed' : ''} ${isEditing ? 'is-editing' : ''}`}
+      className={`matrix-task-item ${task.completed ? 'is-completed' : ''} ${justCompleted && task.completed ? 'is-just-completed' : ''} ${isEditing ? 'is-editing' : ''}`}
       data-id={task.id}
       draggable={!isEditing}
       onDragStart={(e) => {
@@ -291,7 +279,12 @@ function MatrixTaskChip({ task, onDragFinished }: { task: Task; onDragFinished: 
         className="matrix-task-check"
         checked={task.completed}
         aria-label="Toggle completed"
-        onChange={(e) => updateTaskItem(task.id, { completed: e.target.checked })}
+        data-sfx="none"
+        onChange={(e) => {
+          const isDone = e.target.checked;
+          setJustCompleted(isDone);
+          setTaskCompleted(task, isDone);
+        }}
       />
       <div className="matrix-task-body">
         <span
@@ -311,6 +304,7 @@ function MatrixTaskChip({ task, onDragFinished }: { task: Task; onDragFinished: 
             type="button"
             className="matrix-task-time"
             title="Change time"
+            data-sfx="none"
             onClick={(e) => {
               e.stopPropagation();
               openTimePopover(e.currentTarget, task.startTime, task.endTime, { type: 'task', taskId: task.id });
@@ -325,9 +319,10 @@ function MatrixTaskChip({ task, onDragFinished }: { task: Task; onDragFinished: 
         className="matrix-task-del"
         title="Delete task"
         aria-label="Delete task"
+        data-sfx="none"
         onClick={(e) => {
           e.stopPropagation();
-          deleteTaskItem(task.id);
+          removeTask(task);
         }}
       >
         &times;

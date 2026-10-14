@@ -1,0 +1,391 @@
+/* ==========================================================================
+   Quick add: the command bar
+   ========================================================================== */
+.quick-add-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+  padding: 10px 10px 10px 16px;
+  border-radius: var(--radius-lg);
+  transition: border-color var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
+}
+
+.quick-add-box:focus-within {
+  border-color: var(--amber-line);
+  box-shadow: var(--shadow-panel), 0 0 0 3px var(--amber-wash);
+}
+
+/* "Task logged" flash: a warm sweep across the bar (two names so it can restart) */
+.quick-add-box[data-commit-pulse="1"] {
+  animation: commitPulseA 520ms var(--ease-out);
+}
+
+.quick-add-box[data-commit-pulse="2"] {
+  animation: commitPulseB 520ms var(--ease-out);
+}
+
+@keyframes commitPulseA {
+  30% {
+    box-shadow: var(--shadow-panel), 0 0 0 4px var(--amber-glow);
+  }
+}
+
+@keyframes commitPulseB {
+  30% {
+    box-shadow: var(--shadow-panel), 0 0 0 4px var(--amber-glow);
+  }
+}
+
+.quick-add-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.quick-add-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--ink-3);
+  transition: color var(--dur-quick) ease, transform var(--dur-panel) var(--ease-spring);
+}
+
+.quick-add-box:focus-within .quick-add-icon {
+  color: var(--amber-text);
+  transform: rotate(90deg);
+}
+
+.quick-add-input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  font-weight: 450;
+  color: var(--ink);
+}
+
+.quick-add-input::placeholder {
+  color: var(--ink-3);
+}
+
+.quick-add-input:focus-visible {
+  outline: none;
+}
+
+.quick-add-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chip-btn.is-active {
+  color: var(--ink);
+}
+
+.chip-btn.is-active svg {
+  color: var(--amber-text);
+}
+
+.quick-add-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 10px 0 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.btn-kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  background: rgba(60, 30, 0, 0.14);
+  box-shadow: inset 0 1px 1px rgba(60, 30, 0, 0.25);
+}
+
+/* ---------- Desktop: one slim line ---------- */
+@media (min-width: 1025px) {
+  .quick-add-box {
+    margin: 0;
+    padding: 7px 7px 7px 16px;
+    gap: 0;
+  }
+
+  .quick-add-chips-row {
+    flex-shrink: 0;
+    gap: 6px;
+  }
+}
+
+/* ---------- Tablet & phone: chips drop to a second row ---------- */
+@media (max-width: 1024px) {
+  .quick-add-box {
+    padding: 8px 8px 8px 14px;
+    gap: 0;
+  }
+
+  .quick-add-input-row {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .quick-add-chips-row {
+    order: 3;
+    flex-basis: 100%;
+    padding: 10px 0 2px;
+    border-top: 1px solid var(--groove-dark);
+    box-shadow: inset 0 1px 0 var(--groove-light);
+  }
+}
+
+@media (max-width: 680px) {
+  .quick-add-box {
+    margin-bottom: 20px;
+  }
+
+  .quick-add-input {
+    font-size: 16px; /* Prevents auto-zoom on iOS Safari */
+    min-height: 44px;
+  }
+}
+
+/* ---------- Inside the day slate: a recessed command line, chips beneath ---------- */
+.slate-command .quick-add-box {
+  margin: 0;
+  padding: 6px 6px 6px 12px;
+  gap: 0;
+  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.slate-command .quick-add-box:focus-within {
+  border-color: var(--amber-line);
+  box-shadow: inset 0 0 0 1px var(--line), 0 0 0 3px var(--amber-wash);
+}
+
+.slate-command .quick-add-input-row {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.slate-command .quick-add-chips-row {
+  order: 3;
+  flex-basis: 100%;
+  padding: 7px 0 1px;
+  border-top: 1px solid var(--line);
+}
+
+/* ==========================================================================
+   HUD command bar (game pass)
+   A sharp-edged prompt: amber caret, mono input, flat segment chips and a
+   compact LOG ↵ key. No rounded field, no pills.
+   ========================================================================== */
+.command-bar,
+.slate-command .command-bar {
+  border-radius: 0;
+  border: 1px solid var(--line-strong);
+  border-left: 2px solid var(--amber-line);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: none;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+}
+
+.command-bar:focus-within,
+.slate-command .command-bar:focus-within {
+  border-color: var(--amber-line);
+  border-left-color: var(--amber);
+  background: rgba(0, 0, 0, 0.62);
+  box-shadow: inset 0 0 24px -12px var(--amber-glow);
+}
+
+.command-bar[data-commit-pulse="1"],
+.command-bar[data-commit-pulse="2"] {
+  animation-name: none;
+}
+
+.command-bar[data-commit-pulse="1"] {
+  animation: commandLoggedA 480ms var(--ease-out);
+}
+
+.command-bar[data-commit-pulse="2"] {
+  animation: commandLoggedB 480ms var(--ease-out);
+}
+
+@keyframes commandLoggedA {
+  25% {
+    background-color: rgba(235, 162, 69, 0.28);
+    border-left-color: var(--amber-hi);
+  }
+}
+
+@keyframes commandLoggedB {
+  25% {
+    background-color: rgba(235, 162, 69, 0.28);
+    border-left-color: var(--amber-hi);
+  }
+}
+
+.command-prompt {
+  width: 14px;
+  justify-content: center;
+}
+
+.command-caret {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--amber-text);
+}
+
+.command-bar:focus-within .command-prompt {
+  transform: none;
+}
+
+/* Blinking cursor block while the prompt waits */
+.command-bar:focus-within:not(.has-text) .command-caret {
+  animation: caretBlink 1s steps(1) infinite;
+}
+
+@keyframes caretBlink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Tighter gaps so the whole example placeholder fits beside the compact key */
+.command-bar .quick-add-input-row {
+  gap: 8px;
+}
+
+.command-bar .quick-add-input {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0;
+  caret-color: var(--hud-gold);
+  text-overflow: ellipsis;
+}
+
+.command-bar .quick-add-input::placeholder {
+  color: var(--ink-3);
+  text-transform: none;
+  text-overflow: ellipsis;
+}
+
+/* Chips become flat bracketed readouts */
+.command-bar .chip-btn {
+  height: 26px;
+  padding: 0 9px;
+  gap: 6px;
+  border-radius: 0;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.command-bar .chip-btn svg {
+  color: var(--ink-3);
+}
+
+.command-bar .chip-btn.is-active {
+  border-color: var(--amber-line);
+  color: var(--ink);
+}
+
+.command-bar .chip-btn.is-active svg {
+  color: var(--amber-text);
+}
+
+.command-bar .clear-chip-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 0;
+}
+
+/* The compact submit key: LOG ↵ */
+.command-submit {
+  flex-shrink: 0;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 0;
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+}
+
+.command-key {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  opacity: 0.8;
+}
+
+/* Typing lights the key solid gold */
+.command-bar.has-text .command-submit {
+  border-color: var(--hud-gold);
+  background: var(--hud-gold);
+  color: #140c02;
+  box-shadow: none;
+}
+
+/* Idle: the key sits back as a quiet hint; hover or focus gives it a crisp gold frame */
+.command-bar:not(.has-text) .command-submit {
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--ink-3);
+  box-shadow: none;
+  filter: none;
+}
+
+.command-bar:not(.has-text):focus-within .command-submit,
+.command-bar:not(.has-text) .command-submit:hover {
+  border-color: var(--hud-gold);
+  color: var(--hud-gold);
+}
+
+@media (max-width: 680px) {
+  .command-submit {
+    height: 36px;
+    padding: 0 10px;
+  }
+}

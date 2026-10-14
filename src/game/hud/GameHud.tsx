@@ -88,6 +88,7 @@ export function GameHud({ onChangeMode, isTouchDevice, celebrate }: GameHudProps
         <button
           type="button"
           className="hud-interact-prompt"
+          data-sfx="none"
           onClick={() => {
             gameInput.interactRequested = true;
           }}
