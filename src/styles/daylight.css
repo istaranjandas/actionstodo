@@ -1,0 +1,257 @@
+/* ==========================================================================
+   Daylight: warm alabaster mode
+   The HUD was drawn for dusk, so a few surfaces hard-code smoked glass, black wells and
+   pale ink. This pass gives each one its daylight value: warm ivory glass, Stone ink and
+   burnt amber accents, all read from the tokens.
+   Loaded last; :where() keeps each override at the weight of the rule it replaces, so
+   hover, focus and latched states written for both themes still win.
+   ========================================================================== */
+
+/* ---------- World labels ---------- */
+:where([data-theme='light']) .post-label {
+  background: linear-gradient(180deg, rgba(251, 249, 245, 0.95), rgba(248, 245, 239, 0.95));
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 10px 24px -10px var(--cast);
+}
+
+:where([data-theme='light']) .post-label.is-focused {
+  background: linear-gradient(180deg, var(--raised-top), var(--amber-tint));
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 0 0 3px var(--amber-wash), 0 12px 28px -10px var(--cast);
+}
+
+:where([data-theme='light']) .post-label.is-focused .post-label-day,
+:where([data-theme='light']) .post-label.is-focused .post-label-day strong {
+  color: var(--amber-text);
+}
+
+:where([data-theme='light']) .lantern-tooltip {
+  background: rgba(251, 249, 245, 0.97);
+  box-shadow: 0 10px 24px -10px var(--cast);
+}
+
+/* ---------- Top bar ---------- */
+:where([data-theme='light']) .system-trigger {
+  box-shadow: var(--hud-glass-shadow);
+}
+
+:where([data-theme='light']) .brand-icon {
+  box-shadow: var(--shadow-amber), 0 12px 28px -14px var(--cast);
+}
+
+:where([data-theme='light']) .system-trigger:hover {
+  box-shadow: var(--shadow-key-hover), var(--hud-glass-shadow);
+  border-color: var(--amber-line);
+}
+
+:where([data-theme='light']) .system-trigger:active,
+:where([data-theme='light']) .system-trigger.is-active {
+  border-color: var(--amber-line);
+}
+
+:where([data-theme='light']) .sync-lamp {
+  box-shadow: 0 0 0 3px var(--well);
+}
+
+:where([data-theme='light']) .segmented {
+  background: var(--well);
+}
+
+:where([data-theme='light']) .system-action,
+:where([data-theme='light']) .inspector-value-btn,
+:where([data-theme='light']) .toolbar-btn,
+:where([data-theme='light']) .chip-btn,
+:where([data-theme='light']) .week-today-btn,
+:where([data-theme='light']) .popover-nudge-btn,
+:where([data-theme='light']) .grid-slot-btn,
+:where([data-theme='light']) .duration-pill,
+:where([data-theme='light']) .creator-copy-email-btn,
+:where([data-theme='light']) .task-date-chip,
+:where([data-theme='light']) .command-bar .chip-btn,
+:where([data-theme='light']) .hud-dark .drop-slot {
+  background: rgba(253, 251, 248, 0.72);
+}
+
+/* Recessed wells: warm ivory instead of a black inset */
+:where([data-theme='light']) .week-date-nav,
+:where([data-theme='light']) .viewport-mode-toggle,
+:where([data-theme='light']) .task-time-pill,
+:where([data-theme='light']) .popover-time-control,
+:where([data-theme='light']) .matrix-add-input {
+  background: var(--well);
+}
+
+/* ---------- Day slate ---------- */
+:where([data-theme='light']) .slate {
+  background: var(--hud-glass);
+  box-shadow: var(--hud-glass-shadow);
+}
+
+@media (max-width: 1024px) {
+  :where([data-theme='light']) .slate {
+    background: var(--hud-glass-strong);
+  }
+
+  :where([data-theme='light']) .slate.is-grid .date-group.day-card,
+  :where([data-theme='light']) .slate.is-grid .slate-header,
+  :where([data-theme='light']) .slate.is-grid .slate-command {
+    background: var(--hud-glass-strong);
+  }
+}
+
+:where([data-theme='light']) .slate.is-scrolled .slate-header {
+  box-shadow: 0 12px 18px -14px var(--cast);
+}
+
+:where([data-theme='light']) .slate-header {
+  background: linear-gradient(90deg, var(--amber-tint), transparent 60%);
+}
+
+:where([data-theme='light']) .slate-gauge,
+:where([data-theme='light']) .date-group-meter {
+  background: var(--well-deep);
+}
+
+:where([data-theme='light']) .slate-gauge::after {
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(251, 249, 245, 0.9) calc(10% - 1px) 10%);
+}
+
+:where([data-theme='light']) .hud-scrim {
+  background:
+    radial-gradient(120% 90% at 50% 45%, rgba(251, 249, 245, 0.42), rgba(251, 249, 245, 0.72)),
+    linear-gradient(180deg, rgba(251, 249, 245, 0.3), rgba(251, 249, 245, 0.5));
+}
+
+/* ---------- Task list ---------- */
+:where([data-theme='light']) .hud-dark .date-group {
+  border-color: var(--hud-glass-edge);
+  box-shadow: var(--hud-glass-shadow);
+}
+
+:where([data-theme='light']) .hud-dark .next-up,
+:where([data-theme='light']) .hud-dark .next-up.is-clear {
+  border-color: rgba(217, 119, 6, 0.3);
+  border-left-color: var(--amber);
+  background: var(--amber-tint);
+}
+
+:where([data-theme='light']) .hud-dark button.next-up:hover {
+  border-color: var(--amber-line);
+  border-left-color: var(--amber);
+  background: var(--amber-tint);
+  box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.18);
+}
+
+:where([data-theme='light']) .hud-dark .task-row + .task-row {
+  border-top-color: var(--line);
+}
+
+/* Hover / focus: a warm cream bar instead of the dusk inverted fill */
+@media (hover: hover) {
+  :where([data-theme='light']) .slate .task-row:hover {
+    background: var(--amber-tint);
+  }
+
+  :where([data-theme='light']) .hud-dark .task-row:hover:not(.is-editing):not(.is-dragging):not(.is-selected),
+  :where([data-theme='light']) .hud-dark .slate .task-row:hover:not(.is-editing):not(.is-dragging):not(.is-selected) {
+    --ink: #1c1917;
+    --ink-2: #44403c;
+    --ink-3: #57534e;
+    --ink-faint: #78716c;
+    --line: rgba(28, 25, 23, 0.12);
+    --line-strong: rgba(28, 25, 23, 0.2);
+    --well: #f3efe8;
+    --hover: rgba(28, 25, 23, 0.045);
+    --amber-text: #a84c07;
+    --teal: #208368;
+    --teal-hi: #29a383;
+    background: var(--amber-tint);
+  }
+}
+
+:where([data-theme='light']) .hud-dark .task-row:focus-visible:not(.is-editing):not(.is-selected) {
+  --ink: #1c1917;
+  --ink-2: #44403c;
+  --ink-3: #57534e;
+  --line: rgba(28, 25, 23, 0.12);
+  --line-strong: rgba(28, 25, 23, 0.2);
+  --well: #f3efe8;
+  --amber-text: #a84c07;
+  background: var(--amber-tint);
+}
+
+/* Selected: soft amber fill with Stone ink, burnt amber rail on the left */
+:where([data-theme='light']) .hud-dark .task-row.is-selected,
+:where([data-theme='light']) .hud-dark .slate .task-row.is-selected,
+:where([data-theme='light']) .hud-dark .task-row.is-selected:hover {
+  --ink: #1c1917;
+  --ink-2: #44403c;
+  --ink-3: #57534e;
+  --ink-faint: #78716c;
+  --amber-text: #92400e;
+  --teal: #208368;
+  --teal-hi: #29a383;
+  background: var(--amber-hi);
+}
+
+:where([data-theme='light']) .hud-dark .task-row.is-selected::before {
+  background: var(--amber-deep);
+}
+
+:where([data-theme='light']) .hud-dark .task-row.is-editing,
+:where([data-theme='light']) .hud-dark .slate .task-row.is-editing {
+  background: var(--raised-top);
+}
+
+:where([data-theme='light']) .hud-dark .task-row::after {
+  background: linear-gradient(90deg, rgba(41, 163, 131, 0.25), var(--teal-wash) 30%, transparent 70%);
+}
+
+:where([data-theme='light']) .hud-dark .task-row.is-just-completed .task-text,
+:where([data-theme='light']) .hud-dark .slate .task-row.is-just-completed .task-text {
+  animation-name: objectiveStrikeDay;
+}
+
+@keyframes objectiveStrikeDay {
+  0% {
+    color: var(--ink);
+    text-decoration-color: transparent;
+  }
+  40% {
+    color: var(--teal);
+  }
+}
+
+:where([data-theme='light']) .hud-dark .date-group.is-drag-over:not(.is-drag-source),
+:where([data-theme='light']) .hud-dark .slate .date-group.is-drag-over:not(.is-drag-source) {
+  background: linear-gradient(90deg, var(--amber-wash), var(--amber-tint));
+}
+
+:where([data-theme='light']) .hud-dark .date-group.is-drag-over .drop-slots,
+:where([data-theme='light']) .day-card-add-form {
+  background: var(--well);
+}
+
+/* ---------- Quick add ---------- */
+:where([data-theme='light']) .slate-command .quick-add-box {
+  background: var(--well);
+}
+
+:where([data-theme='light']) .command-bar,
+:where([data-theme='light']) .slate-command .command-bar {
+  background: var(--well);
+}
+
+:where([data-theme='light']) .command-bar:focus-within,
+:where([data-theme='light']) .slate-command .command-bar:focus-within {
+  background: var(--raised-top);
+  box-shadow: 0 0 0 3px var(--amber-wash);
+}
+
+:where([data-theme='light']) .command-bar:not(.has-text):focus-within .command-submit,
+:where([data-theme='light']) .command-bar:not(.has-text) .command-submit:hover {
+  color: var(--amber-text);
+}
+
+/* ---------- Native pickers follow the page ---------- */
+:where([data-theme='light']) {
+  accent-color: var(--amber-deep);
+}

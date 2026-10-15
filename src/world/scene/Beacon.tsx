@@ -88,7 +88,7 @@ export function Beacon({ animate }: { animate: boolean }) {
     beamMaterial.uniforms.uOpacity.value = live.numbers.beamOpacity * (1 + flare.current * 2.5);
     if (lampLight.current) {
       lampLight.current.color.copy(live.colors.beacon);
-      lampLight.current.intensity = 60 + flare.current * 420;
+      lampLight.current.intensity = (60 + flare.current * 420) * live.numbers.lampLightStrength;
     }
 
   });

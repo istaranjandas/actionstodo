@@ -10,6 +10,7 @@ import { addDays, getLocalISODate } from '../modules/dateUtils';
 import { ViewNav } from './ViewNav';
 import type { NavKey } from '../modules/navigation';
 import type { Task } from '../types';
+import { DatePicker } from './DatePicker';
 
 interface TimelineRibbonProps {
   tasks: Task[];
@@ -109,14 +110,10 @@ export function TimelineRibbon({ tasks, focusDate, activeLens, lensCounts, showP
             <button type="button" className="ribbon-tool" tabIndex={-1} aria-hidden="true">
               <CalendarSearch size={15} strokeWidth={2} />
             </button>
-            <input
-              type="date"
-              className="chip-date-input"
-              aria-label="Jump to a date"
+            <DatePicker
+              ariaLabel="Jump to a date"
               value={focusDate ?? ''}
-              onChange={(e) => {
-                if (e.target.value) onFocusDay(e.target.value);
-              }}
+              onChange={onFocusDay}
             />
           </div>
         </div>

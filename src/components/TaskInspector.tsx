@@ -7,6 +7,7 @@ import { updateTaskItem } from '../modules/store';
 import { moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
 import { useOpenTimePopover } from './TimePopover';
 import type { Task } from '../types';
+import { DatePicker } from './DatePicker';
 
 const DELETE_CONFIRM_MS = 3000;
 
@@ -108,14 +109,10 @@ export function TaskInspector({ task, isClosing, onClose }: TaskInspectorProps) 
           </span>
           <div className="picker-chip-wrap inspector-date">
             <button type="button" className="inspector-value-btn" tabIndex={-1}>{formatShortDate(task.date)}</button>
-            <input
-              type="date"
-              className="chip-date-input"
+            <DatePicker
               value={task.date}
-              aria-label="Task date"
-              onChange={(e) => {
-                if (e.target.value) moveTask(task.id, { date: e.target.value });
-              }}
+              ariaLabel="Task date"
+              onChange={(date) => moveTask(task.id, { date })}
             />
           </div>
         </div>

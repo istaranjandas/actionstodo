@@ -10,6 +10,7 @@ export interface WorldPalette {
   skyHorizon: string;
   skyGlow: string;
   skyGround: string;
+  skyRimHorizonMinimum: number;
   sun: string;
   sunElevation: number;
   sunAzimuth: number;
@@ -25,20 +26,33 @@ export interface WorldPalette {
   // Terrain albedo tint, and the obsidian floor its unlit facets settle to (never pure black)
   terrainTint: string;
   terrainShade: string;
+  terrainValley: string;
+  terrainRock: string;
+  terrainPeak: string;
   snow: string;
   cloud: string;
   cloudLit: string;
   mist: string;
   water: string;
+  waterGlintStrength: number;
+  roadColor: string;
+  roadColorBlend: number;
+  signpostWood: string;
   motes: string;
   beacon: string;
   beamOpacity: number;
+  lampLightStrength: number;
   lanternGlow: number;
+  marker: string;
+  markerGlow: number;
+  poolStrength: number;
+  focusLightStrength: number;
+  shadowStrength: number;
   starOpacity: number;
 }
 
-// Both hours are golden hour over obsidian: no pale sky, no white haze. Daylight is the same light
-// an hour earlier, the sun a little higher and the valley a little brighter.
+// Dusk is golden hour over obsidian. Daylight is a clear late morning: soft blue overhead fading to a
+// warm ivory haze, sandstone slopes lit from the side, so the white HUD sits in a bright world.
 export const WORLD_PALETTES: Record<Theme, WorldPalette> = {
   dark: {
     skyTop: '#07090e',
@@ -47,6 +61,7 @@ export const WORLD_PALETTES: Record<Theme, WorldPalette> = {
     skyHorizon: '#d97706',
     skyGlow: '#f59e0b',
     skyGround: '#07090e',
+    skyRimHorizonMinimum: 0.3,
     sun: '#ffa53a',
     sunElevation: 3,
     sunAzimuth: 18,
@@ -61,48 +76,75 @@ export const WORLD_PALETTES: Record<Theme, WorldPalette> = {
     fillIntensity: 0.2,
     terrainTint: '#6b5a50',
     terrainShade: '#11131a',
+    terrainValley: '#5b5850',
+    terrainRock: '#86827c',
+    terrainPeak: '#f2f2f0',
     snow: '#c9b9a6',
     cloud: '#10131b',
     cloudLit: '#9a4a0c',
     mist: '#120e10',
     water: '#07090e',
+    waterGlintStrength: 1.8,
+    roadColor: '#7a869f',
+    roadColorBlend: 0,
+    signpostWood: '#4d3d2d',
     motes: '#ffcf96',
     beacon: '#f59e0b',
     beamOpacity: 0.3,
+    lampLightStrength: 1,
     lanternGlow: 1,
+    marker: '#f59e0b',
+    markerGlow: 1,
+    poolStrength: 1,
+    focusLightStrength: 1,
+    shadowStrength: 0,
     starOpacity: 0.9
   },
   light: {
-    skyTop: '#0d1220',
-    skyUpper: '#1b2232',
-    skyEmber: '#5a2a0c',
-    skyHorizon: '#e08a1e',
-    skyGlow: '#fbbf24',
-    skyGround: '#0d1220',
-    sun: '#ffc06a',
-    sunElevation: 7,
-    sunAzimuth: 22,
-    sunIntensity: 2.8,
-    fog: '#12141b',
-    fogNear: 90,
-    fogFar: 540,
-    hemiSky: '#334155',
-    hemiGround: '#2a1d10',
-    hemiIntensity: 0.3,
-    fill: '#334155',
-    fillIntensity: 0.25,
-    terrainTint: '#7d6a5e',
-    terrainShade: '#161921',
-    snow: '#d8cbb8',
-    cloud: '#181c27',
-    cloudLit: '#c2610f',
-    mist: '#18130f',
-    water: '#0a0e17',
-    motes: '#ffd9a0',
+    skyTop: '#4a789c',
+    skyUpper: '#7ca1bc',
+    skyEmber: '#b9c4c6',
+    skyHorizon: '#ede2d0',
+    skyGlow: '#f6e6c8',
+    skyGround: '#e0d8c9',
+    skyRimHorizonMinimum: 0.85,
+    sun: '#fff3dc',
+    sunElevation: 15,
+    sunAzimuth: 100,
+    sunIntensity: 4.8,
+    fog: '#dfd7c8',
+    fogNear: 170,
+    fogFar: 620,
+    hemiSky: '#64829e',
+    hemiGround: '#5c4938',
+    hemiIntensity: 0.6,
+    fill: '#c9d6e3',
+    fillIntensity: 0.18,
+    terrainTint: '#ffffff',
+    terrainShade: '#1c222b',
+    terrainValley: '#b09576',
+    terrainRock: '#9a9389',
+    terrainPeak: '#ddd3c3',
+    snow: '#ead8c0',
+    cloud: '#f4f3ee',
+    cloudLit: '#fffbf2',
+    mist: '#e2dacb',
+    water: '#2c6b8e',
+    waterGlintStrength: 2.4,
+    roadColor: '#7a869f',
+    roadColorBlend: 1,
+    signpostWood: '#261e18',
+    motes: '#e2a336',
     beacon: '#f59e0b',
-    beamOpacity: 0.18,
-    lanternGlow: 0.85,
-    starOpacity: 0.35
+    beamOpacity: 0.04,
+    lampLightStrength: 0.2,
+    lanternGlow: 0.55,
+    marker: '#e06d06',
+    markerGlow: 0.15,
+    poolStrength: 0,
+    focusLightStrength: 0,
+    shadowStrength: 0.75,
+    starOpacity: 0
   }
 };
 

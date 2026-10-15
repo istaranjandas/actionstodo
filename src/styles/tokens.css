@@ -20,14 +20,15 @@
   /* Corner notch for framed HUD plates (top-right + bottom-left chamfer) */
   --hud-notch: 8px;
   --hud-chamfer: polygon(0 0, calc(100% - var(--hud-notch)) 0, 100% var(--hud-notch), 100% 100%, var(--hud-notch) 100%, 0 calc(100% - var(--hud-notch)));
-  /* Smoked obsidian glass: the one material every HUD panel shares */
-  --hud-gold: #f59e0b;
-  --hud-gold-hi: #fbbf24;
-  --hud-glass: linear-gradient(180deg, rgba(13, 16, 23, 0.86) 0%, rgba(9, 11, 16, 0.92) 100%);
-  --hud-glass-strong: var(--hud-glass);
-  --hud-glass-edge: rgba(255, 255, 255, 0.08);
-  --hud-glass-blur: blur(20px) saturate(140%);
-  --hud-glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /* Warm alabaster glass: the one material every HUD panel shares (Dusk swaps in smoked obsidian).
+     Daylight neutrals follow the Tailwind Stone ramp; the accent is burnt amber (Amber 600 / 700). */
+  --hud-gold: #d97706;
+  --hud-gold-hi: #b45309;
+  --hud-glass: linear-gradient(180deg, rgba(251, 249, 245, 0.88) 0%, rgba(249, 246, 240, 0.9) 100%);
+  --hud-glass-strong: linear-gradient(180deg, #fbf9f5 0%, #f8f5ef 100%);
+  --hud-glass-edge: rgba(28, 25, 23, 0.12);
+  --hud-glass-blur: blur(12px);
+  --hud-glass-shadow: 0 12px 32px -8px rgba(28, 24, 20, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
@@ -50,60 +51,60 @@
   --env-grain-opacity: 0.05;
   --env-stars-opacity: 0;
 
-  /* Surfaces */
-  --panel-top: #fbfaf6;
-  --panel-bottom: #f1efe8;
-  --panel-solid: #f6f4ef;
-  --plate-top: #fefdfb;
-  --plate-bottom: #f4f2ec;
-  --raised-top: #ffffff;
-  --raised-bottom: #ebe8e0;
-  --well: #e7e4db;
-  --well-deep: #dcd8cd;
-  --hover: rgba(30, 42, 52, 0.05);
-  --press: rgba(30, 42, 52, 0.09);
-  --edge-light: rgba(255, 255, 255, 0.95);
-  --edge-dark: rgba(72, 62, 40, 0.1);
-  --line: rgba(40, 52, 62, 0.13);
-  --line-strong: rgba(40, 52, 62, 0.22);
-  --groove-dark: rgba(40, 52, 62, 0.1);
-  --groove-light: rgba(255, 255, 255, 0.85);
-  --key-base: rgba(40, 52, 62, 0.24);
-  --cast: rgba(52, 46, 34, 0.26);
-  --cast-near: rgba(52, 46, 34, 0.12);
-  --scrim: rgba(36, 42, 48, 0.3);
-  --sheen: rgba(255, 255, 255, 0.5);
+  /* Surfaces: warm ivory plates; wells sit a shade deeper */
+  --panel-top: #fbf9f5;
+  --panel-bottom: #f8f5ef;
+  --panel-solid: #fbf9f5;
+  --plate-top: #fcfaf7;
+  --plate-bottom: #f9f6f1;
+  --raised-top: #fdfbf8;
+  --raised-bottom: #f7f4ee;
+  --well: #f3efe8;
+  --well-deep: #e9e3d9;
+  --hover: rgba(28, 25, 23, 0.045);
+  --press: rgba(28, 25, 23, 0.08);
+  --edge-light: rgba(255, 255, 255, 0.7);
+  --edge-dark: rgba(28, 25, 23, 0.08);
+  --line: rgba(28, 25, 23, 0.12);
+  --line-strong: rgba(28, 25, 23, 0.2);
+  --groove-dark: rgba(28, 25, 23, 0.08);
+  --groove-light: rgba(255, 255, 255, 0.7);
+  --key-base: rgba(28, 25, 23, 0.2);
+  --cast: rgba(28, 24, 20, 0.14);
+  --cast-near: rgba(28, 24, 20, 0.08);
+  --scrim: rgba(28, 25, 23, 0.22);
+  --sheen: rgba(255, 255, 255, 0.6);
   --glare-tint: rgba(255, 255, 255, 0.7);
-  --hud-scrim: rgba(246, 244, 238, 0.5);
-  --nav-track: rgba(231, 228, 219, 0.92);
-  --bezel: rgba(40, 52, 62, 0.035);
-  --text-halo: 0 1px 0 rgba(255, 255, 255, 0.65), 0 0 20px rgba(255, 255, 255, 0.5);
+  --hud-scrim: rgba(251, 249, 245, 0.55);
+  --nav-track: rgba(243, 239, 232, 0.94);
+  --bezel: rgba(28, 25, 23, 0.03);
+  --text-halo: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 20px rgba(251, 249, 245, 0.6);
 
-  /* Ink */
-  --ink: #1a232b;
-  --ink-2: #46535d;
-  --ink-3: #5f6c75;
-  --ink-faint: #929ca3;
-  --ink-inverse: #f7f5f0;
+  /* Ink: Stone 900 / 700 / 600 / 500 */
+  --ink: #1c1917;
+  --ink-2: #44403c;
+  --ink-3: #57534e;
+  --ink-faint: #78716c;
+  --ink-inverse: #fbf9f5;
 
-  /* Signals */
-  --amber: #e29a33;
-  --amber-hi: #f5bb66;
-  --amber-deep: #b8731a;
-  --amber-ink: #2a1904;
-  --amber-text: #8f520a;
-  --amber-wash: rgba(226, 154, 51, 0.13);
-  --amber-tint: rgba(226, 154, 51, 0.07);
-  --amber-line: rgba(196, 124, 28, 0.6);
-  --amber-glow: rgba(226, 154, 51, 0.38);
-  --teal: #12917a;
-  --teal-hi: #2db498;
-  --teal-ink: #f2fffb;
-  --teal-wash: rgba(18, 145, 122, 0.13);
-  --coral: #c4533c;
-  --coral-hi: #d8694f;
-  --coral-wash: rgba(196, 83, 60, 0.12);
-  --focus-ring: #c27a0c;
+  /* Signals: burnt amber fills and rails, a deeper ochre for text; Jade for done, Tomato for danger */
+  --amber: #d97706;
+  --amber-hi: #f8e3c1;
+  --amber-deep: #b45309;
+  --amber-ink: #1c1917;
+  --amber-text: #a84c07;
+  --amber-wash: #f9ebd5;
+  --amber-tint: #fcf6ec;
+  --amber-line: rgba(217, 119, 6, 0.6);
+  --amber-glow: rgba(217, 119, 6, 0.28);
+  --teal: #208368;
+  --teal-hi: #29a383;
+  --teal-ink: #ffffff;
+  --teal-wash: #e6f7ed;
+  --coral: #d13415;
+  --coral-hi: #e54d2e;
+  --coral-wash: #feebe7;
+  --focus-ring: #b45309;
 
   /* Legacy names still read by inline SVG icons */
   --bg: var(--panel-solid);
@@ -112,10 +113,18 @@
   --text: var(--ink);
 }
 
-/* Dusk values; .hud-dark applies them to in-game panels in both themes */
+/* Dusk values. HUD panels (.hud-dark) used to force these in both themes; now they follow the theme */
 [data-theme="dark"],
-.hud-dark {
+[data-theme="dark"] .hud-dark {
   color-scheme: dark;
+
+  --hud-gold: #f59e0b;
+  --hud-gold-hi: #fbbf24;
+  --hud-glass: linear-gradient(180deg, rgba(13, 16, 23, 0.86) 0%, rgba(9, 11, 16, 0.92) 100%);
+  --hud-glass-strong: var(--hud-glass);
+  --hud-glass-edge: rgba(255, 255, 255, 0.08);
+  --hud-glass-blur: blur(20px) saturate(140%);
+  --hud-glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
   --env-sky-top: #03060a;
   --env-sky-mid: #0b1620;
@@ -203,15 +212,17 @@
 
 /* World-facing HUD values: these follow the time of day, not the panel material */
 :root {
-  --slate-top-colour: rgba(26, 37, 46, 0.96);
-  --slate-bottom-colour: rgba(13, 19, 25, 0.97);
-  --world-scrim: rgba(238, 236, 228, 0.42);
-  --location-ink: #13202a;
-  --location-ink-2: #33434e;
-  --location-halo: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 26px rgba(255, 255, 255, 0.7);
+  --slate-top-colour: rgba(251, 249, 245, 0.96);
+  --slate-bottom-colour: rgba(248, 245, 239, 0.97);
+  --world-scrim: rgba(253, 253, 252, 0.42);
+  --location-ink: #1c1917;
+  --location-ink-2: #44403c;
+  --location-halo: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 26px rgba(251, 249, 245, 0.75);
 }
 
 [data-theme="dark"] {
+  --slate-top-colour: rgba(26, 37, 46, 0.96);
+  --slate-bottom-colour: rgba(13, 19, 25, 0.97);
   --world-scrim: rgba(3, 6, 10, 0.6);
   --location-ink: #ffffff;
   --location-ink-2: #f59e0b;

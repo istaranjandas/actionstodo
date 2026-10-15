@@ -7,6 +7,7 @@ import { logTask } from '../modules/taskActions';
 import { useOpenTimePopover } from './TimePopover';
 import { CalendarIcon, ClockIcon } from './Icons';
 import type { AppState } from '../types';
+import { DatePicker } from './DatePicker';
 
 interface QuickAddFormProps {
   appState: AppState;
@@ -91,14 +92,10 @@ export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFo
               <CalendarIcon size={12} />
               <span>{formatShortDate(selectedAddDate)}</span>
             </button>
-            <input
-              type="date"
-              className="chip-date-input"
-              aria-label="Select date"
+            <DatePicker
+              ariaLabel="Select date"
               value={selectedAddDate}
-              onChange={(e) => {
-                if (e.target.value) setUiState({ selectedAddDate: e.target.value });
-              }}
+              onChange={(date) => setUiState({ selectedAddDate: date })}
             />
           </div>
 

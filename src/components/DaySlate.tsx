@@ -1,6 +1,7 @@
 // The day slate: a field log floating beside its waypost. Header shows real progress, the body lists the
-// tasks, and the command line at the foot logs new ones. One day (Today, a picked date) is a single
-// left-anchored column; the multi-day lenses widen it into a grid of day cards that scrolls as a whole.
+// tasks, and the command line logs new ones. One day (Today, a picked date) is a single left-anchored
+// column with the command line at its foot; the multi-day lenses widen it into a grid of day cards that
+// scrolls as a whole, and the command line moves up into the header so the cards keep the height.
 import type { ReactNode, RefCallback } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import type { ViewSummary } from '../modules/store';
@@ -23,9 +24,10 @@ interface DaySlateProps {
 export function DaySlate({ label, layout, summary, isScrolled, isDoneLens, backLabel, onBack, scrollRef, command, children }: DaySlateProps) {
   const { open: openCount, done: doneCount, total } = summary;
   const progress = total ? Math.round((doneCount / total) * 100) : 0;
+  const isGrid = layout === 'grid';
 
   return (
-    <section className={`slate ${layout === 'grid' ? 'is-grid' : 'is-column'} ${isScrolled ? 'is-scrolled' : ''}`} aria-label={label}>
+    <section className={`slate ${isGrid ? 'is-grid' : 'is-column'} ${isScrolled ? 'is-scrolled' : ''}`} aria-label={label}>
       <header className="slate-header">
         {backLabel && (
           <button type="button" className="slate-back" data-sfx="close" onClick={onBack} title="Back (Esc)">
@@ -33,6 +35,7 @@ export function DaySlate({ label, layout, summary, isScrolled, isDoneLens, backL
             <span>{backLabel}</span>
           </button>
         )}
+        {isGrid && <div className="slate-command is-in-header">{command}</div>}
         <div className="slate-progress" aria-label={isDoneLens ? `${doneCount} completed` : `${openCount} open, ${doneCount} done`}>
           {!isDoneLens && (
             <span className="slate-stat">
@@ -51,12 +54,12 @@ export function DaySlate({ label, layout, summary, isScrolled, isDoneLens, backL
       </header>
 
       <div className="slate-body main-pane" ref={scrollRef}>
-        <main className={`date-groups ${layout === 'grid' ? 'day-grid' : ''}`} id="dateGroupsContainer">
+        <main className={`date-groups ${isGrid ? 'day-grid' : ''}`} id="dateGroupsContainer">
           {children}
         </main>
       </div>
 
-      <footer className="slate-command">{command}</footer>
+      {!isGrid && <footer className="slate-command">{command}</footer>}
     </section>
   );
 }

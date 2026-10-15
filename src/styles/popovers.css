@@ -27,6 +27,15 @@
   flex-direction: column;
   gap: 12px;
   transform-origin: top left;
+  /* Only scrolls when the viewport is too short for either side of the trigger */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.time-popover > * {
+  flex-shrink: 0;
 }
 
 .time-popover.open {
@@ -244,6 +253,131 @@
   background: var(--amber-wash);
 }
 
+/* ---------- Calendar ---------- */
+.date-popover {
+  width: 300px;
+}
+
+.date-popover-step {
+  width: 28px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+}
+
+.date-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.date-grid-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.date-grid-weekday {
+  padding: 2px 0 5px;
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ink-3);
+}
+
+.date-grid-weekday.is-weekend {
+  color: var(--ink-faint);
+}
+
+.date-cell {
+  position: relative;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  transition:
+    transform var(--dur-press) var(--ease-press),
+    color var(--dur-quick) ease,
+    border-color var(--dur-quick) ease,
+    background var(--dur-quick) ease;
+}
+
+.date-cell.is-weekend {
+  color: var(--ink-3);
+}
+
+.date-cell.is-outside {
+  color: var(--ink-faint);
+  opacity: 0.6;
+}
+
+@media (hover: hover) {
+  .date-cell:hover {
+    color: var(--ink);
+    border-color: var(--amber-line);
+    background: var(--amber-tint);
+    opacity: 1;
+  }
+}
+
+.date-cell:active {
+  transform: scale(0.94);
+  transition-duration: 40ms;
+}
+
+.date-cell:focus-visible {
+  outline-offset: 1px;
+}
+
+/* Today: amber frame with a small tick, so it reads without colour alone */
+.date-cell.is-today {
+  color: var(--amber-text);
+  border-color: var(--amber-line);
+  font-weight: 600;
+}
+
+.date-cell.is-today::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 10px;
+  height: 2px;
+  transform: translateX(-50%);
+  background: currentColor;
+}
+
+.date-cell.is-selected {
+  background: var(--amber);
+  border-color: var(--amber-deep);
+  color: var(--amber-ink);
+  font-weight: 600;
+  box-shadow: var(--shadow-amber);
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .date-cell.is-selected:hover {
+    color: var(--amber-ink);
+    background: var(--amber);
+    filter: brightness(1.1);
+  }
+}
+
+.date-popover-selected {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+
 /* Phone: the picker becomes a bottom sheet */
 @media (max-width: 680px) {
   .time-popover {
@@ -275,6 +409,11 @@
   .grid-slot-btn,
   .duration-pill {
     height: 38px;
+  }
+
+  .date-cell {
+    height: 42px;
+    font-size: 13px;
   }
 
   .popover-durations-row {

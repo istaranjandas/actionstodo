@@ -28,11 +28,20 @@
   --env-stars-opacity: 0.8;
 }
 
+/* Daylight: soft sky overhead fading to a warm ivory haze, sandstone ridges stepping back through it */
 [data-theme='light'] .environment {
-  --env-sky-top: #0d1220;
-  --env-sky-mid: #1b2232;
-  --env-sky-low: #d97706;
-  --env-stars-opacity: 0.3;
+  --env-sky-top: #c6d9e6;
+  --env-sky-mid: #e6e9e6;
+  --env-sky-low: #f5efe6;
+  --env-sun: rgba(255, 243, 222, 0.55);
+  --env-ridge-far: #e6dccd;
+  --env-ridge-mid: #d8c7b2;
+  --env-ridge-near: #b19c86;
+  --env-haze: rgba(245, 239, 230, 0.6);
+  --env-rim: rgba(239, 230, 216, 0.85);
+  --env-vignette: rgba(110, 82, 56, 0.1);
+  --env-grain-opacity: 0.03;
+  --env-stars-opacity: 0;
 }
 
 .environment > * {

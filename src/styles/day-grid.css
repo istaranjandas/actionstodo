@@ -65,8 +65,50 @@
   padding: 12px 16px 14px;
 }
 
-.slate.is-grid .slate-command > * {
-  max-width: 760px;
+/* The command line rides in the header, left of the progress readout, so the cards get the board's
+   full height. It sheds the plate styling: the header is already the plate. */
+.slate.is-grid .slate-command.is-in-header {
+  flex: 0 1 820px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+@media (max-width: 1024px) {
+  .slate.is-grid .slate-header {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .slate.is-grid .slate-command.is-in-header {
+    order: 2;
+    flex-basis: 100%;
+  }
+}
+
+/* On desktop the date / time chips sit on the prompt line, keeping the header one row tall */
+@media (min-width: 1025px) {
+  .slate.is-grid .slate-command .quick-add-input-row {
+    flex-wrap: nowrap;
+  }
+
+  .slate.is-grid .slate-command .quick-add-input {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .slate.is-grid .slate-command .quick-add-chips-row {
+    order: 0;
+    flex: 0 0 auto;
+    flex-basis: auto;
+    padding: 0;
+    border-top: none;
+  }
 }
 
 /* ---------- Grid of day cards ---------- */
