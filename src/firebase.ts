@@ -17,7 +17,8 @@ import {
   where, 
   onSnapshot, 
   writeBatch,
-  getDocs
+  getDocs,
+  setDoc
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -48,5 +49,6 @@ export {
   where, 
   onSnapshot, 
   writeBatch,
-  getDocs
+  getDocs,
+  setDoc
 };

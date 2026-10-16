@@ -10,7 +10,8 @@ import {
   query, 
   where, 
   onSnapshot, 
-  writeBatch 
+  writeBatch,
+  setDoc
 } from '../firebase';
 import { getLocalISODate, getWeekDates } from './dateUtils';
 import type { AppState, Task, ViewName } from '../types';
@@ -243,6 +244,13 @@ export function initFirestoreSync(user: User, onSyncUpdate?: () => void): void {
   if (state.unsubscribeFirestore) {
     state.unsubscribeFirestore();
   }
+
+  // Profile for the admin portal's user list
+  setDoc(doc(db, 'users', user.uid), {
+    name: user.displayName ?? '',
+    email: user.email ?? '',
+    lastSeen: Date.now()
+  }, { merge: true }).catch(e => console.error('Profile save failed', e));
 
   // One-time migration of un-synced local offline tasks created before login
   const localOfflineTasks = state.tasks.filter(t => t.id && t.id.startsWith('task_'));

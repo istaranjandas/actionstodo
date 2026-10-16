@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import 'lenis/dist/lenis.css';
 import { THEME_KEY } from './modules/store';
 import { App } from './App';
+import { AdminPage } from './admin/AdminPage';
 
 function applyInitialTheme() {
   const savedTheme = localStorage.getItem(THEME_KEY);
@@ -15,6 +16,6 @@ applyInitialTheme();
 
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
-    <App />
+    {window.location.pathname.startsWith('/admin') ? <AdminPage /> : <App />}
   </StrictMode>
 );
