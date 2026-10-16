@@ -381,6 +381,13 @@ body:not(.has-world) .world-labels {
   gap: 12px;
 }
 
+.system-trigger.is-icon {
+  width: 46px;
+  padding: 0;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .sync-lamp {
   width: 8px;
   height: 8px;
