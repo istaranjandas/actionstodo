@@ -1,7 +1,7 @@
 // The one system control in the HUD: sound, time of day, account, mode, help and the creator's contact
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
-import { Gamepad2, Keyboard, Menu, Moon, Music, Sun, Volume2, X } from 'lucide-react';
+import { Car, Gamepad2, Keyboard, Menu, Moon, Music, Sun, Volume2, X } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup, signOut } from '../firebase';
 import { updateSoundSettings, useSoundSettings } from '../audio/soundSettings';
 import { playUiSound } from '../audio/uiSounds';
@@ -143,6 +143,9 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
   return (
     <div className="system-menu">
       <span className={`sync-lamp ${currentUser ? 'is-live' : ''}`} title={currentUser ? 'Cloud sync is live' : 'Saved on this device'} aria-hidden="true" />
+      <a href="/alpineoverride/" className="system-trigger is-icon" aria-label="Play Alpine Overdrive" title="Play Alpine Overdrive">
+        <Car size={18} strokeWidth={2.2} aria-hidden="true" />
+      </a>
       <button
         type="button"
         className={`system-trigger ${isOpen ? 'is-active' : ''}`}
