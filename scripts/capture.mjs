@@ -194,8 +194,9 @@ async function captureScenario({ name, width, height, mobile, steps }) {
 
 const resetWithDemoData = (theme, viewportMode = 'manual') => `localStorage.setItem('todo_do_tasks_v1', ${JSON.stringify(demoTasksJson)}); localStorage.setItem('notion_minimal_theme', '${theme}'); localStorage.setItem('actionstodo_viewport_mode', '${viewportMode}'); location.reload(); true`;
 const pressKey = (key) => `window.dispatchEvent(new KeyboardEvent('keydown', { key: '${key}', bubbles: true })); true`;
-// Time of day lives in the System menu: open it, pick Daylight, close it
-const switchToDaylight = `document.querySelector('.system-trigger').click(); setTimeout(() => { document.querySelectorAll('.segmented-option')[1].click(); document.querySelector('.system-trigger').click(); }, 200); true`;
+// Time of day lives in the System menu: open it, pick Daylight, close it.
+// The Alpine link beside the trigger also carries .system-trigger, so target the button by context.
+const switchToDaylight = `document.querySelector('.system-menu button.system-trigger').click(); setTimeout(() => { const daylight = document.querySelectorAll('.segmented-option')[1]; if (daylight) daylight.click(); document.querySelector('.system-menu button.system-trigger').click(); }, 300); true`;
 const WORLD_LOAD_MS = 9000;
 const CAMERA_FLIGHT_MS = 2800;
 

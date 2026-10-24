@@ -32,13 +32,9 @@
   box-shadow: var(--dock-shadow);
 }
 
+/* Width, edge and the tools' right alignment now come from ribbon.css for both hours */
 :where([data-theme='light']) .lens-bar {
-  width: 100%;
   padding: 4px 6px 4px 4px;
-}
-
-:where([data-theme='light']) .lens-tools {
-  margin-left: auto;
 }
 
 :where([data-theme='light']) .lens-bar .view-nav-item {

@@ -3,16 +3,17 @@
    Two separate pieces, no shared box; the track fades into the edges and
    glides the focused day to its centre.
    ========================================================================== */
+/* The ribbon shares the HUD gutter with the title and the system menu, so every edge in the
+   interface lines up: left 0 == the day slate, right 0 == the system menu. */
 .ribbon {
   position: absolute;
-  left: 50%;
+  left: var(--hud-inset);
+  right: var(--hud-inset);
   bottom: 16px;
-  width: min(1180px, calc(100% - var(--hud-inset) * 2));
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  transform: translateX(-50%);
   pointer-events: none;
   animation: ribbonRise 600ms var(--ease-out);
 }
@@ -24,7 +25,7 @@
 @keyframes ribbonRise {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(30px);
+    transform: translateY(30px);
   }
 }
 
@@ -33,6 +34,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  /* The bar spans the ribbon, so its edges sit on the same gutter as the slate and the system menu */
+  width: 100%;
   padding: 4px 6px 4px 4px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
@@ -50,6 +53,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  /* Month and the jump/shortcut tools ride the far right edge of the bar */
+  margin-left: auto;
   padding-left: 10px;
   border-left: 1px solid var(--line);
 }
@@ -296,14 +301,8 @@
     left: 8px;
     right: 8px;
     bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-    width: auto;
-    transform: none;
     gap: 6px;
     animation-name: drawerRise;
-  }
-
-  .lens-bar {
-    width: 100%;
   }
 
   .timeline-month {
