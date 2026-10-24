@@ -9,10 +9,6 @@
   background: var(--env-sky-top);
 }
 
-body.is-game-mode .creator-badge-dock {
-  display: none !important;
-}
-
 .game-arena,
 .game-arena-loading {
   position: relative;

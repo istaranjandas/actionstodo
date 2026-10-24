@@ -2,7 +2,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { routeThreeConsole } from '../canvas/threeConsole';
+import { routeThreeConsole } from '../canvas/consoleFilters';
 import { cameraPoseFor } from './worldViews';
 import type { WorldLens } from './worldViews';
 import type { WorldDay } from './worldBridge';

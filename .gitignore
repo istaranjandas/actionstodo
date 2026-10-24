@@ -11,6 +11,12 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tsbuildinfo
+
+# Local environment overrides (never commit real keys)
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*

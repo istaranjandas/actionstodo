@@ -23,7 +23,6 @@ export interface AppState {
   selectedAddDate: string;
   selectedAddStart: string;
   selectedAddEnd: string;
-  sortByTime: boolean;
   isTableView: boolean;
   unsubscribeFirestore: (() => void) | null;
 }

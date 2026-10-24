@@ -3,19 +3,21 @@
 // with a day slate, a details slate and the path ribbon floating in it. Game mode: the quest arena.
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { auth, onAuthStateChanged } from './firebase';
-import { addDays, formatFriendlyDate, formatWeekRangeLabel, getLocalISODate, getWeekDates } from './modules/dateUtils';
-import { initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, THEME_KEY, updateTaskItem } from './modules/store';
+import { addDays, formatFriendlyDate, formatWeekRangeLabel, getLocalISODate, getWeekDates, parseISODate } from './modules/dateUtils';
+import { initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
 import { setupTaskDragAndDrop } from './modules/listDrag';
 import { moveTask } from './modules/taskActions';
 import { countForView, daysFromToday, NAV_ITEMS } from './modules/navigation';
 import type { NavKey } from './modules/navigation';
+import { useDisplaySettings } from './modules/displaySettings';
+import { THEME_KEY, applyThemeAttribute, readRenderedTheme } from './modules/theme';
 import { useStore } from './hooks/useStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
-import { DESKTOP_SCROLL_PANE_QUERY, NON_DESKTOP_QUERY, useMotionProfile } from './hooks/useMotionProfile';
+import { COMPACT_QUERY, DESKTOP_SCROLL_PANE_QUERY, NON_DESKTOP_QUERY, useMotionProfile } from './hooks/useMotionProfile';
 import { readScrollTop, restoreScrollPosition, useSmoothScroll } from './hooks/useSmoothScroll';
 import { useUiSounds } from './hooks/useUiSounds';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
-import { usePresence } from './hooks/usePresence';
+import { usePreservedValue } from './hooks/usePreservedValue';
 import { playUiSound } from './audio/uiSounds';
 import { swellAmbientMusic } from './audio/ambientMusic';
 import { rewardCompletedQuests } from './game/state/gameProgress';
@@ -36,6 +38,7 @@ import { QuickAddForm } from './components/QuickAddForm';
 import { Sheet } from './components/Sheet';
 import { Toasts } from './components/Toasts';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
+import { InspectorSlate } from './components/InspectorSlate';
 import type { ViewportMode } from './components/ViewportModeToggle';
 import { WeekTable } from './components/WeekTable';
 import { TimePopover, TimePopoverContext } from './components/TimePopover';
@@ -45,13 +48,6 @@ import type { Task, Theme, TimePopoverContext as PopoverTarget, ViewName } from 
 const HEADER_CONDENSE_OFFSET = 12;
 const VIEWPORT_MODE_KEY = 'actionstodo_viewport_mode';
 const BULK_SYNC_THRESHOLD = 3;
-
-const LENS_TITLES: Record<Exclude<ViewName, 'today'>, { title: string; subtitle: () => string }> = {
-  upcoming: { title: 'Upcoming', subtitle: () => 'The path ahead' },
-  'this-week': { title: 'This week', subtitle: () => formatWeekRangeLabel(getWeekDates(0)) },
-  all: { title: 'All dates', subtitle: () => 'Every waypost on the path' },
-  completed: { title: 'Done', subtitle: () => 'Lanterns already lit' }
-};
 
 const GameArena = lazy(() => import('./game/GameArena'));
 
@@ -63,31 +59,17 @@ function readInitialViewportMode(): ViewportMode {
   }
 }
 
-function readInitialTheme(): Theme {
-  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-}
-
-// Desktop details slate: floats beside the day slate while its lantern is ringed in the world
-function InspectorSlate({ task, onClose }: { task: Task | null; onClose: () => void }) {
-  const lastTask = useRef(task);
-  if (task) lastTask.current = task;
-  const { isMounted, isClosing } = usePresence(Boolean(task), 200);
-  if (!isMounted || !lastTask.current) return null;
-  return (
-    <div className="inspector-slate">
-      <TaskInspector key={lastTask.current.id} task={lastTask.current} isClosing={isClosing} onClose={onClose} />
-    </div>
-  );
-}
-
 export function App() {
   const appState = useStore();
   const { prefersReducedMotion, isTouchDevice, hasFinePointer } = useMotionProfile();
+  // Animations are off unless the System panel turns them on, so low-end machines stay responsive
+  const { animationsEnabled } = useDisplaySettings();
+  const reducedMotion = prefersReducedMotion || !animationsEnabled;
   const isNonDesktop = useMediaQuery(NON_DESKTOP_QUERY);
   const isWide = useMediaQuery(DESKTOP_SCROLL_PANE_QUERY);
-  const isPhone = useMediaQuery('(max-width: 680px)');
+  const isPhone = useMediaQuery(COMPACT_QUERY);
   const isCompact = !isWide;
-  const [theme, setTheme] = useState<Theme>(readInitialTheme);
+  const [theme, setTheme] = useState<Theme>(readRenderedTheme);
   const [weekOffset, setWeekOffset] = useState(0);
   const [scrollPane, setScrollPane] = useState<HTMLElement | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -145,12 +127,16 @@ export function App() {
 
   // --- Theme ("time of day") ---
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    applyThemeAttribute(theme);
   }, [theme]);
 
   const applyTheme = useCallback((next: Theme) => {
     setTheme(next);
-    localStorage.setItem(THEME_KEY, next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // Storage can be blocked; the theme still applies for this visit
+    }
   }, []);
 
   // --- Planner (week table) is desktop-only, as before ---
@@ -187,10 +173,10 @@ export function App() {
   useUiSounds();
 
   useEffect(() => {
-    document.body.classList.toggle('is-reduced-motion', prefersReducedMotion);
-  }, [prefersReducedMotion]);
+    document.body.classList.toggle('is-reduced-motion', reducedMotion);
+  }, [reducedMotion]);
 
-  const motionAllowed = !prefersReducedMotion;
+  const motionAllowed = !reducedMotion;
   const scroller = useSmoothScroll({
     scrollPane,
     usePaneAsScroller: true,
@@ -377,19 +363,17 @@ export function App() {
     locationTitle = 'Planner';
     locationSubtitle = formatWeekRangeLabel(getWeekDates(weekOffset));
   } else if (focusDate) {
-    const [year, month, day] = focusDate.split('-').map(Number);
     locationTitle = formatFriendlyDate(focusDate).title;
-    locationSubtitle = new Date(year, month - 1, day).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    locationSubtitle = parseISODate(focusDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
   } else {
-    const lens = LENS_TITLES[currentView as Exclude<ViewName, 'today'>];
-    locationTitle = lens.title;
-    locationSubtitle = lens.subtitle();
+    const lens = NAV_ITEMS.find(item => item.key === currentView);
+    locationTitle = lens?.title ?? '';
+    locationSubtitle = lens?.subtitle() ?? '';
   }
   const lensLabel = NAV_ITEMS.find(item => item.key === currentView)?.label ?? 'path';
   const backLabel = specificDateFilter && currentView !== 'today' ? `Back to ${lensLabel}` : specificDateFilter ? 'Back to today' : null;
 
-  const lastSheetTask = useRef<Task | null>(null);
-  if (selectedTask) lastSheetTask.current = selectedTask;
+  const lastSheetTask = usePreservedValue(selectedTask);
 
   return (
     <TaskSelectionContext.Provider value={taskSelection}>
@@ -400,7 +384,7 @@ export function App() {
               <GameArena
                 tasks={viewTasks}
                 theme={theme}
-                prefersReducedMotion={prefersReducedMotion}
+                prefersReducedMotion={reducedMotion}
                 isTouchDevice={isTouchDevice}
                 onCompleteQuest={completeQuest}
                 onChangeMode={changeViewportMode}
@@ -421,7 +405,7 @@ export function App() {
               weekStartOffset={weekStartOffset}
               days={worldDays}
               theme={theme}
-              reducedMotion={prefersReducedMotion}
+              reducedMotion={reducedMotion}
               hasFinePointer={hasFinePointer}
               isCompact={isCompact}
               scroller={scroller}
@@ -487,7 +471,7 @@ export function App() {
         <div className="hud-dark hud-portal">
           {viewportMode === 'manual' && isCompact && (
             <Sheet isOpen={Boolean(selectedTask)} label="Task details" onClose={closeTask}>
-              {lastSheetTask.current && <TaskInspector key={lastSheetTask.current.id} task={lastSheetTask.current} isClosing={false} onClose={closeTask} />}
+              {lastSheetTask && <TaskInspector key={lastSheetTask.id} task={lastSheetTask} isClosing={false} onClose={closeTask} />}
             </Sheet>
           )}
           {viewportMode === 'manual' && <ShortcutsOverlay isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />}

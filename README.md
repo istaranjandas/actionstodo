@@ -13,7 +13,7 @@ A minimalist, high-productivity daily task manager and week planner with real-ti
 - 🔊 **Sound & music**: Synthesised interface sounds and an optional ambient soundtrack, each with its own switch and volume in the System menu.
 - ☁️ **Real-Time Firebase Cloud Sync**: Google Sign-In with instant Firestore multi-device synchronization.
 - 💾 **Offline First & Disk Sync**: Seamless offline mode with `localStorage`, direct `.json` disk sync via File System Access API, and 1-click JSON backup import/export.
-- 🌄 **Dusk & Daylight**: The valley's time of day follows your theme; animation respects the system reduced-motion setting, and the app falls back to a painted valley when WebGL is unavailable.
+- 🌄 **Dusk & Daylight**: The valley's time of day follows your theme. Animations are **off by default** (System → Motion → Animations) so low-end machines stay smooth; turning them on adds the camera journeys, the living world and the interface transitions. The system reduced-motion setting always wins, and the app falls back to a painted valley when WebGL is unavailable.
 
 ## 🛠️ Tech Stack
 
@@ -22,7 +22,7 @@ A minimalist, high-productivity daily task manager and week planner with real-ti
 - **Audio**: Web Audio API — every sound is generated at runtime, no audio files
 - **Cloud Database**: Google Firebase Firestore
 - **Authentication**: Firebase Auth (Google Provider)
-- **Hosting**: Firebase Hosting & Vercel-ready
+- **Hosting**: Firebase Hosting (`firebase.json`) for the app, plus `netlify.toml` if you deploy there instead
 
 ## 🔧 Getting Started
 

@@ -17,7 +17,6 @@ import {
   where, 
   onSnapshot, 
   writeBatch,
-  getDocs,
   setDoc
 } from "firebase/firestore";
 
@@ -49,6 +48,5 @@ export {
   where, 
   onSnapshot, 
   writeBatch,
-  getDocs,
   setDoc
 };

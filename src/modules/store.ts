@@ -17,9 +17,6 @@ import { getLocalISODate, getWeekDates } from './dateUtils';
 import type { AppState, Task, ViewName } from '../types';
 
 export const STORAGE_KEY = 'todo_do_tasks_v1';
-export const THEME_KEY = 'notion_minimal_theme';
-export const TITLE_KEY = 'notion_minimal_title';
-export const SORT_TIME_KEY = 'notion_minimal_sort_time_v2';
 
 export const state: AppState = {
   tasks: loadTasks(),
@@ -29,7 +26,6 @@ export const state: AppState = {
   selectedAddDate: getLocalISODate(),
   selectedAddStart: '',
   selectedAddEnd: '',
-  sortByTime: true,
   isTableView: false,
   unsubscribeFirestore: null
 };
@@ -132,10 +128,6 @@ export function filterTasks(tasks: Task[], view: ViewName, specificDate: string 
   }
 }
 
-export function getFilteredTasks(): Task[] {
-  return filterTasks(state.tasks, state.currentView, state.specificDateFilter);
-}
-
 export interface TaskTally {
   open: number;
   done: number;
@@ -176,7 +168,7 @@ export async function addTask(finalText: string, targetDate: string, finalStart 
     }
   } else {
     const newTask: Task = {
-      id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      id: 'task_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
       text: finalText,
       date: targetDate,
       startTime: finalStart,
@@ -193,8 +185,8 @@ export async function addTask(finalText: string, targetDate: string, finalStart 
 export async function updateTaskItem(taskId: string, updates: Partial<Task>): Promise<void> {
   const index = state.tasks.findIndex(t => t.id === taskId);
   if (index !== -1) {
-    state.tasks[index] = { ...state.tasks[index], ...updates };
-    state.tasks = [...state.tasks];
+    // Replace the whole array in one step: React reads the snapshot it is handed
+    state.tasks = state.tasks.map((task, i) => (i === index ? { ...task, ...updates } : task));
     saveLocalTasks();
     notifyStore();
     if (state.currentUser) {
@@ -222,25 +214,8 @@ export async function deleteTaskItem(taskId: string): Promise<void> {
   }
 }
 
-export async function clearCompletedTasks(): Promise<void> {
-  const completedTasks = state.tasks.filter(t => t.completed);
-  if (completedTasks.length === 0) return;
-
-  state.tasks = state.tasks.filter(t => !t.completed);
-  saveLocalTasks();
-  notifyStore();
-
-  if (state.currentUser) {
-    const batch = writeBatch(db);
-    completedTasks.forEach(t => {
-      batch.delete(doc(db, 'tasks', t.id));
-    });
-    await batch.commit();
-  }
-}
-
 // Firestore Realtime Listener
-export function initFirestoreSync(user: User, onSyncUpdate?: () => void): void {
+export function initFirestoreSync(user: User): void {
   if (state.unsubscribeFirestore) {
     state.unsubscribeFirestore();
   }
@@ -285,7 +260,6 @@ export function initFirestoreSync(user: User, onSyncUpdate?: () => void): void {
     state.tasks = cloudTasks;
     saveLocalTasks();
     notifyStore();
-    if (onSyncUpdate) onSyncUpdate();
   }, (err) => {
     console.error('Firestore sync error:', err);
   });

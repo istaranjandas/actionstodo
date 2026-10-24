@@ -646,13 +646,6 @@ button.next-up:active {
   color: var(--amber-text);
 }
 
-.inline-add-icon {
-  width: 18px;
-  font-size: 16px;
-  line-height: 1;
-  text-align: center;
-}
-
 /* ---------- Empty state ---------- */
 .empty-state {
   padding: 48px 24px;

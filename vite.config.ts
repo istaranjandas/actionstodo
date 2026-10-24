@@ -5,15 +5,17 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    open: true
+    // Capture output and build artefacts are not part of the module graph; watching them only
+    // produced EBUSY noise in the terminal
+    watch: { ignored: ['**/.screenshots/**', '**/dist/**'] }
   },
   build: {
     outDir: 'dist',
-    chunkSizeWarningLimit: 2400,
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('vite/preload-helper') || id.includes('commonjsHelpers')) return 'react-vendor';
+          // Vite's own runtime helpers are shared glue, not React
+          if (id.includes('vite/preload-helper') || id.includes('commonjsHelpers')) return 'vite-helpers';
           if (!id.includes('node_modules')) return undefined;
           if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react-vendor';
           if (id.includes('@dimforge') || id.includes('@react-three/rapier')) return 'physics';

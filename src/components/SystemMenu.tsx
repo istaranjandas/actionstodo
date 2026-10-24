@@ -1,30 +1,31 @@
 // The one system control in the HUD: sound, time of day, account, mode, help and the creator's contact
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
-import { Car, Gamepad2, Keyboard, Menu, Moon, Music, Sun, Volume2, X } from 'lucide-react';
+import { Car, Gamepad2, Keyboard, Menu, Moon, Music, Sparkles, Sun, Volume2, X } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup, signOut } from '../firebase';
 import { updateSoundSettings, useSoundSettings } from '../audio/soundSettings';
+import { updateDisplaySettings, useDisplaySettings } from '../modules/displaySettings';
 import { playUiSound } from '../audio/uiSounds';
+import { pushToast } from '../modules/toasts';
 import { useDismissiblePopup } from '../hooks/useDismissiblePopup';
 import { CreatorAvatarIcon, GoogleIcon } from './Icons';
 import type { AppState, Theme } from '../types';
 
 const CREATOR_EMAIL = 'istaranjandas@gmail.com';
 
-interface SoundSettingRowProps {
+interface SettingRowProps {
   icon: ReactNode;
   label: string;
   hint: string;
   enabled: boolean;
-  volume: number;
   onToggle: () => void;
-  onVolumeChange: (volume: number) => void;
-  onVolumeCommit?: () => void;
+  // Extra controls that belong under the switch (the volume slider)
+  children?: ReactNode;
 }
 
-function SoundSettingRow({ icon, label, hint, enabled, volume, onToggle, onVolumeChange, onVolumeCommit }: SoundSettingRowProps) {
+// The one preference row: icon, label, explanation and switch, plus whatever the setting adds below
+function SettingRow({ icon, label, hint, enabled, onToggle, children }: SettingRowProps) {
   const labelId = useId();
-  const percent = Math.round(volume * 100);
 
   return (
     <div className={`settings-row ${enabled ? 'is-on' : ''}`}>
@@ -38,6 +39,23 @@ function SoundSettingRow({ icon, label, hint, enabled, volume, onToggle, onVolum
           <span className="settings-switch-thumb" />
         </button>
       </div>
+      {children}
+    </div>
+  );
+}
+
+interface SoundSettingRowProps extends Omit<SettingRowProps, 'children'> {
+  volume: number;
+  onVolumeChange: (volume: number) => void;
+  onVolumeCommit?: () => void;
+}
+
+// A preference row that also carries a volume slider; the slider greys out with the switch
+function SoundSettingRow({ icon, label, hint, enabled, volume, onToggle, onVolumeChange, onVolumeCommit }: SoundSettingRowProps) {
+  const percent = Math.round(volume * 100);
+
+  return (
+    <SettingRow icon={icon} label={label} hint={hint} enabled={enabled} onToggle={onToggle}>
       <label className="settings-volume">
         <span className="settings-volume-label">Volume</span>
         <input
@@ -56,7 +74,7 @@ function SoundSettingRow({ icon, label, hint, enabled, volume, onToggle, onVolum
         />
         <span className="settings-volume-value">{percent}%</span>
       </label>
-    </div>
+    </SettingRow>
   );
 }
 
@@ -76,6 +94,7 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
   const copyTimer = useRef<number | undefined>(undefined);
   const titleId = useId();
   const { effectsEnabled, effectsVolume, musicEnabled, musicVolume } = useSoundSettings();
+  const { animationsEnabled } = useDisplaySettings();
   const { currentUser } = appState;
 
   const close = useCallback(() => {
@@ -113,7 +132,7 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
       const error = err as { code?: string; message?: string };
       if (error.code !== 'auth/popup-closed-by-user') {
         console.error('Sign-in error:', err);
-        alert('Could not sign in: ' + error.message);
+        pushToast({ message: 'Could not sign in', detail: error.message, tone: 'danger' });
       }
     }
   };
@@ -210,6 +229,17 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
           </section>
 
           <section className="settings-section">
+            <span className="settings-section-label">Motion</span>
+            <SettingRow
+              icon={<Sparkles size={16} strokeWidth={2} />}
+              label="Animations"
+              hint={animationsEnabled ? 'On — full motion' : 'Off by default to keep low-end devices smooth'}
+              enabled={animationsEnabled}
+              onToggle={() => updateDisplaySettings({ animationsEnabled: !animationsEnabled })}
+            />
+          </section>
+
+          <section className="settings-section">
             <span className="settings-section-label">Account</span>
             {currentUser ? (
               <div className="system-account">
@@ -250,7 +280,7 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
             </div>
           </section>
 
-          <p className="settings-note">Animations follow your device’s reduced-motion setting.</p>
+          <p className="settings-note">Animations are off by default. Turn them on for the full experience; your device’s reduced-motion setting is always respected.</p>
         </div>
       )}
     </div>

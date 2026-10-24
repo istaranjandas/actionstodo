@@ -71,8 +71,7 @@
   font-size: 11px;
 }
 
-.popover-close-btn,
-.settings-close-btn {
+.popover-close-btn {
   width: 28px;
   height: 28px;
   display: inline-grid;
@@ -87,8 +86,7 @@
   transition: color var(--dur-quick) ease, background var(--dur-quick) ease;
 }
 
-.popover-close-btn:hover,
-.settings-close-btn:hover {
+.popover-close-btn:hover {
   color: var(--ink);
   background: var(--hover);
 }

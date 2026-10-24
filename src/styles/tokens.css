@@ -2,6 +2,12 @@
    Design tokens
    One light source (soft skylight from above) drives every bevel and shadow.
    Dark theme = "Dusk", light theme = "Daylight". Same console, different hour.
+
+   Breakpoints (CSS cannot read these from a variable, so they live here as the reference scale;
+   the matching JS constants are in src/hooks/useMotionProfile.ts):
+     680px   phone          — import this, never a one-off width
+     1024px  non-desktop    — narrow window or coarse pointer
+     1025px+ desktop        — the scroll pane and the planner board
    ========================================================================== */
 :root {
   color-scheme: light;
@@ -17,9 +23,6 @@
   --radius-lg: 2px;
   --radius-xl: 2px;
   --radius-pill: 1px;
-  /* Corner notch for framed HUD plates (top-right + bottom-left chamfer) */
-  --hud-notch: 8px;
-  --hud-chamfer: polygon(0 0, calc(100% - var(--hud-notch)) 0, 100% var(--hud-notch), 100% 100%, var(--hud-notch) 100%, 0 calc(100% - var(--hud-notch)));
   /* Warm alabaster glass: the one material every HUD panel shares (Dusk swaps in smoked obsidian).
      Daylight neutrals follow the Tailwind Stone ramp; the accent is burnt amber (Amber 600 / 700). */
   --hud-gold: #d97706;
@@ -62,9 +65,7 @@
   --well: #f3efe8;
   --well-deep: #e9e3d9;
   --hover: rgba(28, 25, 23, 0.045);
-  --press: rgba(28, 25, 23, 0.08);
   --edge-light: rgba(255, 255, 255, 0.7);
-  --edge-dark: rgba(28, 25, 23, 0.08);
   --line: rgba(28, 25, 23, 0.12);
   --line-strong: rgba(28, 25, 23, 0.2);
   --groove-dark: rgba(28, 25, 23, 0.08);
@@ -74,18 +75,12 @@
   --cast-near: rgba(28, 24, 20, 0.08);
   --scrim: rgba(28, 25, 23, 0.22);
   --sheen: rgba(255, 255, 255, 0.6);
-  --glare-tint: rgba(255, 255, 255, 0.7);
-  --hud-scrim: rgba(251, 249, 245, 0.55);
-  --nav-track: rgba(243, 239, 232, 0.94);
-  --bezel: rgba(28, 25, 23, 0.03);
-  --text-halo: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 20px rgba(251, 249, 245, 0.6);
 
   /* Ink: Stone 900 / 700 / 600 / 500 */
   --ink: #1c1917;
   --ink-2: #44403c;
   --ink-3: #57534e;
   --ink-faint: #78716c;
-  --ink-inverse: #fbf9f5;
 
   /* Signals: burnt amber fills and rails, a deeper ochre for text; Jade for done, Tomato for danger */
   --amber: #d97706;
@@ -110,7 +105,6 @@
   --bg: var(--panel-solid);
   --bg-subtle: var(--well);
   --border: var(--line-strong);
-  --text: var(--ink);
 }
 
 /* Dusk values. HUD panels (.hud-dark) used to force these in both themes; now they follow the theme */
@@ -150,9 +144,7 @@
   --well: #0a1014;
   --well-deep: #06090c;
   --hover: rgba(190, 220, 240, 0.05);
-  --press: rgba(190, 220, 240, 0.09);
   --edge-light: rgba(200, 228, 245, 0.09);
-  --edge-dark: rgba(0, 0, 0, 0.45);
   --line: rgba(150, 185, 210, 0.12);
   --line-strong: rgba(150, 185, 210, 0.2);
   --groove-dark: rgba(0, 0, 0, 0.5);
@@ -162,17 +154,11 @@
   --cast-near: rgba(0, 0, 0, 0.42);
   --scrim: rgba(2, 5, 8, 0.56);
   --sheen: rgba(200, 228, 245, 0.06);
-  --glare-tint: rgba(200, 228, 245, 0.1);
-  --hud-scrim: rgba(3, 6, 10, 0.62);
-  --nav-track: rgba(7, 11, 15, 0.84);
-  --bezel: rgba(0, 0, 0, 0.22);
-  --text-halo: 0 1px 0 rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 0, 0, 0.6);
 
   --ink: #e3eaee;
   --ink-2: #a0b1bc;
   --ink-3: #7b8e9b;
   --ink-faint: #4b5b66;
-  --ink-inverse: #0b1116;
 
   --amber: #eba245;
   --amber-hi: #ffc677;

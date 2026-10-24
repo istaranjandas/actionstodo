@@ -49,8 +49,10 @@ const TERRAIN_COLOR_PARS = /* glsl */ `
   uniform vec3 peakColor;
 `;
 
+// three r186 widened vColor to vec4 for every colour path, so the tint must be assigned as vec4
 const TERRAIN_COLOR_VERTEX = /* glsl */ `
-  vColor = mix(mix(valleyColor, rockColor, terrainBlend.x), peakColor, terrainBlend.y) * terrainBlend.z;
+  vec3 terrainTint = mix(mix(valleyColor, rockColor, terrainBlend.x), peakColor, terrainBlend.y) * terrainBlend.z;
+  vColor = vec4(terrainTint, 1.0);
 `;
 
 function buildTerrainMaterial(live: LivePalette): THREE.MeshStandardMaterial {

@@ -18,8 +18,7 @@ import { ArenaBursts } from './effects/ArenaBursts';
 import { GameHud } from './hud/GameHud';
 import { TouchControls } from './hud/TouchControls';
 import { gameInput, isTypingTarget, useGameKeyboard } from './input/gameInput';
-import { silenceRapierInitNotice } from './physicsConsole';
-import { routeThreeConsole } from '../canvas/threeConsole';
+import { routeThreeConsole, silenceRapierInitNotice } from '../canvas/consoleFilters';
 import type { ViewportMode } from '../components/ViewportModeToggle';
 import type { Task, Theme } from '../types';
 

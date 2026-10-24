@@ -1,4 +1,6 @@
 // Date Utility Functions
+// Dates travel through the app as local ISO strings ("YYYY-MM-DD"). They are parsed in exactly one
+// place so no caller has to remember the month offset or the timezone dance.
 
 export function getLocalISODate(d: Date = new Date()): string {
   const year = d.getFullYear();
@@ -7,9 +9,19 @@ export function getLocalISODate(d: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+export function isoDateParts(isoStr: string): { year: number; month: number; day: number } {
+  const [year, month, day] = isoStr.split('-').map(Number);
+  return { year, month, day };
+}
+
+// Local midnight for an ISO date — never UTC, so the day never shifts under the user
+export function parseISODate(isoStr: string): Date {
+  const { year, month, day } = isoDateParts(isoStr);
+  return new Date(year, month - 1, day);
+}
+
 export function addDays(isoStr: string, count: number): string {
-  const parts = isoStr.split('-').map(Number);
-  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  const d = parseISODate(isoStr);
   d.setDate(d.getDate() + count);
   return getLocalISODate(d);
 }
@@ -30,46 +42,38 @@ export function getWeekDates(offsetWeeks = 0): string[] {
   return days;
 }
 
-export function formatFriendlyDate(isoStr: string | null | undefined): { title: string; sub: string } {
-  if (!isoStr) return { title: 'No Date', sub: '' };
-  const today = getLocalISODate();
-  const tomorrow = addDays(today, 1);
-  const yesterday = addDays(today, -1);
-
-  const parts = isoStr.split('-').map(Number);
-  const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-
-  const weekday = dateObj.toLocaleDateString(undefined, { weekday: 'short' });
-  const monthDay = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-
-  if (isoStr === today) {
-    return { title: 'Today', sub: `${weekday}, ${monthDay}` };
-  } else if (isoStr === tomorrow) {
-    return { title: 'Tomorrow', sub: `${weekday}, ${monthDay}` };
-  } else if (isoStr === yesterday) {
-    return { title: 'Yesterday', sub: `${weekday}, ${monthDay}` };
-  } else {
-    const fullDay = dateObj.toLocaleDateString(undefined, { weekday: 'long' });
-    return { title: fullDay, sub: `${monthDay}` };
-  }
-}
-
-export function formatShortDate(isoStr: string): string {
+// "Today" / "Tomorrow" / "Yesterday" for the day either side of now, or null for any other date
+function relativeDayLabel(isoStr: string): string | null {
   const today = getLocalISODate();
   if (isoStr === today) return 'Today';
   if (isoStr === addDays(today, 1)) return 'Tomorrow';
   if (isoStr === addDays(today, -1)) return 'Yesterday';
-  const parts = isoStr.split('-').map(Number);
-  const d = new Date(parts[0], parts[1] - 1, parts[2]);
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return null;
+}
+
+export function formatFriendlyDate(isoStr: string | null | undefined): { title: string; sub: string } {
+  if (!isoStr) return { title: 'No Date', sub: '' };
+  const dateObj = parseISODate(isoStr);
+
+  const weekday = dateObj.toLocaleDateString(undefined, { weekday: 'short' });
+  const monthDay = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+  const relative = relativeDayLabel(isoStr);
+  if (relative) {
+    return { title: relative, sub: `${weekday}, ${monthDay}` };
+  }
+  const fullDay = dateObj.toLocaleDateString(undefined, { weekday: 'long' });
+  return { title: fullDay, sub: `${monthDay}` };
+}
+
+export function formatShortDate(isoStr: string): string {
+  return relativeDayLabel(isoStr) ?? parseISODate(isoStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 export function formatWeekRangeLabel(dates: string[]): string {
   if (!dates || dates.length < 7) return '';
-  const startParts = dates[0].split('-').map(Number);
-  const endParts = dates[6].split('-').map(Number);
-  const startObj = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-  const endObj = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+  const startObj = parseISODate(dates[0]);
+  const endObj = parseISODate(dates[6]);
 
   const startMonth = startObj.toLocaleDateString(undefined, { month: 'short' });
   const endMonth = endObj.toLocaleDateString(undefined, { month: 'short' });
