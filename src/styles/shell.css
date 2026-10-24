@@ -30,9 +30,15 @@
 }
 
 .game-shell {
-  --ribbon-h: 124px;
+  /* The top dock: the lens bar with the date strip under it. Everything else is measured from it. */
+  --dock-top: 16px;
+  --dock-bar-h: 36px;
+  --dock-h: 112px;
+  /* Space the ribbon takes at the bottom: none on desktop, because the dock is at the top.
+     Phones keep the dock below and reserve it here. */
+  --ribbon-h: 0px;
   --hud-inset: 36px;
-  --slate-top: 136px;
+  --slate-top: calc(var(--dock-top) + var(--dock-h) + 112px);
   --slate-w: 456px;
   position: fixed;
   inset: 0;
@@ -206,10 +212,10 @@ body:not(.has-world) .world-labels {
   opacity: var(--safe-zone-fade, 1);
 }
 
-/* ---------- Area title (top-left) ---------- */
+/* ---------- Area title (under the top dock) ---------- */
 .location {
   position: absolute;
-  top: 26px;
+  top: calc(var(--dock-top) + var(--dock-h) + 26px);
   left: var(--hud-inset);
   display: flex;
   align-items: center;
@@ -763,7 +769,7 @@ body:not(.has-world) .world-labels {
   position: absolute;
   left: var(--hud-inset);
   right: var(--hud-inset);
-  top: 120px;
+  top: calc(var(--slate-top) - 16px);
   bottom: calc(var(--ribbon-h) + 36px);
   display: flex;
   flex-direction: column;
@@ -1431,5 +1437,61 @@ body:not(.has-world) .world-labels {
   .slate {
     clip-path: none;
     border-left: 1px solid var(--line);
+  }
+}
+
+/* ==========================================================================
+   Desktop top dock
+   The ribbon is a header, not a footer: lens tabs on the left, month and the
+   jump/today tools on the right, and the system cluster (sync lamp, the game
+   link, the System trigger) closing the same panel as icon-only buttons.
+   ========================================================================== */
+@media (min-width: 1025px) {
+  /* Room for the cluster, so the tools never run under it */
+  .lens-tools {
+    padding-right: 100px;
+  }
+
+  .system-menu {
+    top: var(--dock-top);
+    right: calc(var(--hud-inset) + 4px);
+    height: var(--dock-bar-h);
+    gap: 8px;
+    /* The ribbon is rendered after this cluster and paints its glass over it */
+    z-index: 2;
+  }
+
+  .system-trigger,
+  .system-trigger.is-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 32px;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line-strong);
+    background: linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: var(--shadow-key);
+    color: var(--ink-2);
+    font-size: 13px;
+  }
+
+  .system-trigger-label {
+    display: none;
+  }
+
+  .system-trigger:hover {
+    color: var(--amber-text);
+    border-color: var(--amber-line);
+    box-shadow: var(--shadow-key-hover);
+  }
+
+  .system-trigger:active,
+  .system-trigger.is-active {
+    transform: none;
+    border-color: var(--amber-line);
+    box-shadow: var(--shadow-key-pressed), inset 0 -2px 0 var(--amber);
   }
 }

@@ -8,7 +8,7 @@ A minimalist, high-productivity daily task manager and week planner with real-ti
 - ✍️ **Natural Language Parsing**: Type `"Call Alex at 5pm"` or `"Design sprint 2pm to 3:30pm"` to automatically parse and slot time.
 - 🏮 **The Lantern Path**: Your days are wayposts along a trail through a living 3D valley; every task is a lantern on its day's post, and completing one lights it. Walk the path with `Q` / `E`, or switch lens (Today, Upcoming, Week, All, Done, Planner) with `1`–`6`.
 - 🗒️ **Day slate & details**: The focused day's tasks float beside its waypost; click a task or its lantern to edit title, date and time on the details slate.
-- 📅 **Path ribbon**: A strip of day beads along the bottom doubles as the calendar; jump a week with `«` `»` or to any date with the dial.
+- 📅 **Path ribbon**: The top dock carries the lens tabs and a strip of day beads that doubles as the calendar — with the month, the jump-to-date dial and the system controls on its right. Phones dock it below instead. Jump a week with `«` `»`.
 - 📊 **Planner**: The week matrix (time slots by weekday) opens as a full board over the valley.
 - 🔊 **Sound & music**: Synthesised interface sounds and an optional ambient soundtrack, each with its own switch and volume in the System menu.
 - ☁️ **Real-Time Firebase Cloud Sync**: Google Sign-In with instant Firestore multi-device synchronization.

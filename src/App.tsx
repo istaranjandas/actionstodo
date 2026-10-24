@@ -416,13 +416,6 @@ export function App() {
               {/* Multi-day boards dim and soften the world behind them so every row stays legible */}
               {(isGridView || isTableView) && <div className="hud-scrim" aria-hidden="true" />}
               <LocationTitle title={locationTitle} subtitle={locationSubtitle} />
-              <SystemMenu
-                appState={appState}
-                theme={theme}
-                onSetTheme={applyTheme}
-                onEnterGameMode={() => changeViewportMode('game')}
-                onOpenControls={() => setIsShortcutsOpen(true)}
-              />
 
               {isTableView ? (
                 <div className="planner-board">
@@ -463,6 +456,15 @@ export function App() {
                 isCompact={isCompact}
                 onSelectLens={selectLens}
                 onFocusDay={focusDay}
+              />
+
+              {/* After the ribbon: on desktop the system cluster closes the same top dock */}
+              <SystemMenu
+                appState={appState}
+                theme={theme}
+                onSetTheme={applyTheme}
+                onEnterGameMode={() => changeViewportMode('game')}
+                onOpenControls={() => setIsShortcutsOpen(true)}
               />
             </div>
           </>
