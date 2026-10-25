@@ -8,7 +8,6 @@ export interface ShortcutHandlers {
   onNewTask: () => void;
   onEscape: () => void;
   onToggleShortcuts: () => void;
-  onFocusCalendar: () => void;
   onToday: () => void;
 }
 
@@ -66,7 +65,6 @@ export function useGlobalShortcuts(handlers: ShortcutHandlers, enabled: boolean)
       else if (key === 'e') current.onStepNav(1);
       else if (key === 't' || key === 'n' || key === '/') current.onNewTask();
       else if (event.key === '?') current.onToggleShortcuts();
-      else if (key === 'c') current.onFocusCalendar();
       else if (event.key === 'Home') current.onToday();
       else return;
       event.preventDefault();

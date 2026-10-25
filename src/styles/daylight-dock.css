@@ -1,222 +1,51 @@
-/* ---------- World scrims ---------- */
-/* Daylight keeps a soft ivory vignette behind the dock, so the dark area title and the date ruler
-   read against the sky; the valley needs no fade at the foot. */
-:where([data-theme='light']) .game-shell::before {
-  background: linear-gradient(180deg, var(--top-scrim) 0%, rgba(250, 248, 243, 0.34) 55%, transparent 100%);
-}
-
+/* ==========================================================================
+   Daylight dock
+   The floating pill and the system keys borrow the ivory glass; the active
+   lens keeps a lit amber ring. The valley needs no fade at its foot.
+   ========================================================================== */
 :where([data-theme='light']) .game-shell::after {
   background: none;
 }
 
-/* ---------- Timeline ribbon: one glass dock, lens bar stacked over the date strip ---------- */
-:where([data-theme='light']) .ribbon {
-  --dock-glass: rgba(250, 247, 242, 0.82);
-  --dock-edge: rgba(28, 25, 23, 0.1);
-  --dock-radius: 12px;
-  --dock-shadow: 0 12px 32px -8px rgba(28, 24, 20, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  --dock-ink: #1c1917;
-  --dock-ink-2: #57534e;
-  --dock-stone: #68625b;
-  --dock-stone-soft: #716a64;
-  --dock-stone-past: #857d75;
-  --dock-accent: #d97706;
-  --dock-accent-deep: #b45309;
-  --dock-accent-tint: rgba(217, 119, 6, 0.1);
-  --dock-accent-edge: rgba(217, 119, 6, 0.45);
-  gap: 6px;
-}
-
 :where([data-theme='light']) .lens-bar,
-:where([data-theme='light']) .timeline {
-  border: 1px solid var(--dock-edge);
-  border-radius: var(--dock-radius);
-  background: var(--dock-glass);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  box-shadow: var(--dock-shadow);
-}
-
-/* Width, edge and the tools' right alignment now come from ribbon.css for both hours */
-:where([data-theme='light']) .lens-bar {
-  padding: 4px 6px 4px 4px;
+:where([data-theme='light']) .system-trigger,
+:where([data-theme='light']) .system-trigger.is-icon {
+  background: rgba(251, 249, 245, 0.86);
+  border-color: rgba(28, 25, 23, 0.1);
+  box-shadow: 0 12px 32px -14px rgba(28, 24, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 :where([data-theme='light']) .lens-bar .view-nav-item {
-  border-radius: 8px;
-  color: var(--dock-ink-2);
-}
-
-:where([data-theme='light']) .lens-bar .view-nav-item + .view-nav-item {
-  box-shadow: none;
+  color: var(--ink-2);
 }
 
 :where([data-theme='light']) .lens-bar .view-nav-item:hover {
   background: rgba(28, 25, 23, 0.05);
-  color: var(--dock-ink);
+  color: var(--ink);
 }
 
 :where([data-theme='light']) .lens-bar .view-nav-item.is-active {
-  color: var(--dock-accent-deep);
-}
-
-:where([data-theme='light']) .lens-bar .view-nav-item.is-active .view-nav-icon {
-  color: var(--dock-accent);
+  color: var(--amber-text);
 }
 
 :where([data-theme='light']) .lens-bar .view-nav-indicator {
-  left: 8px;
-  width: calc(var(--indicator-w, 0px) - 16px);
-  border-radius: 2px;
-  background: var(--dock-accent);
-  box-shadow: none;
-}
-
-:where([data-theme='light']) .view-nav-count {
-  background: var(--well);
+  border-color: var(--amber-line);
+  background: var(--amber-wash);
 }
 
 :where([data-theme='light']) .lens-bar .view-nav-count {
-  border-radius: 4px;
   background: transparent;
-  color: var(--dock-ink-2);
-  box-shadow: inset 0 0 0 1px rgba(28, 25, 23, 0.16);
+  color: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
 :where([data-theme='light']) .lens-bar .view-nav-item.is-active .view-nav-count {
-  background: var(--dock-accent-tint);
-  color: var(--dock-accent-deep);
-  box-shadow: inset 0 0 0 1px var(--dock-accent-edge);
-}
-
-:where([data-theme='light']) .timeline-month {
-  color: var(--dock-ink-2);
-}
-
-:where([data-theme='light']) .timeline-step {
-  border-radius: 8px;
-  border-color: var(--dock-edge);
-  color: var(--dock-ink-2);
-}
-
-:where([data-theme='light']) .timeline-step:hover {
-  border-color: var(--dock-accent-edge);
-  background: var(--dock-accent-tint);
-  color: var(--dock-accent-deep);
-}
-
-/* ---------- Date strip ---------- */
-:where([data-theme='light']) .timeline {
-  padding: 0 4px;
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-:where([data-theme='light']) .timeline::before {
-  background: repeating-linear-gradient(90deg, rgba(28, 25, 23, 0.12) 0 1px, transparent 1px 13px);
-}
-
-:where([data-theme='light']) .timeline-notch {
-  background: var(--dock-accent);
-  filter: none;
-}
-
-:where([data-theme='light']) .day-bead {
-  border-radius: 8px;
-  color: var(--dock-stone);
-  text-shadow: none;
+  background: var(--amber);
+  color: var(--amber-ink);
   box-shadow: none;
 }
 
-:where([data-theme='light']) .day-bead::after {
-  background: rgba(28, 25, 23, 0.22);
-}
-
-:where([data-theme='light']) .day-bead:hover {
-  border-color: var(--dock-edge);
-  background: rgba(28, 25, 23, 0.04);
-  color: var(--dock-ink);
-}
-
-:where([data-theme='light']) .day-bead-weekday,
-:where([data-theme='light']) .day-bead.is-weekend .day-bead-weekday {
-  color: var(--dock-stone-soft);
-}
-
-:where([data-theme='light']) .day-bead.is-past {
-  color: var(--dock-stone-past);
-}
-
-:where([data-theme='light']) .day-bead.is-past:hover {
-  color: var(--dock-ink);
-}
-
-:where([data-theme='light']) .mark-open {
-  background: var(--dock-accent);
-}
-
-:where([data-theme='light']) .mark-done {
-  background: var(--teal);
-}
-
-:where([data-theme='light']) .day-bead.is-today .day-bead-weekday,
-:where([data-theme='light']) .day-bead.is-today .day-bead-number {
-  color: var(--dock-accent-deep);
-}
-
-:where([data-theme='light']) .day-bead.is-today::after {
-  background: var(--dock-accent);
-}
-
-:where([data-theme='light']) .day-bead.is-focused {
-  border-color: var(--dock-accent);
-  background: var(--dock-accent-tint);
-  box-shadow: none;
-  color: var(--dock-ink);
-}
-
-:where([data-theme='light']) .day-bead.is-focused .day-bead-weekday {
-  font-weight: 700;
-  color: var(--dock-accent-deep);
-}
-
-:where([data-theme='light']) .day-bead.is-focused .day-bead-number {
-  font-weight: 800;
-  color: var(--dock-ink);
-}
-
-:where([data-theme='light']) .day-bead.is-focused .mark-open {
-  background: var(--dock-accent-deep);
-}
-
-:where([data-theme='light']) .day-bead.is-focused .mark-done {
-  background: var(--teal);
-}
-
-/* ---------- Drag & drop ---------- */
-:where([data-theme='light']) body.is-dragging-task .day-bead {
-  background: var(--dock-accent-tint);
-}
-
-:where([data-theme='light']) body.is-dragging-task .timeline {
-  border-color: var(--dock-accent-edge);
-  box-shadow: var(--dock-shadow), 0 0 0 1px rgba(217, 119, 6, 0.18);
-}
-
-:where([data-theme='light']) .day-bead.is-drop-hover,
-:where([data-theme='light']) body.is-dragging-task .day-bead.is-drop-hover {
-  border-color: var(--dock-accent);
-  background: var(--dock-accent-deep);
-  color: #ffffff;
-  box-shadow: 0 6px 16px -6px rgba(180, 83, 9, 0.45);
-}
-
-:where([data-theme='light']) .day-bead.is-drop-hover .day-bead-weekday,
-:where([data-theme='light']) .day-bead.is-drop-hover .day-bead-number {
-  color: #ffffff;
-}
-
-:where([data-theme='light']) .day-bead.is-drop-hover .mark-open,
-:where([data-theme='light']) .day-bead.is-drop-hover .mark-done {
-  background: #ffffff;
+:where([data-theme='light']) .system-trigger:hover {
+  border-color: var(--amber-line);
+  color: var(--amber-text);
 }

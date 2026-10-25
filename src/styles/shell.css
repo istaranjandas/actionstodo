@@ -30,15 +30,13 @@
 }
 
 .game-shell {
-  /* The top dock: the lens bar with the date strip under it. Everything else is measured from it. */
+  /* The dock: one floating pill in the top-left corner. Everything else is measured from it. */
   --dock-top: 16px;
-  --dock-bar-h: 36px;
-  --dock-h: 112px;
-  /* Space the ribbon takes at the bottom: none on desktop, because the dock is at the top.
-     Phones keep the dock below and reserve it here. */
+  --dock-h: 44px;
+  /* Space the dock takes at the bottom: none on desktop; phones reserve it here */
   --ribbon-h: 0px;
   --hud-inset: 36px;
-  --slate-top: calc(var(--dock-top) + var(--dock-h) + 112px);
+  --slate-top: calc(var(--dock-top) + var(--dock-h) + 24px);
   --slate-w: 456px;
   position: fixed;
   inset: 0;
@@ -50,7 +48,7 @@
   pointer-events: auto;
 }
 
-/* Soft scrims top and bottom keep the HUD legible over any sky; the world stays clear in between */
+/* One soft scrim at the foot only: the sky is left unobstructed all the way to the top edge */
 .game-shell::before,
 .game-shell::after {
   content: '';
@@ -60,17 +58,8 @@
   pointer-events: none;
 }
 
-/* Sky vignette: the dock and the date ruler get their own atmosphere, so the mountain ridge and the
-   lighthouse sit in open sky below the ruler instead of cutting through the numbers. */
 .game-shell::before {
-  top: 0;
-  height: 168px;
-  background: linear-gradient(
-    180deg,
-    var(--top-scrim) 0%,
-    color-mix(in srgb, var(--top-scrim) 55%, transparent) 55%,
-    transparent 100%
-  );
+  display: none;
 }
 
 .game-shell::after {
@@ -232,66 +221,8 @@ body:not(.has-world) .world-labels {
   opacity: var(--safe-zone-fade, 1);
 }
 
-/* ---------- Area title (under the top dock) ---------- */
-.location {
-  position: absolute;
-  top: calc(var(--dock-top) + var(--dock-h) + 26px);
-  left: var(--hud-inset);
-  display: flex;
-  align-items: center;
-}
-
-.location-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* The date rides the same line as the place name: "TODAY · SAT, OCT 24" */
-.location-date {
-  margin-left: 12px;
-  font-size: 0.34em;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  vertical-align: 0.55em;
-  color: var(--location-ink-2);
-}
-
-.location-subtitle {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--location-ink-2);
-  text-shadow: var(--location-halo);
-}
-
-.location-title {
-  font-family: var(--font-display);
-  font-size: 50px;
-  font-weight: 700;
-  line-height: 0.92;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--location-ink);
-  text-shadow: var(--location-halo);
-  animation: titleScan 520ms var(--ease-out);
-}
-
-@keyframes titleScan {
-  from {
-    opacity: 0;
-    clip-path: inset(0 100% 0 0);
-    transform: translateX(-10px);
-    letter-spacing: 0.12em;
-  }
-  to {
-    opacity: 1;
-    clip-path: inset(0 0 0 0);
-    transform: none;
-  }
-}
+/* ---------- Area title ----------
+   The place name and the date now live inside the slate header; the world keeps the whole frame. */
 
 .brand-icon {
   width: 46px;
@@ -321,7 +252,7 @@ body:not(.has-world) .world-labels {
   box-shadow: inset 0 2px 4px rgba(90, 48, 4, 0.45);
 }
 
-/* In the dock the mascot is a key the size of the lens tabs, cut on the same corner */
+/* In the dock the mascot is a round key the height of the lens tabs */
 .brand-mark {
   position: relative;
   flex-shrink: 0;
@@ -330,11 +261,11 @@ body:not(.has-world) .world-labels {
 
 .lens-bar .brand-icon {
   width: 34px;
-  height: 32px;
-  border-radius: 0;
+  height: 34px;
+  border-radius: var(--radius-round);
   border: none;
   box-shadow: 0 0 18px -6px var(--amber-glow);
-  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  clip-path: none;
 }
 
 .lens-bar .brand-icon svg {
@@ -347,20 +278,6 @@ body:not(.has-world) .world-labels {
   .lens-bar .brand-icon {
     width: 44px;
     height: 44px;
-  }
-
-  /* Keep the area title clear of the system cluster in the top-right corner */
-  .location {
-    right: 140px;
-  }
-
-  /* The date becomes a kicker line under the place name, so a long day name never collides */
-  .location-date {
-    display: block;
-    margin: 2px 0 0;
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    vertical-align: baseline;
   }
 }
 
@@ -805,6 +722,77 @@ body:not(.has-world) .world-labels {
   color: var(--ink-3);
 }
 
+/* The date sits in the header and opens the calendar, like the month label used to */
+.slate-date {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.slate-date-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.slate-date-label svg {
+  color: var(--ink-3);
+}
+
+.picker-chip-wrap:hover > .slate-date-label {
+  border-color: var(--amber-line);
+  color: var(--amber-text);
+}
+
+.picker-chip-wrap:hover > .slate-date-label svg {
+  color: var(--amber-text);
+}
+
+/* DONE is a latch: it toggles finished rows in and out of the log */
+.slate-stat.is-toggle {
+  position: relative;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: inherit;
+  color: var(--ink-2);
+  transition: color var(--dur-quick) ease;
+}
+
+/* A 44px invisible target on touch, without growing the header row */
+@media (max-width: 680px) {
+  .slate-stat.is-toggle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+
+.slate-stat.is-toggle:hover {
+  color: var(--ink);
+}
+
+.slate-stat.is-toggle strong {
+  color: var(--ink-3);
+}
+
+.slate-stat.is-toggle.is-on:not(.is-zero) strong {
+  color: var(--amber-text);
+}
+
 .slate-gauge {
   position: relative;
   width: 96px;
@@ -1072,10 +1060,6 @@ body:not(.has-world) .world-labels {
   .inspector-slate {
     width: 320px;
   }
-
-  .location-title {
-    font-size: 42px;
-  }
 }
 
 @media (min-width: 1025px) and (max-width: 1240px) {
@@ -1093,18 +1077,9 @@ body:not(.has-world) .world-labels {
     --hud-inset: 14px;
   }
 
-  .location {
-    top: 14px;
-    gap: 12px;
-  }
-
   .brand-icon {
     width: 40px;
     height: 40px;
-  }
-
-  .location-title {
-    font-size: 34px;
   }
 
   .system-menu {
@@ -1112,7 +1087,7 @@ body:not(.has-world) .world-labels {
   }
 
   .system-trigger {
-    height: 40px;
+    height: 44px;
     padding: 0 12px;
   }
 
@@ -1191,10 +1166,6 @@ body:not(.has-world) .world-labels {
 }
 
 @media (max-width: 680px) {
-  .location-title {
-    font-size: 28px;
-  }
-
   .brand-icon,
   .system-trigger {
     width: 44px;
@@ -1232,10 +1203,6 @@ body:not(.has-world) .world-labels {
   
 
   
-
-  .location-subtitle {
-    font-size: 10px;
-  }
 
   .slate-gauge {
     width: 56px;
@@ -1390,31 +1357,12 @@ body:not(.has-world) .world-labels {
   border-radius: 0;
 }
 
-/* ---------- Area title: mission header ---------- */
-.location-title {
-  letter-spacing: 0.04em;
-}
-
-.location-subtitle {
-  font-weight: 600;
-}
-
-.location-subtitle::before {
-  content: '';
-  display: inline-block;
-  width: 18px;
-  height: 2px;
-  margin-right: 8px;
-  vertical-align: middle;
-  background: var(--location-ink-2);
-  box-shadow: none;
-}
-
+/* ---------- Brand key: the mascot, round like the dock it sits in ---------- */
 .brand-icon {
-  border-radius: 0;
+  border-radius: var(--radius-round);
   background: linear-gradient(165deg, var(--amber-hi), var(--amber) 62%, var(--amber-deep));
   box-shadow: 0 0 0 1px var(--amber-deep), 0 0 24px -6px var(--amber-glow);
-  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+  clip-path: none;
 }
 
 @media (hover: hover) {
@@ -1532,39 +1480,55 @@ body:not(.has-world) .world-labels {
 }
 
 /* ==========================================================================
-   Desktop top dock
-   The ribbon is a header, not a footer: lens tabs on the left, month and the
-   jump/today tools on the right, and the system cluster (sync lamp, the game
-   link, the System trigger) closing the same panel as icon-only buttons.
+   Desktop floating controls
+   The lens pill sits top-left; the system cluster floats top-right as three
+   round glass keys (sync lamp, the game link, the System trigger). Nothing
+   spans the viewport, so the sky runs to the top edge.
    ========================================================================== */
 @media (min-width: 1025px) {
-  /* Room for the cluster, so the tools never run under it */
-  .lens-tools {
-    padding-right: 100px;
-  }
-
   .system-menu {
     top: var(--dock-top);
-    right: calc(var(--hud-inset) + 4px);
-    height: var(--dock-bar-h);
+    right: var(--hud-inset);
+    height: var(--dock-h);
     gap: 8px;
-    /* The ribbon is rendered after this cluster and paints its glass over it */
     z-index: 2;
+  }
+
+  /* The sync lamp becomes a glass status key with an LED in the middle */
+  .system-menu .sync-lamp {
+    width: var(--dock-h);
+    height: var(--dock-h);
+    border-radius: var(--radius-round);
+    border: 1px solid var(--hud-glass-edge);
+    background-color: transparent;
+    background-image:
+      radial-gradient(circle, var(--ink-3) 0 3px, transparent 3.5px),
+      var(--hud-glass);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    backdrop-filter: blur(8px) saturate(140%);
+    box-shadow: var(--hud-glass-shadow);
+  }
+
+  .system-menu .sync-lamp.is-live {
+    background-image:
+      radial-gradient(circle, var(--teal) 0 3px, transparent 3.5px),
+      var(--hud-glass);
+    box-shadow: var(--hud-glass-shadow), 0 0 14px -2px var(--teal);
   }
 
   .system-trigger,
   .system-trigger.is-icon {
     display: inline-grid;
     place-items: center;
-    width: 34px;
-    height: 32px;
+    width: var(--dock-h);
+    height: var(--dock-h);
     padding: 0;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--line-strong);
-    background: linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    box-shadow: var(--shadow-key);
+    border-radius: var(--radius-round);
+    border: 1px solid var(--hud-glass-edge);
+    background: var(--hud-glass);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    backdrop-filter: blur(8px) saturate(140%);
+    box-shadow: var(--hud-glass-shadow);
     color: var(--ink-2);
     font-size: 13px;
   }
@@ -1576,13 +1540,14 @@ body:not(.has-world) .world-labels {
   .system-trigger:hover {
     color: var(--amber-text);
     border-color: var(--amber-line);
-    box-shadow: var(--shadow-key-hover);
+    box-shadow: var(--hud-glass-shadow), inset 0 0 0 1px var(--amber-line);
   }
 
   .system-trigger:active,
   .system-trigger.is-active {
     transform: none;
+    color: var(--amber-text);
     border-color: var(--amber-line);
-    box-shadow: var(--shadow-key-pressed), inset 0 -2px 0 var(--amber);
+    box-shadow: var(--hud-glass-shadow), inset 0 0 0 1px var(--amber-line);
   }
 }

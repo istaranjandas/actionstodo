@@ -22,6 +22,8 @@ interface TaskFeedProps {
   // The view's tasks from summarizeView, the same list the slate header and lens badges count
   viewTasks: Task[];
   layout: FeedLayout;
+  // The DONE toggle in the slate header: off means finished rows stay hidden
+  hideCompleted: boolean;
 }
 
 const EMPTY_MESSAGES: Record<string, string> = {
@@ -73,7 +75,7 @@ export function getSortedDateGroups(appState: AppState, filtered: Task[]): { dat
   return sortedDates.map(dateKey => ({ dateKey, tasks: sortTaskList(groupsMap.get(dateKey) || [], true) }));
 }
 
-export function TaskFeed({ appState, viewTasks, layout }: TaskFeedProps) {
+export function TaskFeed({ appState, viewTasks, layout, hideCompleted }: TaskFeedProps) {
   const groups = useMemo(
     () => getSortedDateGroups(appState, viewTasks),
     [viewTasks, appState.currentView, appState.specificDateFilter]
@@ -83,17 +85,34 @@ export function TaskFeed({ appState, viewTasks, layout }: TaskFeedProps) {
   // Day cards take new tasks inline, except in Done (finished work only)
   const canAddInCard = isGrid && appState.currentView !== 'completed';
 
+  // Hiding done work drops it from the rows (and drops a day that has nothing left open)
+  const visibleGroups = useMemo(
+    () =>
+      hideCompleted
+        ? groups
+            .map(group => ({ ...group, tasks: group.tasks.filter(task => !task.completed) }))
+            .filter(group => group.tasks.length > 0)
+        : groups,
+    [groups, hideCompleted]
+  );
+  const somethingHidden = hideCompleted && groups.some(group => group.tasks.some(task => task.completed));
+
   if (isTodayBoard) {
-    return <TodayBoard tasks={groups[0]?.tasks ?? []} />;
+    const todayTasks = visibleGroups[0]?.tasks ?? [];
+    return <TodayBoard tasks={todayTasks} allDone={todayTasks.length === 0 && somethingHidden} />;
   }
 
-  if (groups.length === 0) {
-    return <div className="empty-state">{EMPTY_MESSAGES[appState.currentView] ?? 'No tasks found for this view.'}</div>;
+  if (visibleGroups.length === 0) {
+    return (
+      <div className="empty-state">
+        {somethingHidden ? 'Everything here is done. Click DONE to show it.' : EMPTY_MESSAGES[appState.currentView] ?? 'No tasks found for this view.'}
+      </div>
+    );
   }
 
   return (
     <>
-      {groups.map(({ dateKey, tasks }, index) => (
+      {visibleGroups.map(({ dateKey, tasks }, index) => (
         <DateGroup key={dateKey} dateKey={dateKey} groupTasks={tasks} staggerIndex={index} isCard={isGrid} canAdd={canAddInCard} />
       ))}
     </>
@@ -278,7 +297,7 @@ function ClearHorizon() {
   );
 }
 
-function TodayBoard({ tasks }: { tasks: Task[] }) {
+function TodayBoard({ tasks, allDone }: { tasks: Task[]; allDone: boolean }) {
   const today = getLocalISODate();
   const nowMinutes = useMinuteClock();
   const { openTask } = useTaskSelection();
@@ -311,7 +330,14 @@ function TodayBoard({ tasks }: { tasks: Task[] }) {
       )}
 
       {tasks.length === 0 ? (
-        <ClearHorizon />
+        allDone ? (
+          <div className="clear-horizon is-quiet">
+            <span className="clear-horizon-kicker">All clear</span>
+            <p className="clear-horizon-text">Everything logged today is done. Click DONE above to show it.</p>
+          </div>
+        ) : (
+          <ClearHorizon />
+        )
       ) : (
         <>
           {timed.length > 0 && (

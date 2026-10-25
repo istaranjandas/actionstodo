@@ -106,6 +106,16 @@
   color: var(--amber-text);
 }
 
+/* Date and time stay collapsed until the command bar is in use, so an idle log stays one line */
+.command-bar .quick-add-chips-row {
+  display: none;
+}
+
+.command-bar:focus-within .quick-add-chips-row,
+.command-bar.has-text .quick-add-chips-row {
+  display: flex;
+}
+
 /* Today is the default target, so the date chip is icon-only until another day is picked */
 .chip-btn.date-chip.is-icon {
   width: 30px;

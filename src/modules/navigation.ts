@@ -1,6 +1,6 @@
-// The lenses, in menu order. Planner is the week table (desktop only, as before).
-// Each lens carries the title and subtitle the area label shows, so nav and headings cannot drift.
-import { formatWeekRangeLabel, getLocalISODate, getWeekDates, isoDateParts } from './dateUtils';
+// The lenses, in menu order: today's log, every date, and the week planner (desktop only).
+// Upcoming, Week and Done are gone from the bar — Done became a toggle in the slate header.
+import { getLocalISODate, isoDateParts } from './dateUtils';
 import { summarizeView } from './store';
 import type { Task, ViewName } from '../types';
 
@@ -10,18 +10,12 @@ export interface NavItem {
   key: NavKey;
   label: string;
   shortcut: string;
-  // Heading shown over the world when this lens is active
-  title: string;
-  subtitle: () => string;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { key: 'today', label: 'Today', shortcut: '1', title: 'Today', subtitle: () => 'The waypost you are standing on' },
-  { key: 'upcoming', label: 'Upcoming', shortcut: '2', title: 'Upcoming', subtitle: () => 'The path ahead' },
-  { key: 'this-week', label: 'Week', shortcut: '3', title: 'This week', subtitle: () => formatWeekRangeLabel(getWeekDates(0)) },
-  { key: 'all', label: 'All', shortcut: '4', title: 'All dates', subtitle: () => 'Every waypost on the path' },
-  { key: 'completed', label: 'Done', shortcut: '5', title: 'Done', subtitle: () => 'Lanterns already lit' },
-  { key: 'planner', label: 'Planner', shortcut: '6', title: 'Planner', subtitle: () => formatWeekRangeLabel(getWeekDates(0)) }
+  { key: 'today', label: 'Today', shortcut: '1' },
+  { key: 'all', label: 'All', shortcut: '2' },
+  { key: 'planner', label: 'Planner', shortcut: '3' }
 ];
 
 // Lens badges read the same summarizeView selector as the lists and the slate header:

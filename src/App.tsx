@@ -3,7 +3,7 @@
 // with a day slate, a details slate and the path ribbon floating in it. Game mode: the quest arena.
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { auth, onAuthStateChanged } from './firebase';
-import { addDays, formatFriendlyDate, formatWeekRangeLabel, getLocalISODate, getWeekDates } from './modules/dateUtils';
+import { addDays, getLocalISODate, getWeekDates } from './modules/dateUtils';
 import { initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
 import { setupTaskDragAndDrop } from './modules/listDrag';
 import { moveTask } from './modules/taskActions';
@@ -26,10 +26,9 @@ import { worldBridge } from './world/worldBridge';
 import type { WorldDay } from './world/worldBridge';
 import { clampDayOffset, FUTURE_DAY_LIMIT, PAST_DAY_LIMIT } from './world/trail';
 import type { WorldLens } from './world/worldViews';
-import { LocationTitle } from './components/LocationTitle';
+import { Dock } from './components/Dock';
 import { SystemMenu } from './components/SystemMenu';
 import { DaySlate } from './components/DaySlate';
-import { TimelineRibbon } from './components/TimelineRibbon';
 import { WorldLabels } from './components/WorldLabels';
 import { TaskFeed } from './components/TaskFeed';
 import { TaskInspector } from './components/TaskInspector';
@@ -71,6 +70,8 @@ export function App() {
   const isCompact = !isWide;
   const [theme, setTheme] = useState<Theme>(readRenderedTheme);
   const [weekOffset, setWeekOffset] = useState(0);
+  // "DONE" in the slate header is a toggle: finished work stays out of the log unless asked for
+  const [showDone, setShowDone] = useState(true);
   const [scrollPane, setScrollPane] = useState<HTMLElement | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [viewportMode, setViewportMode] = useState<ViewportMode>(readInitialViewportMode);
@@ -147,6 +148,11 @@ export function App() {
   useEffect(() => {
     document.body.classList.toggle('is-table-view', isTableView);
   }, [isTableView]);
+
+  // Upcoming, Week and Done left the dock; a stale lens falls back to today's log
+  useEffect(() => {
+    if (!NAV_ITEMS.some(item => item.key === currentView)) setUiState({ currentView: 'today' });
+  }, [currentView]);
 
   // --- Drag & drop: day cards, the Today log and timeline beads all take dropped tasks ---
   useEffect(() => {
@@ -292,10 +298,6 @@ export function App() {
 
   const taskSelection = useMemo(() => ({ selectedTaskId, openTask }), [selectedTaskId, openTask]);
 
-  const focusRibbon = useCallback(() => {
-    document.querySelector<HTMLElement>('.day-bead.is-focused, .day-bead.is-today, .day-bead')?.focus();
-  }, []);
-
   const handleEscape = useCallback(() => {
     if (isShortcutsOpen) setIsShortcutsOpen(false);
     else if (selectedTaskId) closeTask();
@@ -309,7 +311,6 @@ export function App() {
       onNewTask: focusQuickAdd,
       onEscape: handleEscape,
       onToggleShortcuts: () => setIsShortcutsOpen(open => !open),
-      onFocusCalendar: focusRibbon,
       onToday: () => focusDay(getLocalISODate())
     },
     viewportMode === 'manual'
@@ -356,26 +357,11 @@ export function App() {
     updateTaskItem(taskId, { completed: true });
   }, []);
 
-  // --- Where are we: the area title over the world ---
-  let locationTitle: string;
-  let locationSubtitle: string;
-  let locationDate: string | null = null;
-  if (isTableView) {
-    locationTitle = 'Planner';
-    locationSubtitle = formatWeekRangeLabel(getWeekDates(weekOffset));
-  } else if (focusDate) {
-    // One compact line: "TODAY · SAT, OCT 24" — the eyebrow and the hero say the same thing no more
-    const friendly = formatFriendlyDate(focusDate);
-    locationTitle = friendly.title;
-    locationSubtitle = '';
-    locationDate = friendly.sub;
-  } else {
-    const lens = NAV_ITEMS.find(item => item.key === currentView);
-    locationTitle = lens?.title ?? '';
-    locationSubtitle = lens?.subtitle() ?? '';
-  }
-  const lensLabel = NAV_ITEMS.find(item => item.key === currentView)?.label ?? 'path';
-  const backLabel = specificDateFilter && currentView !== 'today' ? `Back to ${lensLabel}` : specificDateFilter ? 'Back to today' : null;
+  // --- Where we are: the slate header names the day; the buttons only need the way back ---
+  const backTargetLabel = NAV_ITEMS.find(item => item.key === currentView)?.label ?? 'path';
+  const backLabel = specificDateFilter && currentView !== 'today' ? `Back to ${backTargetLabel}` : specificDateFilter ? 'Back to today' : null;
+  // The date the header shows: the focused day, or today's log
+  const headerDate = isTableView ? null : focusDate ?? today;
 
   const lastSheetTask = usePreservedValue(selectedTask);
 
@@ -419,7 +405,6 @@ export function App() {
               <WorldLabels days={worldDays} focusDate={focusDate} today={today} onFocusDay={focusDay} />
               {/* Multi-day boards dim and soften the world behind them so every row stays legible */}
               {(isGridView || isTableView) && <div className="hud-scrim" aria-hidden="true" />}
-              <LocationTitle title={locationTitle} subtitle={locationSubtitle} date={locationDate} />
 
               {isTableView ? (
                 <div className="planner-board">
@@ -434,32 +419,32 @@ export function App() {
                 </div>
               ) : (
                 <DaySlate
-                  label={`${locationTitle} tasks`}
+                  label="Task log"
                   layout={isGridView ? 'grid' : 'column'}
                   summary={viewSummary}
                   isScrolled={isScrolled}
                   isDoneLens={!focusDate && currentView === 'completed'}
                   backLabel={backLabel}
                   onBack={returnToLens}
+                  date={isGridView ? null : headerDate}
+                  onPickDate={focusDay}
+                  showDone={showDone}
+                  onToggleDone={() => setShowDone(shown => !shown)}
                   scrollRef={setScrollPane}
                   command={<QuickAddForm appState={appState} isPhone={isPhone} quickAddInputRef={quickAddInputRef} />}
                 >
                   {/* Keyed by view so the log re-deploys whenever you move along the path */}
-                  <TaskFeed key={viewKey} appState={appState} viewTasks={viewTasks} layout={isGridView ? 'grid' : 'column'} />
+                  <TaskFeed key={viewKey} appState={appState} viewTasks={viewTasks} layout={isGridView ? 'grid' : 'column'} hideCompleted={!showDone} />
                 </DaySlate>
               )}
 
               {!isCompact && !isTableView && <InspectorSlate task={selectedTask} onClose={closeTask} />}
 
-              <TimelineRibbon
-                tasks={tasks}
-                focusDate={focusDate}
+              <Dock
                 activeLens={activeLens}
                 lensCounts={lensCounts}
                 showPlanner={!isNonDesktop}
-                isCompact={isCompact}
                 onSelectLens={selectLens}
-                onFocusDay={focusDay}
               />
 
               {/* After the ribbon: on desktop the system cluster closes the same top dock */}

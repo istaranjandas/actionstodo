@@ -23,6 +23,8 @@
   --radius-lg: 2px;
   --radius-xl: 2px;
   --radius-pill: 1px;
+  /* The one genuinely round shape in the console: the floating dock pill */
+  --radius-round: 999px;
   /* Warm alabaster glass: the one material every HUD panel shares (Dusk swaps in smoked obsidian).
      Daylight neutrals follow the Tailwind Stone ramp; the accent is burnt amber (Amber 600 / 700). */
   --hud-gold: #d97706;
@@ -211,8 +213,6 @@
   --slate-top-colour: rgba(251, 249, 245, 0.96);
   --slate-bottom-colour: rgba(248, 245, 239, 0.97);
   --world-scrim: rgba(253, 253, 252, 0.42);
-  /* Atmosphere behind the dock: darkens (Dusk) or brightens (Daylight) the sky the ruler sits in */
-  --top-scrim: rgba(250, 248, 243, 0.72);
   --location-ink: #1c1917;
   --location-ink-2: #44403c;
   --location-halo: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 26px rgba(251, 249, 245, 0.75);
@@ -222,7 +222,6 @@
   --slate-top-colour: rgba(20, 27, 42, 0.95);
   --slate-bottom-colour: rgba(9, 13, 22, 0.96);
   --world-scrim: rgba(4, 7, 14, 0.6);
-  --top-scrim: rgba(4, 6, 13, 0.92);
   --location-ink: #ffffff;
   --location-ink-2: #f59e0b;
   --location-halo: 0 2px 12px rgba(0, 0, 0, 0.6);
