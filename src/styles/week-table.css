@@ -404,3 +404,54 @@ body.is-table-view .matrix-allday-row .matrix-cell.is-today-col {
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   POLISH PASS: the planner speaks the same language
+   Sans day names, sentence-case labels, no tracked capitals.
+   ========================================================================== */
+.matrix-table th,
+.matrix-day-name,
+.matrix-day-date,
+.matrix-time-header,
+.week-range-label,
+.week-table-hint,
+.week-today-btn,
+.week-table-title-group {
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.matrix-day-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.matrix-day-date,
+.matrix-time-header {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted-ink);
+}
+
+.week-range-label {
+  font-weight: 500;
+}
+
+.week-today-btn {
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.today-tag {
+  border-radius: var(--radius-pill);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.matrix-task-check {
+  border-radius: 4px;
+}

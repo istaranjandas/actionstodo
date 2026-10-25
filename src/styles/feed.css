@@ -114,78 +114,12 @@
   color: var(--ink-3);
 }
 
-/* One empty state for the whole day, with starters that fill the command line */
-.clear-horizon {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 6px 0 8px;
-}
-
-.clear-horizon.is-quiet {
-  padding: 8px 0 10px;
-}
-
-.clear-horizon-kicker {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--telemetry-ink);
-}
-
-.clear-horizon-kicker::before {
-  content: '// ';
-  color: var(--amber);
-  opacity: 0.9;
-}
-
-.clear-horizon-text {
+/* An empty day is one muted line under the command bar, nothing more */
+.today-empty {
   margin: 0;
-  max-width: 42ch;
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--ink-3);
-}
-
-.clear-horizon-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 1px;
-}
-
-.clear-horizon-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 26px;
-  padding: 0 8px;
-  border-radius: 0;
-  border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.03);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  color: var(--ink-2);
-  text-align: left;
-  transition: color var(--dur-quick) ease, border-color var(--dur-quick) ease, background var(--dur-quick) ease;
-}
-
-.clear-horizon-chip svg {
-  flex-shrink: 0;
-  color: var(--amber-text);
-}
-
-.clear-horizon-chip:hover {
-  color: var(--ink);
-  border-color: var(--amber-line);
-  background: var(--amber-tint);
-}
-
-.clear-horizon-chip:active {
-  transform: scale(0.98);
+  padding: 10px 2px 12px;
+  font-size: 13px;
+  color: var(--muted-ink);
 }
 
 /* ---------- Today board ---------- */
@@ -1318,15 +1252,15 @@ body.is-table-view .date-groups {
    (Placed last so it settles the older plate and slate row rules above.)
    ========================================================================== */
 .hud-dark .date-group {
-  border-radius: 0;
+  border-radius: var(--radius-card);
   background: var(--hud-glass);
-  border: 1px solid var(--line);
-  border-left: 1px solid var(--line-strong);
-  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.9);
+  border: 1px solid var(--hud-glass-edge);
+  box-shadow: var(--hud-glass-shadow);
 }
 
+/* Today is marked by its type, not by a painted rail */
 .hud-dark .date-group.is-today {
-  border-left-color: var(--amber);
+  border-color: var(--hud-glass-edge);
 }
 
 .hud-dark .slate .date-group,
@@ -1342,47 +1276,50 @@ body.is-table-view .date-groups {
 
 .hud-dark .date-group-name {
   font-size: 15px;
-  letter-spacing: 0.14em;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .hud-dark .date-group-count,
 .hud-dark .board-section-count {
-  padding: 0 5px;
-  border: 1px solid var(--line-strong);
-  font-size: 10.5px;
-  line-height: 16px;
-  color: var(--ink-2);
+  padding: 0;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--muted-ink);
 }
 
 .hud-dark .date-group-meter {
   width: 56px;
-  height: 3px;
-  border-radius: 0;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--track);
 }
 
 .hud-dark .date-group-meter-fill {
-  border-radius: 0;
+  border-radius: inherit;
   background: var(--amber);
-  box-shadow: 0 0 8px var(--amber-glow);
+  box-shadow: none;
 }
 
-/* Section legends read as console labels: // SCHEDULE, opened by a 2px accent and a hairline */
+/* Section legends are plain labels: no slashes, no accent rail */
 .hud-dark .board-section-label {
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  color: var(--telemetry-ink);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted-ink);
 }
 
 .hud-dark .board-section-label > span:first-child {
-  padding-left: 8px;
-  border-left: 2px solid var(--amber-line);
-  line-height: 1.1;
+  padding-left: 0;
+  border-left: none;
 }
 
 .hud-dark .board-section-label > span:first-child::before {
-  content: '// ';
-  color: var(--amber);
-  opacity: 0.9;
+  content: none;
 }
 
 /* Current objective banner: warm dark-amber glass, same gold story as the rest of the HUD */
@@ -1430,126 +1367,63 @@ body.is-table-view .date-groups {
 .hud-dark .task-row:hover,
 .hud-dark .slate .task-row:hover {
   display: grid;
-  grid-template-columns: 16px minmax(0, 1fr) auto auto;
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
   align-items: center;
   column-gap: 10px;
   flex-wrap: nowrap;
   margin: 0;
-  min-height: 34px;
-  padding: 5px 8px 5px 12px;
+  min-height: 38px;
+  padding: 6px 10px;
   border: none;
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
-  box-shadow: inset 1px 0 0 var(--line);
+  box-shadow: none;
   transform: none;
-  transition:
-    transform 90ms var(--ease-out),
-    background 60ms linear,
-    box-shadow 60ms linear;
+  transition: background-color var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
 }
 
 .hud-dark .task-row + .task-row {
-  border-top: 1px solid rgba(150, 185, 210, 0.06);
+  border-top: 1px solid var(--line);
 }
 
-/* The amber indicator: a solid bar on the left edge, drawn over the 1px accent */
-.hud-dark .task-row::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--amber);
-  box-shadow: 0 0 10px var(--amber-glow);
-  transform: scaleY(0);
-  transition: transform 90ms var(--ease-out);
-  pointer-events: none;
-}
-
-/* Hover / keyboard focus: interaction-menu highlight — inverted bright fill, dark ink */
+/* Hover and keyboard focus: the row simply tints. Nothing inverts, nothing slides. */
 @media (hover: hover) {
   .hud-dark .task-row:hover:not(.is-editing):not(.is-dragging):not(.is-selected),
   .hud-dark .slate .task-row:hover:not(.is-editing):not(.is-dragging):not(.is-selected) {
-    --ink: #0b1116;
-    --ink-2: #24323c;
-    --ink-3: #3b4a54;
-    --ink-faint: #5a6872;
-    --line: rgba(0, 0, 0, 0.18);
-    --line-strong: rgba(0, 0, 0, 0.3);
-    --well: rgba(0, 0, 0, 0.1);
-    --hover: rgba(0, 0, 0, 0.08);
-    --amber-text: #8a4c06;
-    --teal: #0b7563;
-    --teal-hi: #13917a;
-    background: #e8eef1;
-    box-shadow: none;
-    transform: translateX(4px);
+    background: var(--hover);
   }
 }
 
 .hud-dark .task-row:focus-visible:not(.is-editing):not(.is-selected) {
-  --ink: #0b1116;
-  --ink-2: #24323c;
-  --ink-3: #3b4a54;
-  --line: rgba(0, 0, 0, 0.18);
-  --line-strong: rgba(0, 0, 0, 0.3);
-  --well: rgba(0, 0, 0, 0.1);
-  --amber-text: #8a4c06;
-  background: #e8eef1;
-  box-shadow: none;
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
   outline: none;
-  transform: translateX(4px);
 }
 
-.hud-dark .task-row:hover:not(.is-editing):not(.is-dragging)::before,
-.hud-dark .task-row:focus-visible::before,
-.hud-dark .task-row.is-selected::before {
-  transform: scaleY(1);
-}
-
-/* Selected (its details are open): locked-on amber row */
+/* Selected (its details are open): a quiet amber tint, not an inverted fill */
 .hud-dark .task-row.is-selected,
 .hud-dark .slate .task-row.is-selected,
 .hud-dark .task-row.is-selected:hover {
-  --ink: #1a0f02;
-  --ink-2: #3a2405;
-  --ink-3: #5a3a0c;
-  --line: rgba(40, 20, 0, 0.25);
-  --line-strong: rgba(40, 20, 0, 0.35);
-  --well: rgba(40, 20, 0, 0.12);
-  --hover: rgba(40, 20, 0, 0.1);
-  --amber-text: #3a2405;
-  --teal: #0b5f50;
-  --teal-hi: #0f7a66;
-  background: var(--amber-hi);
-  box-shadow: none;
+  background: var(--amber-tint);
+  box-shadow: inset 0 0 0 1px var(--amber-line);
   outline: none;
-  transform: translateX(4px);
-}
-
-.hud-dark .task-row.is-selected::before {
-  background: #fff6e4;
-  box-shadow: none;
 }
 
 .hud-dark .task-row:active:not(.is-editing) {
-  transform: translateX(4px) scale(0.99);
+  background: var(--well);
 }
 
 .hud-dark .task-row.is-editing,
 .hud-dark .slate .task-row.is-editing {
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--well);
   box-shadow: inset 0 0 0 1px var(--amber-line);
-  transform: none;
 }
 
 .hud-dark .task-row.is-dragging,
 .hud-dark .slate .task-row.is-dragging {
-  opacity: 0.35;
+  opacity: 0.4;
   background: transparent;
-  box-shadow: inset 1px 0 0 var(--amber-line);
-  transform: none;
+  box-shadow: none;
 }
 
 /* Grid slots: checkbox | objective | time | delete */
@@ -1854,5 +1728,142 @@ body.is-table-view .date-groups {
     border-color: var(--teal);
     background: var(--teal);
     box-shadow: none;
+  }
+}
+
+/* ==========================================================================
+   POLISH PASS: quiet details
+   Amber survives as an accent, not as a rail on every surface.
+   ========================================================================== */
+.hud-dark .next-up {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--amber-line);
+  border-left: 1px solid var(--amber-line);
+  background: var(--amber-tint);
+  box-shadow: none;
+}
+
+.hud-dark .next-up-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--amber-text);
+}
+
+.hud-dark .now-marker-label {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  clip-path: none;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--amber-text);
+  background: var(--amber-wash);
+}
+
+.hud-dark .now-marker::before {
+  background: var(--line);
+}
+
+/* The time is a quiet readout, not a mono ticker */
+.hud-dark .task-time-pill,
+.hud-dark .slate .task-time-pill {
+  height: 22px;
+  padding: 0 6px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted-ink);
+}
+
+.hud-dark .task-time-pill:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+/* A rounded-square checkbox, the one control everyone already knows */
+.hud-dark .task-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1.5px solid var(--ink-faint);
+  background: transparent;
+  box-shadow: none;
+}
+
+.hud-dark .task-checkbox:checked {
+  border-color: var(--teal);
+  background: var(--teal);
+  box-shadow: none;
+}
+
+.hud-dark .empty-state {
+  border: none;
+  border-radius: var(--radius-lg);
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--muted-ink);
+}
+
+.hud-dark .date-group-empty {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--muted-ink);
+}
+
+.hud-dark .drop-slot {
+  border-radius: var(--radius-xs);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  letter-spacing: 0;
+}
+
+.hud-dark .date-group.is-drag-over:not(.is-drag-source),
+.hud-dark .slate .date-group.is-drag-over:not(.is-drag-source) {
+  border-color: var(--amber-line);
+  background: var(--amber-tint);
+  box-shadow: inset 0 0 0 1px var(--amber-line);
+}
+
+.hud-dark .date-group.is-drag-source .drop-slots,
+.hud-dark .date-group.is-drag-over .drop-slots {
+  border-radius: var(--radius-md);
+  background: var(--well);
+  box-shadow: none;
+}
+
+.hud-dark .task-action-btn {
+  border-radius: var(--radius-xs);
+}
+
+/* Phone: the element is a 44px hit area, the ::before is the visible box */
+@media (max-width: 680px) {
+  .hud-dark .task-checkbox,
+  .hud-dark .task-checkbox:checked {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .hud-dark .task-checkbox::before {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 1.5px solid var(--ink-faint);
+    background: transparent;
+  }
+
+  .hud-dark .task-checkbox:checked::before {
+    border-color: var(--teal);
+    background: var(--teal);
   }
 }

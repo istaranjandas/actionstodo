@@ -13,7 +13,7 @@ import { useDisplaySettings } from './modules/displaySettings';
 import { THEME_KEY, applyThemeAttribute, readRenderedTheme } from './modules/theme';
 import { useStore } from './hooks/useStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
-import { COMPACT_QUERY, DESKTOP_SCROLL_PANE_QUERY, NON_DESKTOP_QUERY, useMotionProfile } from './hooks/useMotionProfile';
+import { DESKTOP_SCROLL_PANE_QUERY, NON_DESKTOP_QUERY, useMotionProfile } from './hooks/useMotionProfile';
 import { readScrollTop, restoreScrollPosition, useSmoothScroll } from './hooks/useSmoothScroll';
 import { useUiSounds } from './hooks/useUiSounds';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
@@ -66,7 +66,6 @@ export function App() {
   const reducedMotion = prefersReducedMotion || !animationsEnabled;
   const isNonDesktop = useMediaQuery(NON_DESKTOP_QUERY);
   const isWide = useMediaQuery(DESKTOP_SCROLL_PANE_QUERY);
-  const isPhone = useMediaQuery(COMPACT_QUERY);
   const isCompact = !isWide;
   const [theme, setTheme] = useState<Theme>(readRenderedTheme);
   const [weekOffset, setWeekOffset] = useState(0);
@@ -380,7 +379,7 @@ export function App() {
                 onChangeMode={changeViewportMode}
               >
                 <div className="arena-quick-add">
-                  <QuickAddForm appState={appState} isPhone={isPhone} quickAddInputRef={quickAddInputRef} />
+                  <QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} />
                 </div>
               </GameArena>
             </Suspense>
@@ -432,7 +431,7 @@ export function App() {
                   showDone={showDone}
                   onToggleDone={() => setShowDone(shown => !shown)}
                   scrollRef={setScrollPane}
-                  command={<QuickAddForm appState={appState} isPhone={isPhone} quickAddInputRef={quickAddInputRef} />}
+                  command={<QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} />}
                 >
                   {/* Keyed by view so the log re-deploys whenever you move along the path */}
                   <TaskFeed key={viewKey} appState={appState} viewTasks={viewTasks} layout={isGridView ? 'grid' : 'column'} hideCompleted={!showDone} />

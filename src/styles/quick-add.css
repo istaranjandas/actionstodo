@@ -281,29 +281,6 @@
   justify-content: center;
 }
 
-.command-caret {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--amber-text);
-}
-
-.command-bar:focus-within .command-prompt {
-  transform: none;
-}
-
-/* Blinking cursor block while the prompt waits */
-.command-bar:focus-within:not(.has-text) .command-caret {
-  animation: caretBlink 1s steps(1) infinite;
-}
-
-@keyframes caretBlink {
-  50% {
-    opacity: 0.25;
-  }
-}
-
 /* Tighter gaps so the whole example placeholder fits beside the compact key */
 .command-bar .quick-add-input-row {
   gap: 8px;
@@ -405,4 +382,129 @@
     height: 36px;
     padding: 0 10px;
   }
+}
+
+/* ==========================================================================
+   POLISH PASS: the command line
+   A soft field, a quiet placeholder, and the submit key as a pill inside the
+   field's right edge. No caret, no clipped corner, no amber rail.
+   ========================================================================== */
+.command-bar,
+.slate-command .command-bar,
+.slate-command .quick-add-box.command-bar {
+  padding: 5px 5px 5px 14px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-input);
+  background: var(--field-fill);
+  box-shadow: none;
+  clip-path: none;
+}
+
+.command-bar:focus-within,
+.slate-command .command-bar:focus-within,
+.slate-command .quick-add-box.command-bar:focus-within {
+  border-color: color-mix(in srgb, var(--amber) 50%, var(--field-border));
+  background: var(--field-fill);
+  box-shadow: 0 0 0 3px var(--amber-wash);
+}
+
+.command-bar .quick-add-input {
+  height: 34px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.command-bar .quick-add-input::placeholder {
+  color: var(--ink-faint);
+  font-weight: 400;
+  text-transform: none;
+}
+
+/* The chips are quiet readouts inside the field */
+.command-bar .chip-btn,
+.slate-command .chip-btn {
+  height: 26px;
+  padding: 0 9px;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--hover);
+  box-shadow: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted-ink);
+}
+
+.command-bar .chip-btn:hover {
+  background: var(--well);
+  color: var(--ink);
+}
+
+.command-bar .chip-btn.is-active {
+  border-color: transparent;
+  color: var(--ink);
+}
+
+.command-bar .chip-btn.is-active svg,
+.command-bar .chip-btn svg {
+  color: currentColor;
+  opacity: 0.75;
+}
+
+.command-bar .clear-chip-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-pill);
+}
+
+/* The submit key: a pill badge parked inside the field */
+.command-submit,
+.command-bar .command-submit {
+  gap: 4px;
+  height: 32px;
+  padding: 0 13px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted-ink);
+}
+
+.command-bar:not(.has-text) .command-submit {
+  border-color: var(--field-border);
+  background: transparent;
+  color: var(--muted-ink);
+}
+
+.command-bar.has-text .command-submit {
+  border-color: var(--amber);
+  background: var(--amber);
+  color: var(--amber-ink);
+  box-shadow: none;
+}
+
+.command-bar:not(.has-text) .command-submit:hover,
+.command-bar:not(.has-text):focus-within .command-submit {
+  border-color: color-mix(in srgb, var(--amber) 55%, var(--field-border));
+  color: var(--amber-text);
+}
+
+.command-key {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  opacity: 0.6;
 }

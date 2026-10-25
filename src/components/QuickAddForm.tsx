@@ -12,11 +12,10 @@ import { DatePicker } from './DatePicker';
 
 interface QuickAddFormProps {
   appState: AppState;
-  isPhone: boolean;
   quickAddInputRef: RefObject<HTMLInputElement | null>;
 }
 
-export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFormProps) {
+export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) {
   const { selectedAddDate, selectedAddStart, selectedAddEnd, tasks } = appState;
   const openTimePopover = useOpenTimePopover();
   const [quickAddText, setQuickAddText] = useState('');
@@ -73,14 +72,11 @@ export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFo
       onSubmit={handleQuickAddSubmit}
     >
       <div className="quick-add-input-row">
-        <div className="quick-add-icon command-prompt" aria-hidden="true">
-          <span className="command-caret">&gt;</span>
-        </div>
         <input
           type="text"
           ref={quickAddInputRef}
           className="quick-add-input"
-          placeholder={isPhone ? 'Log objective…' : 'Log objective… e.g. “Call Alex at 3pm”'}
+          placeholder="Log an objective…"
           aria-label="Log a new task"
           aria-keyshortcuts="T"
           autoComplete="off"

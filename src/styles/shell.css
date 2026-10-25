@@ -1571,3 +1571,358 @@ body:not(.has-world) .world-labels {
     box-shadow: var(--hud-glass-shadow), inset 0 0 0 1px var(--amber-line);
   }
 }
+
+/* ==========================================================================
+   POLISH PASS: the card language
+   One frosted surface for the slate, the day cards, the command line and every
+   popover. Soft geometry, quiet hairlines, no rails, brackets or notches.
+   (Placed last so it settles the sharp HUD rules above.)
+   ========================================================================== */
+.slate {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--hud-glass-edge);
+  background: var(--hud-glass);
+  -webkit-backdrop-filter: var(--hud-glass-blur);
+  backdrop-filter: var(--hud-glass-blur);
+  box-shadow: var(--hud-glass-shadow);
+}
+
+/* The amber rail is gone: the surface itself separates the card from the world */
+.slate::before {
+  display: none;
+}
+
+.slate-header {
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--line);
+  background: none;
+}
+
+.slate.is-scrolled .slate-header {
+  box-shadow: none;
+}
+
+.slate-back {
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted-ink);
+}
+
+.slate-back:hover {
+  border: none;
+  background: var(--hover);
+  color: var(--ink);
+}
+
+/* The date is type, not a boxed badge */
+.slate-date-label {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted-ink);
+}
+
+.slate-date-label svg {
+  color: currentColor;
+  opacity: 0.7;
+}
+
+.picker-chip-wrap:hover > .slate-date-label {
+  border-color: transparent;
+  background: var(--hover);
+  color: var(--ink);
+}
+
+.picker-chip-wrap:hover > .slate-date-label svg {
+  color: currentColor;
+}
+
+.slate-stat {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted-ink);
+}
+
+.slate-stat strong {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.slate-stat.is-done strong {
+  color: var(--amber-text);
+}
+
+.slate-stat.is-toggle.is-on:not(.is-zero) strong {
+  color: var(--amber-text);
+}
+
+.slate-title {
+  border-left: none;
+  padding-left: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+
+.slate-title::before {
+  content: none;
+}
+
+/* A smooth 4px track reads as progress; notches read as a ruler */
+.slate-gauge {
+  width: 84px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--track);
+  box-shadow: none;
+}
+
+.slate-gauge::after {
+  display: none;
+}
+
+.slate-gauge-fill {
+  border-radius: inherit;
+  background: var(--amber);
+  box-shadow: none;
+}
+
+.slate-gauge {
+  overflow: visible;
+}
+
+.slate-body {
+  padding: 6px 16px 10px;
+}
+
+.inspector-slate {
+  border-radius: var(--radius-xl);
+}
+
+/* ---------- The top-right cluster: two keys in the dock pill's own glass ---------- */
+.system-menu {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+  height: 44px;
+  border-radius: var(--radius-round);
+  border: 1px solid var(--hud-glass-edge);
+  background: var(--hud-glass);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  backdrop-filter: blur(8px) saturate(140%);
+  box-shadow: var(--hud-glass-shadow);
+}
+
+.system-trigger,
+.system-trigger.is-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-round);
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.system-trigger:hover {
+  border: none;
+  background: var(--hover);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.system-trigger:active,
+.system-trigger.is-active {
+  transform: none;
+  border: none;
+  background: var(--hover);
+  color: var(--amber-text);
+  box-shadow: none;
+}
+
+.system-trigger-label {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .system-menu {
+    top: 14px;
+    right: 14px;
+    height: 52px;
+    gap: 0;
+    padding: 0 4px;
+  }
+
+  .system-trigger,
+  .system-trigger.is-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* The panel drops from the cluster, not from a taller bar */
+  .system-panel,
+  .arcade-panel {
+    position: fixed;
+    top: 74px;
+    right: 12px;
+    left: auto;
+    width: min(360px, calc(100vw - 24px));
+    max-height: calc(100vh - 90px - var(--ribbon-h));
+  }
+
+  .slate {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--panel-solid);
+    border: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 680px) {
+  .system-menu {
+    height: 52px;
+  }
+
+  /* The DONE latch is a text key, but it still needs a thumb-sized target */
+  .slate-stat.is-toggle {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+/* ---------- The arcade ---------- */
+.arcade-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  z-index: 1001;
+  width: 332px;
+  padding: 10px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--hud-glass-edge);
+  background: var(--hud-glass-strong);
+  -webkit-backdrop-filter: var(--hud-glass-blur);
+  backdrop-filter: var(--hud-glass-blur);
+  box-shadow: var(--hud-glass-shadow), 0 24px 60px -24px var(--cast);
+  transform-origin: top right;
+  animation: panelDeploy var(--dur-panel) var(--ease-out);
+}
+
+.arcade-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 4px 6px 8px;
+}
+
+.arcade-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.arcade-count {
+  font-size: 12px;
+  color: var(--muted-ink);
+}
+
+.arcade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arcade-game {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 8px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  text-align: left;
+  transition: background-color var(--dur-quick) ease;
+}
+
+.arcade-game:hover,
+.arcade-game:focus-visible {
+  background: var(--hover);
+}
+
+.arcade-game-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: var(--amber-tint);
+  color: var(--amber-text);
+}
+
+.arcade-game-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.arcade-game-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.arcade-game-detail {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted-ink);
+}
+
+.arcade-game-go {
+  color: var(--ink-faint);
+}
+
+.arcade-foot {
+  margin: 8px 6px 2px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ink-faint);
+}

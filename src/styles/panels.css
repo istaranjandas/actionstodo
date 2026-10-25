@@ -644,3 +644,72 @@
   background: transparent;
   font-family: var(--font-mono);
 }
+
+/* ==========================================================================
+   POLISH PASS: panels
+   The system and arcade panels share the card material and radius.
+   ========================================================================== */
+.system-panel {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--hud-glass-edge);
+  border-left: 1px solid var(--hud-glass-edge);
+  background: var(--hud-glass-strong);
+  -webkit-backdrop-filter: var(--hud-glass-blur);
+  backdrop-filter: var(--hud-glass-blur);
+  box-shadow: var(--hud-glass-shadow), 0 24px 60px -24px var(--cast);
+}
+
+.segmented {
+  border-radius: var(--radius-md);
+  background: var(--well);
+  box-shadow: none;
+}
+
+.segmented-option {
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.segmented-option.is-active {
+  border-color: transparent;
+  background: var(--panel-solid);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  color: var(--ink);
+}
+
+.segmented-option.is-active svg {
+  color: var(--amber-text);
+}
+
+.system-action {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.system-action:hover {
+  border-color: var(--line-strong);
+  background: var(--hover);
+}
+
+.system-action svg {
+  color: var(--muted-ink);
+}
+
+.system-action.is-wide {
+  text-transform: none;
+}
+
+.sync-lamp {
+  display: none;
+}

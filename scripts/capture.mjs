@@ -195,8 +195,8 @@ async function captureScenario({ name, width, height, mobile, steps }) {
 const resetWithDemoData = (theme, viewportMode = 'manual') => `localStorage.setItem('todo_do_tasks_v1', ${JSON.stringify(demoTasksJson)}); localStorage.setItem('notion_minimal_theme', '${theme}'); localStorage.setItem('actionstodo_viewport_mode', '${viewportMode}'); location.reload(); true`;
 const pressKey = (key) => `window.dispatchEvent(new KeyboardEvent('keydown', { key: '${key}', bubbles: true })); true`;
 // Time of day lives in the System menu: open it, pick Daylight, close it.
-// The Alpine link beside the trigger also carries .system-trigger, so target the button by context.
-const switchToDaylight = `document.querySelector('.system-menu button.system-trigger').click(); setTimeout(() => { const daylight = document.querySelectorAll('.segmented-option')[1]; if (daylight) daylight.click(); document.querySelector('.system-menu button.system-trigger').click(); }, 300); true`;
+// The arcade key is also a .system-trigger, so target the system key by its own class chain.
+const switchToDaylight = `document.querySelector('.system-menu > button.system-trigger').click(); setTimeout(() => { const daylight = document.querySelectorAll('.segmented-option')[1]; if (daylight) daylight.click(); document.querySelector('.system-menu > button.system-trigger').click(); }, 300); true`;
 const WORLD_LOAD_MS = 9000;
 const CAMERA_FLIGHT_MS = 2800;
 
@@ -211,23 +211,30 @@ const scenarios = [
       await sleep(WORLD_LOAD_MS);
       await shoot('01-today-dusk');
       await audit('today-dusk');
+      // The arcade key lists every mini-game, then closes without launching
+      await evaluate(`document.querySelector('.game-menu .system-trigger').click(); true`);
+      await sleep(500);
+      await shoot('02-arcade-dusk');
+      await audit('arcade-dusk');
+      await evaluate(`document.querySelector('.game-menu .system-trigger').click(); true`);
+      await sleep(400);
       await evaluate(`document.querySelectorAll('.task-row')[1].click(); true`);
       await sleep(1000);
-      await shoot('02-task-details-dusk');
+      await shoot('03-task-details-dusk');
       await evaluate(`document.querySelectorAll('.task-row')[1].querySelector('.task-checkbox').click(); true`);
       await sleep(420);
-      await shoot('03-lantern-lit-dusk');
+      await shoot('04-lantern-lit-dusk');
       await evaluate(pressKey('Escape'));
       await evaluate(pressKey('e'));
       await sleep(CAMERA_FLIGHT_MS);
-      await shoot('04-tomorrow-dusk');
+      await shoot('05-tomorrow-dusk');
       await evaluate(pressKey('2'));
       await sleep(CAMERA_FLIGHT_MS);
-      await shoot('05-all-dusk');
+      await shoot('06-all-dusk');
       await audit('all-dusk');
       await evaluate(pressKey('3'));
       await sleep(CAMERA_FLIGHT_MS);
-      await shoot('06-planner-dusk');
+      await shoot('07-planner-dusk');
       await evaluate(pressKey('1'));
       await sleep(400);
       await evaluate(switchToDaylight);

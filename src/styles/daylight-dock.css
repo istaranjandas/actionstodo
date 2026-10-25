@@ -1,51 +1,23 @@
 /* ==========================================================================
    Daylight dock
-   The floating pill and the system keys borrow the ivory glass; the active
-   lens keeps a lit amber ring. The valley needs no fade at its foot.
+   The pill and the control cluster read their glass from the tokens; this keeps
+   the light-hour scrim out of the valley's foot and the active lens legible.
    ========================================================================== */
 :where([data-theme='light']) .game-shell::after {
   background: none;
 }
 
-:where([data-theme='light']) .lens-bar,
-:where([data-theme='light']) .system-trigger,
-:where([data-theme='light']) .system-trigger.is-icon {
-  background: rgba(251, 249, 245, 0.86);
-  border-color: rgba(28, 25, 23, 0.1);
-  box-shadow: 0 12px 32px -14px rgba(28, 24, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-:where([data-theme='light']) .lens-bar .view-nav-item {
-  color: var(--ink-2);
-}
-
-:where([data-theme='light']) .lens-bar .view-nav-item:hover {
-  background: rgba(28, 25, 23, 0.05);
+:where([data-theme='light']) .lens-bar .view-nav-item.is-active,
+:where([data-theme='light']) .system-trigger.is-active {
   color: var(--ink);
 }
 
-:where([data-theme='light']) .lens-bar .view-nav-item.is-active {
-  color: var(--amber-text);
-}
-
-:where([data-theme='light']) .lens-bar .view-nav-indicator {
-  border-color: var(--amber-line);
-  background: var(--amber-wash);
-}
-
 :where([data-theme='light']) .lens-bar .view-nav-count {
-  background: transparent;
-  color: var(--ink-2);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  background: var(--well);
+  color: var(--muted-ink);
 }
 
 :where([data-theme='light']) .lens-bar .view-nav-item.is-active .view-nav-count {
   background: var(--amber);
   color: var(--amber-ink);
-  box-shadow: none;
-}
-
-:where([data-theme='light']) .system-trigger:hover {
-  border-color: var(--amber-line);
-  color: var(--amber-text);
 }

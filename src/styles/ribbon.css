@@ -123,3 +123,52 @@
     padding: 0 2px;
   }
 }
+
+/* ==========================================================================
+   POLISH PASS: the dock
+   Sans type at two weights, no tracked capitals; the active lens stays a pill.
+   ========================================================================== */
+.lens-bar .view-nav-item {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0 13px;
+}
+
+.lens-bar .view-nav-item.is-active {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.lens-bar .view-nav-count {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 17px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  color: var(--muted-ink);
+  background: var(--hover);
+  box-shadow: none;
+}
+
+.lens-bar .view-nav-item.is-active .view-nav-count {
+  color: var(--amber-ink);
+  background: var(--amber);
+}
+
+.lens-bar .view-nav-indicator {
+  background: var(--hover);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.lens-bar .view-nav-item .view-nav-icon {
+  color: var(--muted-ink);
+}
+
+.lens-bar .view-nav-item.is-active .view-nav-icon {
+  color: var(--amber-text);
+}

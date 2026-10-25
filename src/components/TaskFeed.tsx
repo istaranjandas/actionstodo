@@ -8,7 +8,6 @@ import { getDropSlots, taskDuration } from '../modules/listDrag';
 import { logTask, moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
 import { useInlineTextEdit } from '../hooks/useInlineTextEdit';
 import { useMinuteClock } from '../hooks/useMinuteClock';
-import { prefillCommand } from '../modules/commandBar';
 import { useOpenTimePopover } from './TimePopover';
 import { useTaskSelection } from './TaskSelection';
 import { ClockIcon } from './Icons';
@@ -279,24 +278,9 @@ function formatClock(minutes: number): string {
   return `${hours % 12 || 12}:${String(minutes % 60).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
 }
 
-// Chips offered when the day is empty: one click drops the phrase into the command bar
-const STARTERS = ['Deep work block at 9am', 'Call Alex at 3pm', 'Evening review at 7pm'];
-
-function ClearHorizon() {
-  return (
-    <div className="clear-horizon">
-      <span className="clear-horizon-kicker">Clear horizon</span>
-      <p className="clear-horizon-text">Nothing logged for today. Start with one of these, or type your own above.</p>
-      <div className="clear-horizon-chips">
-        {STARTERS.map((text) => (
-          <button key={text} type="button" className="clear-horizon-chip" data-sfx="select" onClick={() => prefillCommand(text)}>
-            <Plus size={12} strokeWidth={2.4} aria-hidden="true" />
-            <span>{text}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+// An empty day says one quiet line and stops; the command bar above is the only call to action
+function TodayEmpty({ allDone }: { allDone: boolean }) {
+  return <p className="today-empty">{allDone ? 'All done for today.' : 'No tasks for today.'}</p>;
 }
 
 function TodayBoard({ tasks, allDone }: { tasks: Task[]; allDone: boolean }) {
@@ -332,14 +316,7 @@ function TodayBoard({ tasks, allDone }: { tasks: Task[]; allDone: boolean }) {
       )}
 
       {tasks.length === 0 ? (
-        allDone ? (
-          <div className="clear-horizon is-quiet">
-            <span className="clear-horizon-kicker">All clear</span>
-            <p className="clear-horizon-text">Everything logged today is done. Click DONE above to show it.</p>
-          </div>
-        ) : (
-          <ClearHorizon />
-        )
+        <TodayEmpty allDone={allDone} />
       ) : (
         <>
           {timed.length > 0 && (
