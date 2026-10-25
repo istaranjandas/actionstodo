@@ -223,22 +223,24 @@ const scenarios = [
       await shoot('04-tomorrow-dusk');
       await evaluate(pressKey('2'));
       await sleep(CAMERA_FLIGHT_MS);
-      await shoot('05-upcoming-dusk');
-      await evaluate(pressKey('5'));
+      await shoot('05-all-dusk');
+      await audit('all-dusk');
+      await evaluate(pressKey('3'));
       await sleep(CAMERA_FLIGHT_MS);
-      await shoot('06-done-dusk');
-      await evaluate(pressKey('6'));
-      await sleep(CAMERA_FLIGHT_MS);
-      await shoot('07-planner-dusk');
+      await shoot('06-planner-dusk');
       await evaluate(pressKey('1'));
       await sleep(400);
       await evaluate(switchToDaylight);
       await sleep(3500);
       await shoot('08-today-daylight');
       await audit('today-daylight');
+      await evaluate(pressKey('2'));
+      await sleep(CAMERA_FLIGHT_MS);
+      await shoot('09-all-daylight');
+      await audit('all-daylight');
       await evaluate(resetWithDemoData('dark', 'game'));
       await sleep(WORLD_LOAD_MS);
-      await shoot('09-game-arena-dusk');
+      await shoot('10-game-arena-dusk');
       await audit('game-arena-dusk');
     }
   },
@@ -252,17 +254,27 @@ const scenarios = [
       await sleep(WORLD_LOAD_MS);
       await shoot('01-today-dusk');
       await audit('today-dusk');
+      await evaluate(pressKey('2'));
+      await sleep(CAMERA_FLIGHT_MS);
+      await shoot('02-all-dusk');
+      await audit('all-dusk');
+      await evaluate(pressKey('1'));
+      await sleep(600);
       await evaluate(`document.querySelectorAll('.task-row')[1].click(); true`);
       await sleep(1000);
-      await shoot('02-task-details-dusk');
+      await shoot('03-task-details-dusk');
       await evaluate(pressKey('Escape'));
       await sleep(500);
       await evaluate(switchToDaylight);
       await sleep(3500);
-      await shoot('03-today-daylight');
+      await shoot('04-today-daylight');
+      await evaluate(pressKey('2'));
+      await sleep(CAMERA_FLIGHT_MS);
+      await shoot('05-all-daylight');
+      await audit('all-daylight');
       await evaluate(resetWithDemoData('dark', 'game'));
       await sleep(WORLD_LOAD_MS);
-      await shoot('04-game-arena-dusk');
+      await shoot('06-game-arena-dusk');
       await audit('game-arena-dusk');
     }
   }

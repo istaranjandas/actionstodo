@@ -39,15 +39,41 @@
   display: none;
 }
 
-/* The header is the plate: telemetry row on top, the command line below it */
+/* The header is a telemetry line beside a compact command bar, not a plate across the screen:
+   it stops at a readable measure so the prompt never outweighs the cards below it */
 .slate.is-grid .slate-header {
-  border: 1px solid var(--hud-glass-edge);
-  border-left: 2px solid var(--hud-gold);
-  background: var(--hud-glass);
-  -webkit-backdrop-filter: var(--hud-glass-blur);
-  backdrop-filter: var(--hud-glass-blur);
-  box-shadow: var(--hud-glass-shadow);
-  margin: 0 16px;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  max-width: min(100%, 860px);
+  margin: 0;
+  padding: 0 16px;
+  border: none;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* Nothing scrolls beneath it, so a scrolled log gains no shadow here */
+.slate.is-grid.is-scrolled .slate-header {
+  box-shadow: none;
+}
+
+.slate.is-grid .slate-header-bar {
+  flex: 0 0 auto;
+  gap: 12px;
+}
+
+.slate.is-grid .slate-progress {
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+/* The counts already read the progress; a bar beside them would only crowd the prompt */
+.slate.is-grid .slate-gauge {
+  display: none;
 }
 
 .game-shell.is-grid-view.has-inspector .slate.is-grid {
@@ -65,16 +91,29 @@
   padding: 12px 16px 14px;
 }
 
-/* The command line spans the header under the telemetry row; it carries its own frame */
+/* The command line takes the remaining measure of the header row */
 .slate.is-grid .slate-command.is-in-header {
+  flex: 1 1 auto;
   min-width: 0;
   margin: 0;
   padding: 0;
 }
 
 @media (max-width: 1024px) {
+  /* No room beside the prompt on a tablet or phone: telemetry sits above it, full width */
   .slate.is-grid .slate-header {
+    flex-wrap: wrap;
     row-gap: 8px;
+    max-width: none;
+  }
+
+  .slate.is-grid .slate-header-bar {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .slate.is-grid .slate-command.is-in-header {
+    flex: 1 1 100%;
   }
 }
 
@@ -260,12 +299,11 @@ body.is-dragging-task .slate.is-grid .day-card[data-drop-date]:not(.is-drag-sour
   }
 
   .slate.is-grid .slate-header {
-    margin: 0 10px;
+    padding: 0 10px;
   }
 
   /* No backdrop filter here, so a dragged card's fixed time-slot sheet anchors to the viewport */
-  .slate.is-grid .date-group.day-card,
-  .slate.is-grid .slate-header {
+  .slate.is-grid .date-group.day-card {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background: linear-gradient(180deg, rgba(13, 18, 30, 0.95) 0%, rgba(7, 10, 18, 0.97) 100%);
@@ -276,6 +314,12 @@ body.is-dragging-task .slate.is-grid .day-card[data-drop-date]:not(.is-drag-sour
   .slate .date-groups.day-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 10px;
+  }
+
+  /* On a phone the card's inline add is the main entry point, so it earns a full touch target */
+  .day-card-add,
+  .day-card-add-form {
+    height: 44px;
   }
 }
 

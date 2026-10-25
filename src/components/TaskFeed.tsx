@@ -30,7 +30,7 @@ const EMPTY_MESSAGES: Record<string, string> = {
   upcoming: 'Nothing scheduled ahead. Add a task and pick a future date.',
   'this-week': 'Nothing planned for this week yet.',
   completed: 'No completed tasks yet. Finish one and it lands here.',
-  all: 'No tasks yet. Log one below, or press N.'
+  all: 'No tasks yet. Log one above, or press N.'
 };
 
 export function getSortedDateGroups(appState: AppState, filtered: Task[]): { dateKey: string; tasks: Task[] }[] {
@@ -153,6 +153,8 @@ const DateGroup = memo(function DateGroup({ dateKey, groupTasks, staggerIndex, i
   const today = getLocalISODate();
   const dayTone = dateKey === today ? 'is-today' : dateKey < today ? 'is-past' : '';
   const isDated = dateKey !== 'Undated';
+  // Past days have no inline entry point: the command bar above is where retro-logged work goes
+  const canAddHere = canAdd && isDated && dateKey >= today;
 
   return (
     <section
@@ -180,10 +182,10 @@ const DateGroup = memo(function DateGroup({ dateKey, groupTasks, staggerIndex, i
         {groupTasks.map(task => (
           <TaskRow key={task.id} task={task} />
         ))}
-        {groupTasks.length === 0 && <div className="date-group-empty">{canAdd ? 'Nothing planned yet.' : 'Nothing planned yet — log one above.'}</div>}
+        {groupTasks.length === 0 && <div className="date-group-empty">{canAddHere ? 'Nothing planned yet.' : 'Nothing planned yet — log one above.'}</div>}
       </div>
       <DropSlots dateKey={dateKey} tasks={groupTasks} />
-      {canAdd && isDated && <DayCardAdd date={dateKey} dayLabel={title} />}
+      {canAddHere && <DayCardAdd date={dateKey} dayLabel={title} />}
     </section>
   );
 });

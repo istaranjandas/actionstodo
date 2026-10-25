@@ -722,6 +722,26 @@ body:not(.has-world) .world-labels {
   color: var(--ink-3);
 }
 
+/* The multi-day board names itself beside its telemetry: // ALL OBJECTIVES */
+.slate-title {
+  flex-shrink: 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--amber-line);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.slate-title::before {
+  content: '// ';
+  color: var(--amber);
+}
+
 /* The date sits in the header and opens the calendar, like the month label used to */
 .slate-date {
   position: relative;

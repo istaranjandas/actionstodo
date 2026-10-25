@@ -421,6 +421,7 @@ export function App() {
                 <DaySlate
                   label="Task log"
                   layout={isGridView ? 'grid' : 'column'}
+                  title={isGridView ? 'All objectives' : null}
                   summary={viewSummary}
                   isScrolled={isScrolled}
                   isDoneLens={!focusDate && currentView === 'completed'}

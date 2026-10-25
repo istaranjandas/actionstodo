@@ -90,8 +90,8 @@
     background: var(--hud-glass-strong);
   }
 
-  :where([data-theme='light']) .slate.is-grid .date-group.day-card,
-  :where([data-theme='light']) .slate.is-grid .slate-header {
+  /* Only the cards are plates here; the header is a bare telemetry line over the prompt */
+  :where([data-theme='light']) .slate.is-grid .date-group.day-card {
     background: var(--hud-glass-strong);
   }
 }

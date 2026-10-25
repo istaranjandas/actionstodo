@@ -13,6 +13,8 @@ export type SlateLayout = 'column' | 'grid';
 interface DaySlateProps {
   label: string;
   layout: SlateLayout;
+  // Names the multi-day board beside its telemetry; the single-day slate is already named by its date
+  title: string | null;
   summary: ViewSummary;
   isScrolled: boolean;
   isDoneLens: boolean;
@@ -34,6 +36,7 @@ const dayLabel = (isoDate: string) =>
 export function DaySlate({
   label,
   layout,
+  title,
   summary,
   isScrolled,
   isDoneLens,
@@ -61,6 +64,8 @@ export function DaySlate({
               <span>{backLabel}</span>
             </button>
           )}
+
+          {title && <span className="slate-title">{title}</span>}
 
           {date && (
             <div className="picker-chip-wrap slate-date" title="Jump to a date">
