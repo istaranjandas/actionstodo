@@ -23,13 +23,18 @@ export interface WorldPalette {
   hemiIntensity: number;
   fill: string;
   fillIntensity: number;
-  // Terrain albedo tint, and the obsidian floor its unlit facets settle to (never pure black)
+  // Terrain albedo tint, and the floor its unlit facets settle to (never pure black)
   terrainTint: string;
   terrainShade: string;
   terrainValley: string;
   terrainRock: string;
   terrainPeak: string;
   snow: string;
+  // Foliage tints multiply the baked pine/boulder vertex colours
+  foliage: string;
+  boulder: string;
+  // Self-lit floor for the flora, so night silhouettes keep a violet edge instead of going black
+  foliageGlow: number;
   cloud: string;
   cloudLit: string;
   mist: string;
@@ -37,8 +42,10 @@ export interface WorldPalette {
   waterGlintStrength: number;
   roadColor: string;
   roadColorBlend: number;
+  roadLine: string;
   signpostWood: string;
   motes: string;
+  moteIntensity: number;
   beacon: string;
   beamOpacity: number;
   lampLightStrength: number;
@@ -51,44 +58,49 @@ export interface WorldPalette {
   starOpacity: number;
 }
 
-// Dusk is golden hour over obsidian. Daylight is a clear late morning: soft blue overhead fading to a
-// warm ivory haze, sandstone slopes lit from the side, so the white HUD sits in a bright world.
+// Dusk is twilight over indigo ridges. Daylight is golden hour in an alpine valley: sage meadows,
+// terracotta peaks under a cerulean-to-peach sky, so the white HUD sits in a warm, breathing world.
 export const WORLD_PALETTES: Record<Theme, WorldPalette> = {
   dark: {
-    // Indigo zenith over a burning rim: shadows are blue-violet, never brown-black
-    skyTop: '#06080f',
-    skyUpper: '#0e1322',
-    skyEmber: '#3a1a08',
-    skyHorizon: '#d97706',
-    skyGlow: '#f5a623',
-    skyGround: '#06080f',
-    skyRimHorizonMinimum: 0.3,
-    sun: '#ffa53a',
-    sunElevation: 3,
-    sunAzimuth: 18,
-    sunIntensity: 2.4,
-    fog: '#151a2b',
-    fogDensity: 0.0042,
-    hemiSky: '#1e2a44',
-    hemiGround: '#12162a',
-    hemiIntensity: 0.32,
-    fill: '#1e293b',
-    fillIntensity: 0.22,
-    terrainTint: '#6a6672',
-    terrainShade: '#0b0e18',
-    terrainValley: '#575a66',
-    terrainRock: '#8b8794',
-    terrainPeak: '#f2efe8',
-    snow: '#cdc3b6',
-    cloud: '#0e1220',
-    cloudLit: '#9a4a0c',
-    mist: '#12131f',
-    water: '#070a14',
-    waterGlintStrength: 1.1,
-    roadColor: '#7a869f',
-    roadColorBlend: 0,
-    signpostWood: '#4a3a2c',
+    // Deep indigo zenith over a burning rim: shadows are blue-violet, never brown-black
+    skyTop: '#10102e',
+    skyUpper: '#1e1b4b',
+    skyEmber: '#54205a',
+    skyHorizon: '#f59e0b',
+    skyGlow: '#fbbf24',
+    skyGround: '#0b0a1e',
+    skyRimHorizonMinimum: 0.34,
+    sun: '#ffb057',
+    sunElevation: 5,
+    sunAzimuth: 14,
+    sunIntensity: 2.5,
+    fog: '#1a1840',
+    fogDensity: 0.0038,
+    hemiSky: '#524d9e',
+    hemiGround: '#2a2560',
+    hemiIntensity: 0.86,
+    fill: '#241f52',
+    fillIntensity: 0.2,
+    terrainTint: '#b9b4d8',
+    terrainShade: '#141233',
+    terrainValley: '#2d2a63',
+    terrainRock: '#312e81',
+    terrainPeak: '#5b57a8',
+    snow: '#b9b2e6',
+    foliage: '#b6b0ec',
+    boulder: '#3b3766',
+    foliageGlow: 0.045,
+    cloud: '#191636',
+    cloudLit: '#a8501b',
+    mist: '#1b1840',
+    water: '#111c3e',
+    waterGlintStrength: 1.5,
+    roadColor: '#4b5768',
+    roadColorBlend: 0.72,
+    roadLine: '#f6d9a4',
+    signpostWood: '#334155',
     motes: '#ffcf96',
+    moteIntensity: 1.15,
     beacon: '#f59e0b',
     beamOpacity: 0.3,
     lampLightStrength: 1,
@@ -98,42 +110,48 @@ export const WORLD_PALETTES: Record<Theme, WorldPalette> = {
     poolStrength: 1,
     focusLightStrength: 1,
     shadowStrength: 0,
-    starOpacity: 0.9
+    starOpacity: 0.95
   },
   light: {
-    skyTop: '#4a789c',
-    skyUpper: '#7ca1bc',
-    skyEmber: '#b9c4c6',
-    skyHorizon: '#ede2d0',
-    skyGlow: '#f6e6c8',
-    skyGround: '#e0d8c9',
-    skyRimHorizonMinimum: 0.85,
-    sun: '#fff3dc',
-    sunElevation: 15,
-    sunAzimuth: 100,
-    sunIntensity: 4.8,
-    fog: '#dfd7c8',
-    fogDensity: 0.0024,
-    hemiSky: '#64829e',
-    hemiGround: '#5c4938',
-    hemiIntensity: 0.6,
-    fill: '#c9d6e3',
-    fillIntensity: 0.18,
+    // Cerulean zenith, peach band, gold at the rim — the Firewatch gradient
+    skyTop: '#1b5e8c',
+    skyUpper: '#4f8cb4',
+    skyEmber: '#e8b489',
+    skyHorizon: '#fde68a',
+    skyGlow: '#ffd9a0',
+    skyGround: '#dccfb8',
+    skyRimHorizonMinimum: 0.86,
+    sun: '#fff1d0',
+    sunElevation: 9,
+    sunAzimuth: 96,
+    sunIntensity: 3.9,
+    fog: '#cfdcd2',
+    fogDensity: 0.0021,
+    hemiSky: '#fff7ed',
+    hemiGround: '#475569',
+    hemiIntensity: 0.7,
+    fill: '#cfe0e8',
+    fillIntensity: 0.16,
     terrainTint: '#ffffff',
-    terrainShade: '#1c222b',
-    terrainValley: '#b09576',
-    terrainRock: '#9a9389',
-    terrainPeak: '#ddd3c3',
-    snow: '#ead8c0',
-    cloud: '#f4f3ee',
-    cloudLit: '#fffbf2',
-    mist: '#e2dacb',
-    water: '#2c6b8e',
-    waterGlintStrength: 2.4,
-    roadColor: '#7a869f',
+    terrainShade: '#2c443c',
+    terrainValley: '#4f8a6e',
+    terrainRock: '#3b6e5c',
+    terrainPeak: '#b87042',
+    snow: '#f7e3c8',
+    foliage: '#ffffff',
+    boulder: '#93a196',
+    foliageGlow: 0,
+    cloud: '#fdf7ee',
+    cloudLit: '#f8dcb0',
+    mist: '#e7ecdf',
+    water: '#2f6f7f',
+    waterGlintStrength: 2.6,
+    roadColor: '#5a6878',
     roadColorBlend: 1,
-    signpostWood: '#261e18',
-    motes: '#e2a336',
+    roadLine: '#f5e7c8',
+    signpostWood: '#334155',
+    motes: '#ffd9a0',
+    moteIntensity: 0.85,
     beacon: '#f59e0b',
     beamOpacity: 0.04,
     lampLightStrength: 0.2,
@@ -142,7 +160,7 @@ export const WORLD_PALETTES: Record<Theme, WorldPalette> = {
     markerGlow: 0.15,
     poolStrength: 0,
     focusLightStrength: 0,
-    shadowStrength: 0.75,
+    shadowStrength: 0.8,
     starOpacity: 0
   }
 };

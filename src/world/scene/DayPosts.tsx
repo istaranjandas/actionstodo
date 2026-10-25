@@ -168,7 +168,8 @@ export function DayPosts({ days, animate }: DayPostsProps) {
   const litCountByDate = useRef(new Map<string, number>());
 
   const geometries = useMemo(() => {
-    const shaft = new THREE.BoxGeometry(0.3, 4.6, 0.3).translate(0, 2.3, 0);
+    // A chamfered octagonal post: eight matte facets catch the low sun instead of one flat black face
+    const shaft = new THREE.CylinderGeometry(0.155, 0.18, 4.6, 8, 1).translate(0, 2.3, 0);
     const base = new THREE.CylinderGeometry(0.48, 0.66, 0.42, 6).translate(0, 0.21, 0);
     const finial = new THREE.ConeGeometry(0.26, 0.42, 4).translate(0, 4.8, 0);
     const arm = new THREE.BoxGeometry(2.6, 0.13, 0.15);
@@ -182,7 +183,7 @@ export function DayPosts({ days, animate }: DayPostsProps) {
 
   const materials = useMemo(
     () => ({
-      wood: new THREE.MeshStandardMaterial({ color: '#4d3d2d', roughness: 0.86, flatShading: true }),
+      wood: new THREE.MeshStandardMaterial({ color: '#334155', roughness: 0.62, metalness: 0.06, flatShading: true }),
       stone: new THREE.MeshStandardMaterial({ color: '#6c6b64', roughness: 0.95, flatShading: true }),
       metal: new THREE.MeshStandardMaterial({ color: '#2c2c2d', roughness: 0.45, metalness: 0.6, flatShading: true }),
       darkGlass: new THREE.MeshStandardMaterial({ color: '#33383c', emissive: new THREE.Color('#ff9b4a'), emissiveIntensity: 0.1, roughness: 0.25, metalness: 0.1, flatShading: true }),

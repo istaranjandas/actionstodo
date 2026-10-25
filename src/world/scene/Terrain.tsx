@@ -92,15 +92,20 @@ const LAKE_FRAGMENT = /* glsl */ `
   #include <fog_pars_fragment>
   void main() {
     vec3 toCamera = normalize(cameraPosition - vWorldPosition);
-    float ripple = sin(vWorldPosition.x * 0.7 + uTime * 0.45) * 0.018 + sin(vWorldPosition.z * 1.1 - uTime * 0.33) * 0.018;
-    vec3 normal = normalize(vec3(ripple, 1.0, ripple * 0.6));
-    float fresnel = pow(1.0 - max(dot(toCamera, normal), 0.0), 4.0);
+    // Two crossing swells plus a fine chop: the surface shimmers without ever looking like glass
+    float swell = sin(vWorldPosition.x * 0.33 + uTime * 0.33) * 0.03 + sin(vWorldPosition.z * 0.47 - uTime * 0.27) * 0.026;
+    float chop = sin((vWorldPosition.x + vWorldPosition.z) * 1.35 + uTime * 0.85) * 0.008;
+    vec3 normal = normalize(vec3(swell + chop, 1.0, swell * 0.7 - chop));
+    float fresnel = pow(1.0 - max(dot(toCamera, normal), 0.0), 3.4);
     // A narrow, feathered sun path: the lake mirrors a little of the burning rim, it never becomes it
     float glint = pow(max(dot(reflect(-toCamera, normal), uSunDirection), 0.0), 720.0);
-    vec3 color = mix(uDeep, uSky, fresnel * 0.3);
-    color += uSun * glint * uGlintStrength * 0.4;
+    float sheen = pow(max(dot(reflect(-toCamera, normal), uSunDirection), 0.0), 48.0);
+    // The far bank reads deeper, so the water has depth instead of a flat fill
+    float depth = smoothstep(0.75, 0.1, length(vUv - vec2(0.5, 0.62)));
+    vec3 color = mix(uDeep * (0.9 + depth * 0.22), mix(uDeep, uSky, 0.55), fresnel * 0.38);
+    color += uSun * (glint * 1.0 + sheen * 0.08) * uGlintStrength * 0.42;
     // Feather the shoreline so the water meets the valley instead of ending in a cut-out polygon
-    float shore = smoothstep(0.52, 0.18, length(vUv - 0.5));
+    float shore = smoothstep(0.5, 0.44, length(vUv - 0.5));
     gl_FragColor = vec4(color, shore);
     #include <colorspace_fragment>
     #include <fog_fragment>
@@ -113,7 +118,7 @@ export function Terrain({ animate }: { animate: boolean }) {
   const material = useMemo(() => buildTerrainMaterial(live), [live]);
 
   const lakeGeometry = useMemo(() => {
-    const circle = new THREE.CircleGeometry(LAKE.radius * 1.35, 48);
+    const circle = new THREE.CircleGeometry(LAKE.radius * 1.14, 56);
     circle.rotateX(-Math.PI / 2);
     return circle;
   }, []);
@@ -147,7 +152,7 @@ export function Terrain({ animate }: { animate: boolean }) {
     material.emissiveIntensity = 1;
     const uniforms = lakeMaterial.uniforms;
     uniforms.uDeep.value.copy(live.colors.water);
-    uniforms.uSky.value.copy(live.colors.skyHorizon);
+    uniforms.uSky.value.copy(live.colors.skyUpper);
     uniforms.uSun.value.copy(live.colors.sun);
     uniforms.uSunDirection.value.copy(live.sunDirection);
     uniforms.uGlintStrength.value = live.numbers.waterGlintStrength;

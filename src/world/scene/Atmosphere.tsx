@@ -39,12 +39,13 @@ const VEIL_FRAGMENT = /* glsl */ `
   uniform float uSeed;
   uniform float uOpacity;
   uniform float uDensity;
+  uniform float uDrift;
   varying vec2 vUv;
   ${NOISE_GLSL}
   void main() {
-    vec2 drift = vec2(uTime * 0.006, 0.0);
+    vec2 drift = vec2(uTime * uDrift, uTime * uDrift * 0.25);
     float density = fbm(vUv * vec2(3.2, 1.6) + drift + uSeed);
-    float edge = smoothstep(0.0, 0.32, vUv.x) * smoothstep(1.0, 0.68, vUv.x) * smoothstep(0.0, 0.35, vUv.y) * smoothstep(1.0, 0.55, vUv.y);
+    float edge = smoothstep(0.0, 0.46, vUv.x) * smoothstep(1.0, 0.54, vUv.x) * smoothstep(0.0, 0.48, vUv.y) * smoothstep(1.0, 0.42, vUv.y);
     float alpha = smoothstep(uDensity, uDensity + 0.32, density) * edge * uOpacity;
     vec3 color = mix(uLit, uColor, smoothstep(0.1, 0.75, vUv.y));
     gl_FragColor = vec4(color, alpha);
@@ -66,9 +67,14 @@ const VEILS: VeilSpec[] = [
   { kind: 'cloud', position: [120, 110, -360], scale: [300, 80], seed: 4.7, opacity: 0.8, density: 0.45 },
   { kind: 'cloud', position: [300, 80, -160], scale: [240, 70], seed: 8.1, opacity: 0.75, density: 0.46 },
   { kind: 'cloud', position: [-300, 70, -120], scale: [240, 64], seed: 2.9, opacity: 0.7, density: 0.46 },
-  { kind: 'mist', position: [0, 4, -70], scale: [260, 18], seed: 3.3, opacity: 0.32, density: 0.3 },
-  { kind: 'mist', position: [20, 7, -140], scale: [340, 26], seed: 6.6, opacity: 0.4, density: 0.3 },
-  { kind: 'mist', position: [-10, 12, -220], scale: [420, 34], seed: 9.2, opacity: 0.45, density: 0.28 }
+  // High, thin weather above the ridge line: the sky keeps moving even when nothing else does
+  { kind: 'cloud', position: [-70, 128, -190], scale: [420, 84], seed: 11.4, opacity: 0.62, density: 0.48 },
+  { kind: 'cloud', position: [150, 118, -150], scale: [380, 78], seed: 14.8, opacity: 0.58, density: 0.5 },
+  { kind: 'cloud', position: [-240, 128, 40], scale: [380, 84], seed: 17.2, opacity: 0.45, density: 0.5 },
+  { kind: 'mist', position: [0, 4, -70], scale: [260, 18], seed: 3.3, opacity: 0.24, density: 0.3 },
+  { kind: 'mist', position: [20, 7, -140], scale: [340, 26], seed: 6.6, opacity: 0.3, density: 0.3 },
+  { kind: 'mist', position: [-10, 12, -220], scale: [420, 34], seed: 9.2, opacity: 0.34, density: 0.28 },
+  { kind: 'mist', position: [30, 6, -40], scale: [220, 16], seed: 12.7, opacity: 0.26, density: 0.32 }
 ];
 
 function Veil({ spec, animate }: { spec: VeilSpec; animate: boolean }) {
@@ -87,7 +93,9 @@ function Veil({ spec, animate }: { spec: VeilSpec; animate: boolean }) {
           uTime: { value: 0 },
           uSeed: { value: spec.seed },
           uOpacity: { value: spec.opacity },
-          uDensity: { value: spec.density }
+          uDensity: { value: spec.density },
+          // Clouds drift slowly; mist pours a little faster through the valley
+          uDrift: { value: spec.kind === 'cloud' ? 0.0042 : 0.009 }
         }
       }),
     [spec]
@@ -109,7 +117,7 @@ function Veil({ spec, animate }: { spec: VeilSpec; animate: boolean }) {
   );
 }
 
-const MOTE_COUNT = 240;
+const MOTE_COUNT = 320;
 
 const MOTE_VERTEX = /* glsl */ `
   attribute float aSeed;
@@ -130,10 +138,11 @@ const MOTE_VERTEX = /* glsl */ `
 
 const MOTE_FRAGMENT = /* glsl */ `
   uniform vec3 uColor;
+  uniform float uIntensity;
   varying float vGlow;
   void main() {
     float falloff = 1.0 - smoothstep(0.0, 0.5, length(gl_PointCoord - 0.5));
-    gl_FragColor = vec4(uColor, falloff * falloff * vGlow * 0.55);
+    gl_FragColor = vec4(uColor, falloff * falloff * vGlow * 0.55 * uIntensity);
     #include <colorspace_fragment>
   }
 `;
@@ -164,7 +173,7 @@ function Motes({ animate }: { animate: boolean }) {
         transparent: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
-        uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color() }, uPixelRatio: { value: 1 } }
+        uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color() }, uIntensity: { value: 1 }, uPixelRatio: { value: 1 } }
       }),
     []
   );
@@ -172,9 +181,9 @@ function Motes({ animate }: { animate: boolean }) {
   useFrame(({ clock, gl }) => {
     material.uniforms.uColor.value.copy(live.colors.motes);
     material.uniforms.uPixelRatio.value = gl.getPixelRatio();
+    material.uniforms.uIntensity.value = live.numbers.moteIntensity;
     if (animate) material.uniforms.uTime.value = clock.elapsedTime;
   });
-
   return <points geometry={geometry} material={material} frustumCulled={false} />;
 }
 

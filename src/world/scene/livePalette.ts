@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { easeColor, easeNumber, sunDirection } from './palette';
 import type { WorldPalette } from './palette';
 
-const COLOR_KEYS = ['skyTop', 'skyUpper', 'skyEmber', 'skyHorizon', 'skyGlow', 'skyGround', 'sun', 'fog', 'hemiSky', 'hemiGround', 'terrainTint', 'terrainShade', 'terrainValley', 'terrainRock', 'terrainPeak', 'snow', 'cloud', 'cloudLit', 'mist', 'water', 'motes', 'beacon', 'marker', 'fill', 'roadColor', 'signpostWood'] as const;
-const NUMBER_KEYS = ['sunElevation', 'sunAzimuth', 'sunIntensity', 'fogDensity', 'hemiIntensity', 'fillIntensity', 'beamOpacity', 'lampLightStrength', 'lanternGlow', 'markerGlow', 'poolStrength', 'focusLightStrength', 'shadowStrength', 'starOpacity', 'skyRimHorizonMinimum', 'waterGlintStrength', 'roadColorBlend'] as const;
+const COLOR_KEYS = ['skyTop', 'skyUpper', 'skyEmber', 'skyHorizon', 'skyGlow', 'skyGround', 'sun', 'fog', 'hemiSky', 'hemiGround', 'terrainTint', 'terrainShade', 'terrainValley', 'terrainRock', 'terrainPeak', 'snow', 'foliage', 'boulder', 'cloud', 'cloudLit', 'mist', 'water', 'motes', 'beacon', 'marker', 'fill', 'roadColor', 'roadLine', 'signpostWood'] as const;
+const NUMBER_KEYS = ['sunElevation', 'sunAzimuth', 'sunIntensity', 'fogDensity', 'hemiIntensity', 'fillIntensity', 'beamOpacity', 'lampLightStrength', 'lanternGlow', 'markerGlow', 'poolStrength', 'focusLightStrength', 'shadowStrength', 'starOpacity', 'skyRimHorizonMinimum', 'waterGlintStrength', 'roadColorBlend', 'moteIntensity', 'foliageGlow'] as const;
 
 type ColorKey = (typeof COLOR_KEYS)[number];
 type NumberKey = (typeof NUMBER_KEYS)[number];

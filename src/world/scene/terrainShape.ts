@@ -6,7 +6,8 @@ export const TERRAIN_LENGTH = 780;
 export const TERRAIN_SEGMENTS_X = 150;
 export const TERRAIN_SEGMENTS_Z = 195;
 export const TERRAIN_CENTER_Z = -130;
-export const LAKE = { x: 19, z: -48, radius: 13, level: -1.0 };
+// The alpine lake the path curves past: wide enough to mirror the sky and the lighthouse
+export const LAKE = { x: 25, z: -32, radius: 17, level: -0.4 };
 
 // A long valley carved around the trail: a flat trail bed, meadows either side, ridges beyond,
 // and mountains closing both ends so the path reads as a journey with a beginning and a horizon
@@ -22,7 +23,8 @@ export function terrainHeight(x: number, z: number): number {
   const trailBed = 1 - smoothstep(2.4, 9, corridor);
   height = height * (1 - trailBed) + (-0.7 + hills * 0.35) * trailBed;
 
+  // A shallow bowl under the water, with a soft shelf where the shore meets the meadow
   const lakeDistance = Math.hypot(x - LAKE.x, z - LAKE.z) / LAKE.radius;
-  height -= (1 - smoothstep(0.35, 1.25, lakeDistance)) * 4.6;
+  height -= (1 - smoothstep(0.22, 1.05, lakeDistance)) * 5.6;
   return height;
 }

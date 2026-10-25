@@ -23,6 +23,8 @@ function buildTrailGeometry(): THREE.BufferGeometry {
   const colors = new Float32Array(rows * 3 * 3);
   const indices: number[] = [];
   const color = new THREE.Color();
+  // The two outer columns are shoulders: a shade darker, so the carriageway reads at a glance
+  const columnShade = [0.64, 1, 0.64];
   for (let row = 0; row < rows; row++) {
     const z = TRAIL_START_Z - row * TRAIL_STEP;
     const centre = trailX(z);
@@ -38,8 +40,8 @@ function buildTrailGeometry(): THREE.BufferGeometry {
       positions[index] = x;
       positions[index + 1] = terrainHeight(x, vz) + (column === 1 ? 0.08 : 0.04);
       positions[index + 2] = vz;
-      const wear = 0.82 + Math.abs(Math.sin(row * 1.7 + column * 2.3)) * 0.22;
-      color.setRGB(0.62 * wear, 0.58 * wear, 0.52 * wear);
+      const wear = (0.9 + Math.abs(Math.sin(row * 1.7 + column * 2.3)) * 0.1) * columnShade[column];
+      color.setRGB(wear, wear, wear);
       colors[index] = color.r;
       colors[index + 1] = color.g;
       colors[index + 2] = color.b;
@@ -62,6 +64,42 @@ function buildTrailGeometry(): THREE.BufferGeometry {
   return geometry;
 }
 
+// Dashed centre line: a scenic pass reads as a road, not a grey strip
+const ROAD_LINE_HALF_WIDTH = 0.085;
+const ROAD_DASH = 3.4;
+const ROAD_GAP = 4.6;
+
+function buildRoadLineGeometry(): THREE.BufferGeometry {
+  const positions: number[] = [];
+  const colors: number[] = [];
+  const point = (z: number, lateral: number): [number, number, number] => {
+    const centre = trailX(z);
+    const dx = trailX(z - 1) - trailX(z + 1);
+    const length = Math.hypot(dx, 2);
+    const nx = 2 / length;
+    const nz = dx / length;
+    const x = centre + nx * lateral;
+    const vz = z + nz * lateral;
+    return [x, terrainHeight(x, vz) + 0.1, vz];
+  };
+  const push = (z: number, lateral: number) => {
+    const [x, y, vz] = point(z, lateral);
+    positions.push(x, y, vz);
+    colors.push(1, 1, 1);
+  };
+  for (let z = TRAIL_START_Z - 12; z > TRAIL_END_Z + 12; z -= ROAD_DASH + ROAD_GAP) {
+    const far = z - ROAD_DASH;
+    push(z, -ROAD_LINE_HALF_WIDTH);
+    push(z, ROAD_LINE_HALF_WIDTH);
+    push(far, -ROAD_LINE_HALF_WIDTH);
+    push(far, ROAD_LINE_HALF_WIDTH);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  return geometry;
+}
+
 const PULSE_DECAY_PER_SECOND = 1 / 1.2;
 const HERO_PULSE = 0.16;
 const heroMatrix = new THREE.Matrix4();
@@ -72,7 +110,12 @@ const heroScaleVector = new THREE.Vector3();
 export function Trail({ animate, focusOffset }: { animate: boolean; focusOffset: number }) {
   const live = useLivePalette();
   const geometry = useMemo(buildTrailGeometry, []);
+  const lineGeometry = useMemo(buildRoadLineGeometry, []);
   const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, flatShading: true }), []);
+  const lineMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0, emissiveIntensity: 0.35 }),
+    []
+  );
   // Self-lit and untouched by tone mapping, so the markers read as glowing in the darkest dusk
   const markerMaterial = useMemo(() => new THREE.MeshBasicMaterial({ toneMapped: false }), []);
 
@@ -138,6 +181,8 @@ export function Trail({ animate, focusOffset }: { animate: boolean; focusOffset:
     material.color.copy(live.colors.terrainTint).lerp(live.colors.snow, 0.25).lerp(live.colors.roadColor, live.numbers.roadColorBlend);
     material.emissive.copy(live.colors.beacon);
     material.emissiveIntensity = pulse.current * 0.35;
+    lineMaterial.color.copy(live.colors.roadLine);
+    lineMaterial.emissive.copy(live.colors.roadLine);
     const glow = THREE.MathUtils.lerp(1, 0.55 + live.numbers.lanternGlow * 0.6 + pulse.current * 1.6, live.numbers.markerGlow);
     markerMaterial.color.copy(live.colors.marker).multiplyScalar(glow);
 
@@ -155,6 +200,7 @@ export function Trail({ animate, focusOffset }: { animate: boolean; focusOffset:
   return (
     <>
       <mesh geometry={geometry} material={material} receiveShadow />
+      <mesh geometry={lineGeometry} material={lineMaterial} />
       <primitive object={markerMesh} />
     </>
   );

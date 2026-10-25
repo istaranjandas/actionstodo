@@ -11,6 +11,7 @@ import { WORLD_PALETTES } from './scene/palette';
 import { createLivePalette, LivePaletteContext, stepLivePalette, useLivePalette } from './scene/livePalette';
 import { Sky } from './scene/Sky';
 import { Terrain } from './scene/Terrain';
+import { Foliage } from './scene/Foliage';
 import { Atmosphere } from './scene/Atmosphere';
 import { Beacon } from './scene/Beacon';
 import { Trail } from './scene/Trail';
@@ -216,6 +217,7 @@ function WorldScene({ lens, focusOffset, weekStartOffset, days, theme, reducedMo
       <Lighting />
       <Sky animate={animate} />
       <Terrain animate={animate} />
+      <Foliage />
       <Trail animate={animate} focusOffset={focusOffset} />
       <DayPosts days={days} animate={animate} />
       <Atmosphere animate={animate} />
