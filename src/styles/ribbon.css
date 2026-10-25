@@ -61,6 +61,9 @@
 
 .timeline-month {
   margin-right: 4px;
+  padding: 4px 2px;
+  border: none;
+  background: none;
   font-family: var(--font-display);
   font-size: 13px;
   font-weight: 600;
@@ -68,9 +71,16 @@
   text-transform: uppercase;
   color: var(--ink-2);
   white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--dur-quick) ease;
 }
 
-.ribbon-tool,
+/* The month is the date picker; hovering it says so */
+.month-picker:hover > .timeline-month,
+.month-picker:focus-within > .timeline-month {
+  color: var(--amber-text);
+}
+
 .timeline-step {
   display: inline-grid;
   place-items: center;
@@ -83,21 +93,12 @@
   transition: transform var(--dur-press) var(--ease-press), color var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
 }
 
-.ribbon-tool {
-  width: 32px;
-  height: 32px;
-}
-
-.ribbon-tool:hover,
-.timeline-step:hover,
-.picker-chip-wrap:hover > .ribbon-tool {
+.timeline-step:hover {
   color: var(--amber-text);
   box-shadow: var(--shadow-key-hover);
 }
 
-.ribbon-tool:active,
-.timeline-step:active,
-.picker-chip-wrap:active > .ribbon-tool {
+.timeline-step:active {
   transform: translateY(1px);
   box-shadow: var(--shadow-key-pressed);
 }
@@ -317,22 +318,6 @@
     padding-left: 8px;
   }
 
-  .ribbon-tool {
-    position: relative;
-    width: 40px;
-    height: 44px;
-  }
-
-  .ribbon-tool::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: max(100%, 44px);
-    height: max(100%, 44px);
-    transform: translate(-50%, -50%);
-  }
-
   /* Phones swipe the track natively; the week steps would only crowd it */
   .timeline-step {
     display: none;
@@ -433,7 +418,6 @@
   color: var(--ink-3);
 }
 
-.ribbon-tool,
 .timeline-step {
   border-radius: 0;
   border: 1px solid var(--line);
@@ -442,17 +426,13 @@
   color: var(--ink-3);
 }
 
-.ribbon-tool:hover,
-.timeline-step:hover,
-.picker-chip-wrap:hover > .ribbon-tool {
+.timeline-step:hover {
   border-color: var(--amber-line);
   background: var(--amber-tint);
   box-shadow: none;
 }
 
-.ribbon-tool:active,
-.timeline-step:active,
-.picker-chip-wrap:active > .ribbon-tool {
+.timeline-step:active {
   transform: scale(0.95);
   box-shadow: none;
 }
@@ -568,7 +548,6 @@
 .day-bead-number {
   font-size: 18px;
 }
-
 .mark-open,
 .mark-done {
   width: 4px;
@@ -682,5 +661,72 @@ body.is-dragging-task .day-bead.is-drop-hover {
   .day-bead {
     flex-basis: 44px;
     height: 50px;
+  }
+}
+
+/* ==========================================================================
+   Temporal state on the ruler
+   Yesterday is history, today is lit, the future is legible. A faint beam
+   stands over today and drops into the valley, tying the ruler to the world.
+   ========================================================================== */
+.day-bead {
+  opacity: 0.8;
+}
+
+.day-bead.is-past {
+  opacity: 0.35;
+  color: var(--telemetry-ink);
+}
+
+.day-bead.is-past .day-bead-weekday {
+  color: var(--telemetry-ink);
+}
+
+.day-bead.is-today,
+.day-bead.is-focused,
+.day-bead:hover,
+.day-bead.is-drop-hover {
+  opacity: 1;
+}
+
+/* Today keeps a low ember in its floor, so it is never the same grey as its neighbours */
+.day-bead.is-today {
+  background: linear-gradient(180deg, transparent 35%, rgba(245, 158, 11, 0.14) 100%);
+}
+
+/* Task density: up to three 4px dots, glowing, matched to the counts in the slate */
+.mark-open {
+  background: var(--telemetry-ink);
+  box-shadow: 0 0 5px rgba(148, 163, 184, 0.5);
+}
+
+.mark-done {
+  background: var(--amber);
+  box-shadow: 0 0 6px var(--amber-glow);
+}
+
+/* The beam: positioned by the ribbon's --today-x, which follows the track's scroll */
+.dock-beam {
+  position: absolute;
+  top: 100%;
+  left: var(--today-x, 50%);
+  width: 56px;
+  height: 118px;
+  margin-left: -28px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.24), rgba(245, 158, 11, 0.06) 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 35%, black 65%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 35%, black 65%, transparent);
+}
+
+/* Below the dock (tablets and phones) the beam would point off-screen */
+@media (max-width: 1024px) {
+  .dock-beam {
+    display: none;
+  }
+
+  .brand-mark .devil-popup {
+    top: auto;
+    bottom: calc(100% + 10px);
   }
 }

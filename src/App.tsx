@@ -3,7 +3,7 @@
 // with a day slate, a details slate and the path ribbon floating in it. Game mode: the quest arena.
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { auth, onAuthStateChanged } from './firebase';
-import { addDays, formatFriendlyDate, formatWeekRangeLabel, getLocalISODate, getWeekDates, parseISODate } from './modules/dateUtils';
+import { addDays, formatFriendlyDate, formatWeekRangeLabel, getLocalISODate, getWeekDates } from './modules/dateUtils';
 import { initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
 import { setupTaskDragAndDrop } from './modules/listDrag';
 import { moveTask } from './modules/taskActions';
@@ -120,7 +120,7 @@ export function App() {
       .map(([date, dayTasks]) => ({
         date,
         offset: daysFromToday(date),
-        tasks: sortTaskList(dayTasks, true).map(task => ({ id: task.id, text: task.text, completed: task.completed }))
+        tasks: sortTaskList(dayTasks, true).map(task => ({ id: task.id, text: task.text, completed: task.completed, startTime: task.startTime }))
       }))
       .sort((a, b) => a.offset - b.offset);
   }, [tasks, today, focusDate]);
@@ -359,12 +359,16 @@ export function App() {
   // --- Where are we: the area title over the world ---
   let locationTitle: string;
   let locationSubtitle: string;
+  let locationDate: string | null = null;
   if (isTableView) {
     locationTitle = 'Planner';
     locationSubtitle = formatWeekRangeLabel(getWeekDates(weekOffset));
   } else if (focusDate) {
-    locationTitle = formatFriendlyDate(focusDate).title;
-    locationSubtitle = parseISODate(focusDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    // One compact line: "TODAY · SAT, OCT 24" — the eyebrow and the hero say the same thing no more
+    const friendly = formatFriendlyDate(focusDate);
+    locationTitle = friendly.title;
+    locationSubtitle = '';
+    locationDate = friendly.sub;
   } else {
     const lens = NAV_ITEMS.find(item => item.key === currentView);
     locationTitle = lens?.title ?? '';
@@ -415,7 +419,7 @@ export function App() {
               <WorldLabels days={worldDays} focusDate={focusDate} today={today} onFocusDay={focusDay} />
               {/* Multi-day boards dim and soften the world behind them so every row stays legible */}
               {(isGridView || isTableView) && <div className="hud-scrim" aria-hidden="true" />}
-              <LocationTitle title={locationTitle} subtitle={locationSubtitle} />
+              <LocationTitle title={locationTitle} subtitle={locationSubtitle} date={locationDate} />
 
               {isTableView ? (
                 <div className="planner-board">

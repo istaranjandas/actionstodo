@@ -92,6 +92,11 @@
   --amber-tint: #fcf6ec;
   --amber-line: rgba(217, 119, 6, 0.6);
   --amber-glow: rgba(217, 119, 6, 0.28);
+  /* Hot centre of an active element: cream in both hours, so a lit thing reads as lit */
+  --amber-core: #f59e0b;
+  /* Structural metadata (counters, ruler ticks, section legends) stays out of the amber story */
+  --telemetry-ink: var(--ink-3);
+  --telemetry-line: rgba(28, 25, 23, 0.14);
   --teal: #208368;
   --teal-hi: #29a383;
   --teal-ink: #ffffff;
@@ -113,10 +118,10 @@
   color-scheme: dark;
 
   --hud-gold: #f59e0b;
-  --hud-gold-hi: #fbbf24;
-  --hud-glass: linear-gradient(180deg, rgba(13, 16, 23, 0.86) 0%, rgba(9, 11, 16, 0.92) 100%);
+  --hud-gold-hi: #fde68a;
+  --hud-glass: linear-gradient(180deg, rgba(13, 18, 30, 0.86) 0%, rgba(7, 10, 18, 0.93) 100%);
   --hud-glass-strong: var(--hud-glass);
-  --hud-glass-edge: rgba(255, 255, 255, 0.08);
+  --hud-glass-edge: rgba(148, 163, 184, 0.12);
   --hud-glass-blur: blur(20px) saturate(140%);
   --hud-glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
@@ -133,42 +138,47 @@
   --env-grain-opacity: 0.06;
   --env-stars-opacity: 0.8;
 
-  /* HUD pass: top and bottom stops match, so every former bevel gradient renders as flat glass */
-  --panel-top: #0e161c;
-  --panel-bottom: #0e161c;
-  --panel-solid: #0e161c;
-  --plate-top: #121b22;
-  --plate-bottom: #121b22;
-  --raised-top: #18232b;
-  --raised-bottom: #18232b;
-  --well: #0a1014;
-  --well-deep: #06090c;
-  --hover: rgba(190, 220, 240, 0.05);
-  --edge-light: rgba(200, 228, 245, 0.09);
-  --line: rgba(150, 185, 210, 0.12);
-  --line-strong: rgba(150, 185, 210, 0.2);
+  /* HUD pass: cool obsidian-indigo surfaces. Never darken amber with black — that is what turns
+     the whole console olive-brown; the shadows go blue-violet so the amber has something to sing against. */
+  --panel-top: #0c111b;
+  --panel-bottom: #0c111b;
+  --panel-solid: #0c111b;
+  --plate-top: #0e1420;
+  --plate-bottom: #0e1420;
+  --raised-top: #141b29;
+  --raised-bottom: #141b29;
+  --well: #070b13;
+  --well-deep: #04070d;
+  --hover: rgba(148, 163, 184, 0.07);
+  --edge-light: rgba(203, 213, 225, 0.1);
+  --line: rgba(148, 163, 184, 0.12);
+  --line-strong: rgba(148, 163, 184, 0.22);
   --groove-dark: rgba(0, 0, 0, 0.5);
-  --groove-light: rgba(200, 228, 245, 0.05);
+  --groove-light: rgba(203, 213, 225, 0.05);
   --key-base: rgba(0, 0, 0, 0.6);
   --cast: rgba(0, 0, 0, 0.64);
   --cast-near: rgba(0, 0, 0, 0.42);
-  --scrim: rgba(2, 5, 8, 0.56);
-  --sheen: rgba(200, 228, 245, 0.06);
+  --scrim: rgba(2, 5, 12, 0.56);
+  --sheen: rgba(203, 213, 225, 0.06);
 
-  --ink: #e3eaee;
-  --ink-2: #a0b1bc;
-  --ink-3: #7b8e9b;
-  --ink-faint: #4b5b66;
+  /* Slate-50 ink: cool greys, so text never looks like it is sitting in a sepia photograph */
+  --ink: #f1f5f9;
+  --ink-2: #94a3b8;
+  --ink-3: #64748b;
+  --ink-faint: #475569;
 
-  --amber: #eba245;
-  --amber-hi: #ffc677;
-  --amber-deep: #b5721a;
+  --amber: #f59e0b;
+  --amber-hi: #fde68a;
+  --amber-deep: #b45309;
   --amber-ink: #231403;
-  --amber-text: #f3b55f;
-  --amber-wash: rgba(235, 162, 69, 0.12);
-  --amber-tint: rgba(235, 162, 69, 0.045);
-  --amber-line: rgba(243, 181, 95, 0.55);
-  --amber-glow: rgba(235, 162, 69, 0.32);
+  --amber-text: #fbbf24;
+  --amber-wash: rgba(245, 158, 11, 0.12);
+  --amber-tint: rgba(245, 158, 11, 0.05);
+  --amber-line: rgba(245, 158, 11, 0.55);
+  --amber-glow: rgba(245, 158, 11, 0.3);
+  --amber-core: #fde68a;
+  --telemetry-ink: #64748b;
+  --telemetry-line: rgba(148, 163, 184, 0.22);
   --teal: #46c7ab;
   --teal-hi: #72e1c7;
   --teal-ink: #04201a;
@@ -201,15 +211,18 @@
   --slate-top-colour: rgba(251, 249, 245, 0.96);
   --slate-bottom-colour: rgba(248, 245, 239, 0.97);
   --world-scrim: rgba(253, 253, 252, 0.42);
+  /* Atmosphere behind the dock: darkens (Dusk) or brightens (Daylight) the sky the ruler sits in */
+  --top-scrim: rgba(250, 248, 243, 0.72);
   --location-ink: #1c1917;
   --location-ink-2: #44403c;
   --location-halo: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 26px rgba(251, 249, 245, 0.75);
 }
 
 [data-theme="dark"] {
-  --slate-top-colour: rgba(26, 37, 46, 0.96);
-  --slate-bottom-colour: rgba(13, 19, 25, 0.97);
-  --world-scrim: rgba(3, 6, 10, 0.6);
+  --slate-top-colour: rgba(20, 27, 42, 0.95);
+  --slate-bottom-colour: rgba(9, 13, 22, 0.96);
+  --world-scrim: rgba(4, 7, 14, 0.6);
+  --top-scrim: rgba(4, 6, 13, 0.92);
   --location-ink: #ffffff;
   --location-ink-2: #f59e0b;
   --location-halo: 0 2px 12px rgba(0, 0, 0, 0.6);

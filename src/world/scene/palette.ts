@@ -16,8 +16,8 @@ export interface WorldPalette {
   sunAzimuth: number;
   sunIntensity: number;
   fog: string;
-  fogNear: number;
-  fogFar: number;
+  // Exponential squared fog: aerial perspective that thickens with distance (no hard fog wall)
+  fogDensity: number;
   hemiSky: string;
   hemiGround: string;
   hemiIntensity: number;
@@ -55,39 +55,39 @@ export interface WorldPalette {
 // warm ivory haze, sandstone slopes lit from the side, so the white HUD sits in a bright world.
 export const WORLD_PALETTES: Record<Theme, WorldPalette> = {
   dark: {
-    skyTop: '#07090e',
-    skyUpper: '#111622',
-    skyEmber: '#3b1806',
+    // Indigo zenith over a burning rim: shadows are blue-violet, never brown-black
+    skyTop: '#06080f',
+    skyUpper: '#0e1322',
+    skyEmber: '#3a1a08',
     skyHorizon: '#d97706',
-    skyGlow: '#f59e0b',
-    skyGround: '#07090e',
+    skyGlow: '#f5a623',
+    skyGround: '#06080f',
     skyRimHorizonMinimum: 0.3,
     sun: '#ffa53a',
     sunElevation: 3,
     sunAzimuth: 18,
     sunIntensity: 2.4,
-    fog: '#0b0d13',
-    fogNear: 70,
-    fogFar: 470,
-    hemiSky: '#1e293b',
-    hemiGround: '#1a120b',
-    hemiIntensity: 0.3,
+    fog: '#151a2b',
+    fogDensity: 0.0042,
+    hemiSky: '#1e2a44',
+    hemiGround: '#12162a',
+    hemiIntensity: 0.32,
     fill: '#1e293b',
-    fillIntensity: 0.2,
-    terrainTint: '#6b5a50',
-    terrainShade: '#11131a',
-    terrainValley: '#5b5850',
-    terrainRock: '#86827c',
-    terrainPeak: '#f2f2f0',
-    snow: '#c9b9a6',
-    cloud: '#10131b',
+    fillIntensity: 0.22,
+    terrainTint: '#6a6672',
+    terrainShade: '#0b0e18',
+    terrainValley: '#575a66',
+    terrainRock: '#8b8794',
+    terrainPeak: '#f2efe8',
+    snow: '#cdc3b6',
+    cloud: '#0e1220',
     cloudLit: '#9a4a0c',
-    mist: '#120e10',
-    water: '#07090e',
-    waterGlintStrength: 1.8,
+    mist: '#12131f',
+    water: '#070a14',
+    waterGlintStrength: 1.1,
     roadColor: '#7a869f',
     roadColorBlend: 0,
-    signpostWood: '#4d3d2d',
+    signpostWood: '#4a3a2c',
     motes: '#ffcf96',
     beacon: '#f59e0b',
     beamOpacity: 0.3,
@@ -113,8 +113,7 @@ export const WORLD_PALETTES: Record<Theme, WorldPalette> = {
     sunAzimuth: 100,
     sunIntensity: 4.8,
     fog: '#dfd7c8',
-    fogNear: 170,
-    fogFar: 620,
+    fogDensity: 0.0024,
     hemiSky: '#64829e',
     hemiGround: '#5c4938',
     hemiIntensity: 0.6,

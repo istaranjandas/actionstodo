@@ -1,5 +1,10 @@
 /* ---------- World scrims ---------- */
-:where([data-theme='light']) .game-shell::before,
+/* Daylight keeps a soft ivory vignette behind the dock, so the dark area title and the date ruler
+   read against the sky; the valley needs no fade at the foot. */
+:where([data-theme='light']) .game-shell::before {
+  background: linear-gradient(180deg, var(--top-scrim) 0%, rgba(250, 248, 243, 0.34) 55%, transparent 100%);
+}
+
 :where([data-theme='light']) .game-shell::after {
   background: none;
 }
@@ -88,19 +93,13 @@
   color: var(--dock-ink-2);
 }
 
-:where([data-theme='light']) .ribbon-tool,
 :where([data-theme='light']) .timeline-step {
   border-radius: 8px;
+  border-color: var(--dock-edge);
   color: var(--dock-ink-2);
 }
 
-:where([data-theme='light']) .ribbon-tool {
-  border-color: var(--dock-edge);
-}
-
-:where([data-theme='light']) .ribbon-tool:hover,
-:where([data-theme='light']) .timeline-step:hover,
-:where([data-theme='light']) .picker-chip-wrap:hover > .ribbon-tool {
+:where([data-theme='light']) .timeline-step:hover {
   border-color: var(--dock-accent-edge);
   background: var(--dock-accent-tint);
   color: var(--dock-accent-deep);

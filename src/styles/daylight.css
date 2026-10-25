@@ -91,8 +91,7 @@
   }
 
   :where([data-theme='light']) .slate.is-grid .date-group.day-card,
-  :where([data-theme='light']) .slate.is-grid .slate-header,
-  :where([data-theme='light']) .slate.is-grid .slate-command {
+  :where([data-theme='light']) .slate.is-grid .slate-header {
     background: var(--hud-glass-strong);
   }
 }
@@ -126,8 +125,7 @@
   box-shadow: var(--hud-glass-shadow);
 }
 
-:where([data-theme='light']) .hud-dark .next-up,
-:where([data-theme='light']) .hud-dark .next-up.is-clear {
+:where([data-theme='light']) .hud-dark .next-up {
   border-color: rgba(217, 119, 6, 0.3);
   border-left-color: var(--amber);
   background: var(--amber-tint);

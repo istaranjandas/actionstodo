@@ -186,7 +186,7 @@ function WorldScene({ lens, focusOffset, weekStartOffset, days, theme, reducedMo
   // Created once; later theme changes ease the live palette instead of rebuilding it
   const live = useMemo(() => createLivePalette(WORLD_PALETTES[theme]), []);
   const scene = useThree((state) => state.scene);
-  const fog = useMemo(() => new THREE.Fog('#0b0d13', 70, 470), []);
+  const fog = useMemo(() => new THREE.FogExp2('#151a2b', 0.0042), []);
   const hasSignalledReady = useRef(false);
   const animate = !reducedMotion;
   const pose = useMemo(() => cameraPoseFor(lens, focusOffset, weekStartOffset), [lens, focusOffset, weekStartOffset]);
@@ -202,8 +202,7 @@ function WorldScene({ lens, focusOffset, weekStartOffset, days, theme, reducedMo
   useFrame((_, delta) => {
     stepLivePalette(live, WORLD_PALETTES[theme], Math.min(delta, 1 / 20), !hasSignalledReady.current || reducedMotion);
     fog.color.copy(live.colors.fog);
-    fog.near = live.numbers.fogNear;
-    fog.far = live.numbers.fogFar;
+    fog.density = live.numbers.fogDensity;
   }, -1);
 
   useFrame(() => {
@@ -217,7 +216,7 @@ function WorldScene({ lens, focusOffset, weekStartOffset, days, theme, reducedMo
       <Lighting />
       <Sky animate={animate} />
       <Terrain animate={animate} />
-      <Trail animate={animate} />
+      <Trail animate={animate} focusOffset={focusOffset} />
       <DayPosts days={days} animate={animate} />
       <Atmosphere animate={animate} />
       <Beacon animate={animate} />

@@ -106,6 +106,13 @@
   color: var(--amber-text);
 }
 
+/* Today is the default target, so the date chip is icon-only until another day is picked */
+.chip-btn.date-chip.is-icon {
+  width: 30px;
+  padding: 0;
+  justify-content: center;
+}
+
 .quick-add-save-btn {
   display: inline-flex;
   align-items: center;

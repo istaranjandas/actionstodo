@@ -60,10 +60,17 @@
   pointer-events: none;
 }
 
+/* Sky vignette: the dock and the date ruler get their own atmosphere, so the mountain ridge and the
+   lighthouse sit in open sky below the ruler instead of cutting through the numbers. */
 .game-shell::before {
   top: 0;
-  height: 200px;
-  background: linear-gradient(180deg, var(--world-scrim), transparent);
+  height: 168px;
+  background: linear-gradient(
+    180deg,
+    var(--top-scrim) 0%,
+    color-mix(in srgb, var(--top-scrim) 55%, transparent) 55%,
+    transparent 100%
+  );
 }
 
 .game-shell::after {
@@ -115,7 +122,7 @@ body:not(.has-world) .world-labels {
   transition: opacity 140ms linear, border-color var(--dur-quick) ease, background var(--dur-quick) ease;
 }
 
-/* A short stem points down to the post */
+/* A short stem points down to the post, ending in a diamond node at the tip */
 .post-label::after {
   content: '';
   position: absolute;
@@ -123,7 +130,20 @@ body:not(.has-world) .world-labels {
   top: 100%;
   width: 1px;
   height: 12px;
-  background: linear-gradient(180deg, var(--line-strong), transparent);
+  background: linear-gradient(180deg, var(--amber-line), transparent);
+}
+
+.post-label::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 11px);
+  width: 5px;
+  height: 5px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber-glow);
+  pointer-events: none;
 }
 
 .post-label:hover {
@@ -219,13 +239,22 @@ body:not(.has-world) .world-labels {
   left: var(--hud-inset);
   display: flex;
   align-items: center;
-  gap: 16px;
 }
 
 .location-copy {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* The date rides the same line as the place name: "TODAY · SAT, OCT 24" */
+.location-date {
+  margin-left: 12px;
+  font-size: 0.34em;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  vertical-align: 0.55em;
+  color: var(--location-ink-2);
 }
 
 .location-subtitle {
@@ -290,6 +319,49 @@ body:not(.has-world) .world-labels {
 .brand-icon:active {
   transform: translateY(1px) scale(0.96);
   box-shadow: inset 0 2px 4px rgba(90, 48, 4, 0.45);
+}
+
+/* In the dock the mascot is a key the size of the lens tabs, cut on the same corner */
+.brand-mark {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+}
+
+.lens-bar .brand-icon {
+  width: 34px;
+  height: 32px;
+  border-radius: 0;
+  border: none;
+  box-shadow: 0 0 18px -6px var(--amber-glow);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+
+.lens-bar .brand-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Phones: the mascot key matches the 44px lens tabs beside it */
+@media (max-width: 680px) {
+  .lens-bar .brand-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Keep the area title clear of the system cluster in the top-right corner */
+  .location {
+    right: 140px;
+  }
+
+  /* The date becomes a kicker line under the place name, so a long day name never collides */
+  .location-date {
+    display: block;
+    margin: 2px 0 0;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    vertical-align: baseline;
+  }
 }
 
 /* ---------- Devil popup ---------- */
@@ -649,11 +721,20 @@ body:not(.has-world) .world-labels {
 
 .slate-header {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   padding: 10px 16px 9px;
   border-bottom: 1px solid var(--line);
   transition: box-shadow var(--dur-panel) ease;
+}
+
+/* Telemetry row: back link on the left, the open/done readout on the right */
+.slate-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
 .slate.is-scrolled .slate-header {
@@ -719,6 +800,11 @@ body:not(.has-world) .world-labels {
   color: var(--amber-text);
 }
 
+/* A zero is telemetry, not an achievement: it does not glow */
+.slate-stat.is-zero strong {
+  color: var(--ink-3);
+}
+
 .slate-gauge {
   position: relative;
   width: 96px;
@@ -747,9 +833,10 @@ body:not(.has-world) .world-labels {
   scrollbar-width: thin;
 }
 
+/* Command slot: the bar itself is the plate, so the slot only spaces it */
 .slate-command {
-  padding: 10px 14px 12px 16px;
-  border-top: 1px solid var(--line);
+  padding: 0;
+  border-top: none;
 }
 
 /* ---------- Details slate ---------- */
@@ -1214,7 +1301,7 @@ body:not(.has-world) .world-labels {
   .slate {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    background: linear-gradient(180deg, rgba(13, 16, 23, 0.95) 0%, rgba(9, 11, 16, 0.97) 100%);
+    background: linear-gradient(180deg, rgba(13, 18, 30, 0.95) 0%, rgba(7, 10, 18, 0.97) 100%);
   }
 }
 
@@ -1269,29 +1356,33 @@ body:not(.has-world) .world-labels {
 }
 
 .slate-gauge {
-  height: 4px;
+  height: 5px;
   border-radius: 0;
-  background: rgba(0, 0, 0, 0.5);
-  box-shadow: inset 0 0 0 1px var(--line);
+  background: rgba(148, 163, 184, 0.16);
+  box-shadow: inset 0 0 0 1px var(--telemetry-line);
 }
 
-/* Segmented gauge: notches every 10% */
+/* Segmented gauge: notches every 10%, so progress reads as a scale rather than a smudge */
 .slate-gauge::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(0, 0, 0, 0.7) calc(10% - 1px) 10%);
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), var(--panel-solid) calc(10% - 1px) 10%);
   pointer-events: none;
 }
 
 .slate-gauge-fill {
   border-radius: 0;
   background: var(--amber);
+  box-shadow: 0 0 8px var(--amber-glow);
 }
 
-.slate-command {
-  padding: 10px 14px 12px 14px;
-  border-top-color: var(--hud-glass-edge);
+/* The command line is the panel's primary action, so it is the one element with a lit left edge */
+.slate-command .command-bar {
+  border-left-width: 3px;
+  border-left-color: var(--amber);
+  background: rgba(6, 9, 15, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 /* ---------- Details slate ---------- */
@@ -1321,7 +1412,7 @@ body:not(.has-world) .world-labels {
 
 .brand-icon {
   border-radius: 0;
-  background: var(--amber);
+  background: linear-gradient(165deg, var(--amber-hi), var(--amber) 62%, var(--amber-deep));
   box-shadow: 0 0 0 1px var(--amber-deep), 0 0 24px -6px var(--amber-glow);
   clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
 }

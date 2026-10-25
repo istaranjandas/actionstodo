@@ -1,12 +1,13 @@
 // The path ribbon: two separate HUD pieces. The lens tabs pick which stretch of path the camera frames;
 // the timeline below is a game compass — a strip of day ticks that glides to centre the focused day.
-// Q / E (or ← →) walk one day, « » jump a week, the dial jumps anywhere. Every day tick is also a drop
-// zone: drag a task onto it to reschedule (data-drop-date, handled by the list drag controller).
+// Q / E (or ← →) walk one day, « » jump a week, the month name opens the date picker. Every day tick is
+// also a drop zone: drag a task onto it to reschedule (data-drop-date, handled by the list drag controller).
 // Key hints live in tooltips only; no keycap badges on screen.
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
-import { CalendarSearch, ChevronsLeft, ChevronsRight, LocateFixed } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { addDays, getLocalISODate } from '../modules/dateUtils';
+import { BrandMark } from './BrandMark';
 import { ViewNav } from './ViewNav';
 import type { NavKey } from '../modules/navigation';
 import type { Task } from '../types';
@@ -36,6 +37,7 @@ const parse = (isoDate: string) => {
 export function TimelineRibbon({ tasks, focusDate, activeLens, lensCounts, showPlanner, onSelectLens, onFocusDay }: TimelineRibbonProps) {
   const today = getLocalISODate();
   const anchorDate = focusDate ?? today;
+  const ribbonRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const hasCentred = useRef(false);
 
@@ -71,17 +73,36 @@ export function TimelineRibbon({ tasks, focusDate, activeLens, lensCounts, showP
     track.scrollTo({ left, behavior: smooth ? 'smooth' : 'auto' });
   };
 
+  // The light beam stands over today wherever the track has been scrolled to
+  const placeTodayBeam = () => {
+    const ribbon = ribbonRef.current;
+    const track = trackRef.current;
+    const bead = track?.querySelector<HTMLElement>(`[data-date="${today}"]`);
+    if (!ribbon || !track || !bead) return;
+    const x = track.offsetLeft + bead.offsetLeft + bead.offsetWidth / 2 - track.scrollLeft;
+    ribbon.style.setProperty('--today-x', `${Math.round(x)}px`);
+  };
+
   // Glide the focused (or today's) bead to the centre of the track
   useLayoutEffect(() => {
     const reduced = document.body.classList.contains('is-reduced-motion');
     centreOn(anchorDate, hasCentred.current && !reduced);
     hasCentred.current = true;
+    placeTodayBeam();
   }, [anchorDate, days]);
 
   useEffect(() => {
-    const handleResize = () => centreOn(anchorDate, false);
+    const handleResize = () => {
+      centreOn(anchorDate, false);
+      placeTodayBeam();
+    };
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const track = trackRef.current;
+    track?.addEventListener('scroll', placeTodayBeam, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      track?.removeEventListener('scroll', placeTodayBeam);
+    };
   }, [anchorDate]);
 
   const monthLabel = parse(anchorDate).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
@@ -98,23 +119,17 @@ export function TimelineRibbon({ tasks, focusDate, activeLens, lensCounts, showP
   };
 
   return (
-    <nav className="ribbon" aria-label="Path navigation">
+    <nav className="ribbon" aria-label="Path navigation" ref={ribbonRef}>
       <div className="lens-bar">
+        <BrandMark />
         <ViewNav activeKey={activeLens} counts={lensCounts} showPlanner={showPlanner} onSelect={onSelectLens} />
         <div className="lens-tools">
-          <span className="timeline-month">{monthLabel}</span>
-          <button type="button" className="ribbon-tool" title="Back to today (Home)" aria-label="Back to today" data-sfx="select" onClick={() => onFocusDay(today)}>
-            <LocateFixed size={15} strokeWidth={2} aria-hidden="true" />
-          </button>
-          <div className="picker-chip-wrap" title="Jump to a date">
-            <button type="button" className="ribbon-tool" tabIndex={-1} aria-hidden="true">
-              <CalendarSearch size={15} strokeWidth={2} />
+          {/* The month is the picker: no second calendar button beside it */}
+          <div className="picker-chip-wrap month-picker" title="Jump to a date">
+            <button type="button" className="timeline-month" tabIndex={-1} aria-label={`Jump to a date in ${monthLabel}`}>
+              {monthLabel}
             </button>
-            <DatePicker
-              ariaLabel="Jump to a date"
-              value={focusDate ?? ''}
-              onChange={onFocusDay}
-            />
+            <DatePicker ariaLabel="Jump to a date" value={focusDate ?? ''} onChange={onFocusDay} />
           </div>
         </div>
       </div>
@@ -156,8 +171,9 @@ export function TimelineRibbon({ tasks, focusDate, activeLens, lensCounts, showP
                 <span className="day-bead-weekday">{WEEKDAY_SHORT[weekday]}</span>
                 <span className="day-bead-number">{day}</span>
                 <span className="day-bead-marks" aria-hidden="true">
-                  {tally && Array.from({ length: Math.min(3, tally.open) }, (_, i) => <span key={`o${i}`} className="mark-open" />)}
-                  {tally && tally.done > 0 && <span className="mark-done" />}
+                  {tally && Array.from({ length: Math.min(3, tally.done + tally.open) }, (_, i) => (
+                    <span key={`m${i}`} className={i < tally.open ? 'mark-open' : 'mark-done'} />
+                  ))}
                 </span>
               </button>
             );
@@ -174,6 +190,8 @@ export function TimelineRibbon({ tasks, focusDate, activeLens, lensCounts, showP
           <ChevronsRight size={16} strokeWidth={2} aria-hidden="true" />
         </button>
       </div>
+
+      <span className="dock-beam" aria-hidden="true" />
     </nav>
   );
 }

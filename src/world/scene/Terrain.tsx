@@ -68,8 +68,10 @@ function buildTerrainMaterial(live: LivePalette): THREE.MeshStandardMaterial {
 
 const LAKE_VERTEX = /* glsl */ `
   varying vec3 vWorldPosition;
+  varying vec2 vUv;
   #include <fog_pars_vertex>
   void main() {
+    vUv = uv;
     vec4 worldPosition = modelMatrix * vec4(position, 1.0);
     vWorldPosition = worldPosition.xyz;
     vec4 mvPosition = viewMatrix * worldPosition;
@@ -86,16 +88,20 @@ const LAKE_FRAGMENT = /* glsl */ `
   uniform float uGlintStrength;
   uniform float uTime;
   varying vec3 vWorldPosition;
+  varying vec2 vUv;
   #include <fog_pars_fragment>
   void main() {
     vec3 toCamera = normalize(cameraPosition - vWorldPosition);
-    float ripple = sin(vWorldPosition.x * 0.8 + uTime * 0.55) * 0.025 + sin(vWorldPosition.z * 1.25 - uTime * 0.4) * 0.025;
+    float ripple = sin(vWorldPosition.x * 0.7 + uTime * 0.45) * 0.018 + sin(vWorldPosition.z * 1.1 - uTime * 0.33) * 0.018;
     vec3 normal = normalize(vec3(ripple, 1.0, ripple * 0.6));
-    float fresnel = pow(1.0 - max(dot(toCamera, normal), 0.0), 3.0);
-    float glint = pow(max(dot(reflect(-toCamera, normal), uSunDirection), 0.0), 140.0);
-    // Dark water that mirrors the burning horizon: warm gold at grazing angles, a sun-glint path on top
-    vec3 color = mix(uDeep, uSky, 0.12 + fresnel * 0.7) + uSun * glint * uGlintStrength;
-    gl_FragColor = vec4(color, 1.0);
+    float fresnel = pow(1.0 - max(dot(toCamera, normal), 0.0), 4.0);
+    // A narrow, feathered sun path: the lake mirrors a little of the burning rim, it never becomes it
+    float glint = pow(max(dot(reflect(-toCamera, normal), uSunDirection), 0.0), 720.0);
+    vec3 color = mix(uDeep, uSky, fresnel * 0.3);
+    color += uSun * glint * uGlintStrength * 0.4;
+    // Feather the shoreline so the water meets the valley instead of ending in a cut-out polygon
+    float shore = smoothstep(0.52, 0.18, length(vUv - 0.5));
+    gl_FragColor = vec4(color, shore);
     #include <colorspace_fragment>
     #include <fog_fragment>
   }
@@ -116,6 +122,8 @@ export function Terrain({ animate }: { animate: boolean }) {
       new THREE.ShaderMaterial({
         vertexShader: LAKE_VERTEX,
         fragmentShader: LAKE_FRAGMENT,
+        transparent: true,
+        depthWrite: false,
         fog: true,
         uniforms: THREE.UniformsUtils.merge([
           THREE.UniformsLib.fog,

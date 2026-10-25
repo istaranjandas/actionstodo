@@ -4,6 +4,7 @@ export interface WorldDayTask {
   id: string;
   text: string;
   completed: boolean;
+  startTime: string;
 }
 
 export interface WorldDay {

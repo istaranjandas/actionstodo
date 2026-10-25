@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { RefObject } from 'react';
-import { formatShortDate } from '../modules/dateUtils';
+import { formatShortDate, getLocalISODate } from '../modules/dateUtils';
 import { formatTimeRangeDisplay, getNextSmartSlot, parseTimeFromText } from '../modules/timeUtils';
+import { COMMAND_PREFILL_EVENT } from '../modules/commandBar';
 import { setUiState } from '../modules/store';
 import { logTask } from '../modules/taskActions';
 import { useOpenTimePopover } from './TimePopover';
@@ -20,6 +21,14 @@ export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFo
   const openTimePopover = useOpenTimePopover();
   const [quickAddText, setQuickAddText] = useState('');
   const [commitCount, setCommitCount] = useState(0);
+  // The date only earns a chip once it is not today; a starter chip elsewhere can prefill the field
+  const isTodayTarget = selectedAddDate === getLocalISODate();
+
+  useEffect(() => {
+    const handlePrefill = (event: Event) => setQuickAddText((event as CustomEvent<string>).detail);
+    window.addEventListener(COMMAND_PREFILL_EVENT, handlePrefill);
+    return () => window.removeEventListener(COMMAND_PREFILL_EVENT, handlePrefill);
+  }, []);
 
   // --- Quick Add Time & Date Helpers ---
   const parsed = parseTimeFromText(quickAddText);
@@ -71,7 +80,7 @@ export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFo
           type="text"
           ref={quickAddInputRef}
           className="quick-add-input"
-          placeholder={isPhone ? 'Log objective…' : 'Log objective… try “Call Alex at 3pm”'}
+          placeholder={isPhone ? 'Log objective…' : 'Log objective… e.g. “Call Alex at 3pm”'}
           aria-label="Log a new task"
           aria-keyshortcuts="T"
           autoComplete="off"
@@ -88,9 +97,15 @@ export function QuickAddForm({ appState, isPhone, quickAddInputRef }: QuickAddFo
 
         <div className="quick-add-chips-row">
           <div className="picker-chip-wrap">
-            <button type="button" className="chip-btn" title="Select task date" tabIndex={-1}>
+            <button
+              type="button"
+              className={`chip-btn date-chip ${isTodayTarget ? 'is-icon' : ''}`}
+              title={isTodayTarget ? 'Log to another day' : 'Select task date'}
+              aria-label={isTodayTarget ? 'Select task date' : undefined}
+              tabIndex={-1}
+            >
               <CalendarIcon size={12} />
-              <span>{formatShortDate(selectedAddDate)}</span>
+              {!isTodayTarget && <span>{formatShortDate(selectedAddDate)}</span>}
             </button>
             <DatePicker
               ariaLabel="Select date"

@@ -114,6 +114,76 @@
   color: var(--ink-3);
 }
 
+/* One empty state for the whole day, with starters that fill the command line */
+.clear-horizon {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 0 16px;
+}
+
+.clear-horizon-kicker {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--telemetry-ink);
+}
+
+.clear-horizon-kicker::before {
+  content: '// ';
+  color: var(--amber);
+  opacity: 0.9;
+}
+
+.clear-horizon-text {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.clear-horizon-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.clear-horizon-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 0;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.03);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+  text-align: left;
+  transition: color var(--dur-quick) ease, border-color var(--dur-quick) ease, background var(--dur-quick) ease;
+}
+
+.clear-horizon-chip svg {
+  flex-shrink: 0;
+  color: var(--amber-text);
+}
+
+.clear-horizon-chip:hover {
+  color: var(--ink);
+  border-color: var(--amber-line);
+  background: var(--amber-tint);
+}
+
+.clear-horizon-chip:active {
+  transform: scale(0.98);
+}
+
 /* ---------- Today board ---------- */
 .today-board {
   padding: 14px 16px 10px;
@@ -148,14 +218,6 @@ button.next-up:active {
   box-shadow: var(--shadow-key-pressed), inset 3px 0 0 var(--amber);
 }
 
-.next-up.is-clear {
-  display: flex;
-  flex-direction: column;
-  border-color: var(--line);
-  background: linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
-  box-shadow: var(--shadow-key), inset 3px 0 0 var(--teal);
-}
-
 .next-up-label {
   grid-area: label;
   font-family: var(--font-display);
@@ -164,10 +226,6 @@ button.next-up:active {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--amber-text);
-}
-
-.next-up.is-clear .next-up-label {
-  color: var(--teal);
 }
 
 .next-up-text {
@@ -226,8 +284,8 @@ button.next-up:active {
   color: var(--ink-3);
 }
 
-/* Timeline: "now" cuts across the schedule at the current time */
-.task-list.timeline {
+/* Schedule list: cells carry their own order, so no ribbon ruler leaks in here */
+.task-list.is-schedule {
   position: relative;
   margin-bottom: 8px;
 }
@@ -1010,11 +1068,6 @@ body.is-table-view .date-groups {
   transition: transform 140ms var(--ease-out);
 }
 
-.slate .next-up.is-clear {
-  box-shadow: none;
-  background: none;
-}
-
 @media (hover: hover) {
   .slate button.next-up:hover {
     transform: translateX(4px);
@@ -1309,17 +1362,23 @@ body.is-table-view .date-groups {
   box-shadow: 0 0 8px var(--amber-glow);
 }
 
-/* Section legends read as console labels: // SCHEDULE */
+/* Section legends read as console labels: // SCHEDULE, opened by a 2px accent and a hairline */
 .hud-dark .board-section-label {
   font-size: 11px;
   letter-spacing: 0.2em;
-  color: var(--ink-3);
+  color: var(--telemetry-ink);
+}
+
+.hud-dark .board-section-label > span:first-child {
+  padding-left: 8px;
+  border-left: 2px solid var(--amber-line);
+  line-height: 1.1;
 }
 
 .hud-dark .board-section-label > span:first-child::before {
   content: '// ';
-  color: var(--amber-text);
-  opacity: 0.8;
+  color: var(--amber);
+  opacity: 0.9;
 }
 
 /* Current objective banner: warm dark-amber glass, same gold story as the rest of the HUD */
@@ -1337,13 +1396,7 @@ body.is-table-view .date-groups {
   background: rgba(245, 158, 11, 0.11);
 }
 
-.hud-dark .next-up.is-clear {
-  border-left-color: rgba(245, 158, 11, 0.45);
-  background: rgba(245, 158, 11, 0.07);
-}
-
-.hud-dark .next-up-label,
-.hud-dark .next-up.is-clear .next-up-label {
+.hud-dark .next-up-label {
   font-size: 10.5px;
   letter-spacing: 0.22em;
   color: var(--hud-gold-hi);

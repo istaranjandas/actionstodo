@@ -37,9 +37,11 @@ export function cameraPoseFor(lens: WorldLens, focusOffset: number, weekStartOff
     case 'planner':
       return { position: [0, 150, 30], target: [0, 0, -95] };
     default: {
-      // Stand back along the trail, always left of the post so it frames to the right of the day slate
+      // Stand back along the trail, always left of the post so it frames to the right of the day slate.
+      // The eye is held almost level, which drops the ridge and the lighthouse into open sky below the
+      // date ruler instead of letting the peaks cut through the numbers.
       const post = dayPostPlacement(focusOffset);
-      return { position: [post.x - 6.5, 4.4, post.z + 15], target: [post.x - 1, 2.4, post.z - 6], focus: [post.x, 3, post.z] };
+      return { position: [post.x - 6.5, 4.4, post.z + 15], target: [post.x - 1, 3.6, post.z - 6], focus: [post.x, 3, post.z] };
     }
   }
 }

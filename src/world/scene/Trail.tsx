@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { trailX } from '../trail';
+import { trailDistance, trailX } from '../trail';
 import { subscribeWorldEvents } from '../worldEvents';
 import { useLivePalette } from './livePalette';
 import { terrainHeight } from './terrainShape';
@@ -13,6 +13,9 @@ const TRAIL_END_Z = -470;
 const TRAIL_STEP = 2;
 const TRAIL_HALF_WIDTH = 1.7;
 const MARKER_SPACING = 9;
+const MARKER_NEAR = 0.35;
+const MARKER_FAR = 1;
+const MARKER_FADE = 220;
 
 function buildTrailGeometry(): THREE.BufferGeometry {
   const rows = Math.floor((TRAIL_START_Z - TRAIL_END_Z) / TRAIL_STEP) + 1;
@@ -60,8 +63,13 @@ function buildTrailGeometry(): THREE.BufferGeometry {
 }
 
 const PULSE_DECAY_PER_SECOND = 1 / 1.2;
+const HERO_PULSE = 0.16;
+const heroMatrix = new THREE.Matrix4();
+const heroPosition = new THREE.Vector3();
+const heroRotation = new THREE.Quaternion();
+const heroScaleVector = new THREE.Vector3();
 
-export function Trail({ animate }: { animate: boolean }) {
+export function Trail({ animate, focusOffset }: { animate: boolean; focusOffset: number }) {
   const live = useLivePalette();
   const geometry = useMemo(buildTrailGeometry, []);
   const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, flatShading: true }), []);
@@ -79,20 +87,44 @@ export function Trail({ animate }: { animate: boolean }) {
     return placements;
   }, []);
 
+  // The marker beside the focused day: the one that pulses, so the eye lands on where you stand
+  const heroIndex = useMemo(() => {
+    const heroZ = -trailDistance(focusOffset);
+    let best = 0;
+    let bestGap = Infinity;
+    markers.forEach((marker, index) => {
+      const gap = Math.abs(marker[2] - heroZ);
+      if (gap < bestGap) {
+        bestGap = gap;
+        best = index;
+      }
+    });
+    return best;
+  }, [markers, focusOffset]);
+
   const markerMesh = useMemo(() => {
     // A slim upright diamond
     const diamond = new THREE.OctahedronGeometry(0.13, 0);
     diamond.scale(1, 1.55, 1);
     const mesh = new THREE.InstancedMesh(diamond, markerMaterial, markers.length);
     const matrix = new THREE.Matrix4();
-    markers.forEach((position, index) => mesh.setMatrixAt(index, matrix.makeTranslation(...position)));
+    const shade = new THREE.Color();
+    markers.forEach((position, index) => {
+      mesh.setMatrixAt(index, matrix.makeTranslation(...position));
+      // Future waymarkers dim with distance, so the path has depth instead of a uniform fence of lights
+      const depth = Math.min(1, Math.abs(position[2] - TRAIL_START_Z) / MARKER_FADE);
+      const brightness = MARKER_FAR - (MARKER_FAR - MARKER_NEAR) * depth;
+      mesh.setColorAt(index, shade.setScalar(brightness));
+    });
     mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.castShadow = true;
     return mesh;
   }, [markers, markerMaterial]);
 
   // Completing a task sends a brief surge of warm light along the markers and the path
   const pulse = useRef(0);
+  const heroScale = useRef(1);
   useEffect(
     () =>
       subscribeWorldEvents((event) => {
@@ -101,13 +133,23 @@ export function Trail({ animate }: { animate: boolean }) {
     [animate]
   );
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     pulse.current = Math.max(0, pulse.current - Math.min(delta, 1 / 20) * PULSE_DECAY_PER_SECOND);
     material.color.copy(live.colors.terrainTint).lerp(live.colors.snow, 0.25).lerp(live.colors.roadColor, live.numbers.roadColorBlend);
     material.emissive.copy(live.colors.beacon);
     material.emissiveIntensity = pulse.current * 0.35;
     const glow = THREE.MathUtils.lerp(1, 0.55 + live.numbers.lanternGlow * 0.6 + pulse.current * 1.6, live.numbers.markerGlow);
     markerMaterial.color.copy(live.colors.marker).multiplyScalar(glow);
+
+    // Only the hero marker breathes, and only while animations are on
+    const target = animate ? 1 + Math.sin(clock.elapsedTime * 1.9) * HERO_PULSE : 1;
+    if (Math.abs(target - heroScale.current) > 0.004) {
+      heroScale.current = target;
+      const [x, y, z] = markers[heroIndex];
+      heroMatrix.compose(heroPosition.set(x, y, z), heroRotation, heroScaleVector.setScalar(target));
+      markerMesh.setMatrixAt(heroIndex, heroMatrix);
+      markerMesh.instanceMatrix.needsUpdate = true;
+    }
   });
 
   return (

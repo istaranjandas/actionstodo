@@ -7,6 +7,8 @@ import { sortTaskList, tallyTasks, updateTaskItem } from '../modules/store';
 import { getDropSlots, taskDuration } from '../modules/listDrag';
 import { logTask, moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
 import { useInlineTextEdit } from '../hooks/useInlineTextEdit';
+import { useMinuteClock } from '../hooks/useMinuteClock';
+import { prefillCommand } from '../modules/commandBar';
 import { useOpenTimePopover } from './TimePopover';
 import { useTaskSelection } from './TaskSelection';
 import { ClockIcon } from './Icons';
@@ -140,23 +142,26 @@ const DateGroup = memo(function DateGroup({ dateKey, groupTasks, staggerIndex, i
       data-drop-date={isDated ? dateKey : undefined}
       style={{ '--stagger-index': Math.min(staggerIndex, 8) } as CSSProperties}
     >
-      <div className="date-group-header">
-        <div className="date-group-title-wrap">
-          <span className="date-group-name">{title}</span>
-          <span className="date-group-subname">{sub}</span>
+      {/* A day card names its own date; the single-day slate is already named by the area title */}
+      {isCard && (
+        <div className="date-group-header">
+          <div className="date-group-title-wrap">
+            <span className="date-group-name">{title}</span>
+            <span className="date-group-subname">{sub}</span>
+          </div>
+          <div className="date-group-progress" title={`${completedCount} of ${total} done`}>
+            <span className="date-group-meter" aria-hidden="true">
+              <span className="date-group-meter-fill" style={{ width: `${progressPercent}%` }} />
+            </span>
+            <span className="date-group-count">{completedCount}/{total}</span>
+          </div>
         </div>
-        <div className="date-group-progress" title={`${completedCount} of ${total} done`}>
-          <span className="date-group-meter" aria-hidden="true">
-            <span className="date-group-meter-fill" style={{ width: `${progressPercent}%` }} />
-          </span>
-          <span className="date-group-count">{completedCount}/{total}</span>
-        </div>
-      </div>
+      )}
       <div className="task-list" role="list" id={`group-list-${dateKey}`}>
         {groupTasks.map(task => (
           <TaskRow key={task.id} task={task} />
         ))}
-        {groupTasks.length === 0 && <div className="date-group-empty">{canAdd ? 'Nothing planned yet.' : 'Nothing planned yet. Log a task below.'}</div>}
+        {groupTasks.length === 0 && <div className="date-group-empty">{canAdd ? 'Nothing planned yet.' : 'Nothing planned yet — log one above.'}</div>}
       </div>
       <DropSlots dateKey={dateKey} tasks={groupTasks} />
       {canAdd && isDated && <DayCardAdd date={dateKey} dayLabel={title} />}
@@ -241,24 +246,6 @@ const toMinutes = (time: string) => {
   return hours * 60 + minutes;
 };
 
-function useMinuteClock(): number {
-  const read = () => {
-    const now = new Date();
-    return now.getHours() * 60 + now.getMinutes();
-  };
-  const [minutes, setMinutes] = useState(read);
-  useEffect(() => {
-    const tick = () => setMinutes(read());
-    const timer = window.setInterval(tick, 30000);
-    document.addEventListener('visibilitychange', tick);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', tick);
-    };
-  }, []);
-  return minutes;
-}
-
 function formatGap(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
@@ -271,12 +258,33 @@ function formatClock(minutes: number): string {
   return `${hours % 12 || 12}:${String(minutes % 60).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
 }
 
+// Chips offered when the day is empty: one click drops the phrase into the command bar
+const STARTERS = ['Deep work block at 9am', 'Call Alex at 3pm', 'Evening review at 7pm'];
+
+function ClearHorizon() {
+  return (
+    <div className="clear-horizon">
+      <span className="clear-horizon-kicker">Clear horizon</span>
+      <p className="clear-horizon-text">Nothing logged for today. Start with one of these, or type your own above.</p>
+      <div className="clear-horizon-chips">
+        {STARTERS.map((text) => (
+          <button key={text} type="button" className="clear-horizon-chip" data-sfx="select" onClick={() => prefillCommand(text)}>
+            <Plus size={12} strokeWidth={2.4} aria-hidden="true" />
+            <span>{text}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TodayBoard({ tasks }: { tasks: Task[] }) {
   const today = getLocalISODate();
   const nowMinutes = useMinuteClock();
   const { openTask } = useTaskSelection();
   const timed = tasks.filter(t => t.startTime);
   const anytime = tasks.filter(t => !t.startTime);
+  // Only a task still ahead (or running) earns the banner; an empty day says nothing at all
   const nextUp = timed.find(t => !t.completed && toMinutes(t.startTime) + taskDuration(t) > nowMinutes);
   const markerIndex = timed.findIndex(t => toMinutes(t.startTime) > nowMinutes);
 
@@ -288,15 +296,9 @@ function TodayBoard({ tasks }: { tasks: Task[] }) {
       : `In progress · ends in ${formatGap(start + taskDuration(nextUp) - nowMinutes)}`;
   }
 
-  const nowMarker = (
-    <div className="now-marker" role="presentation">
-      <span className="now-marker-label">Now · {formatClock(nowMinutes)}</span>
-    </div>
-  );
-
   return (
     <section className="date-group today-board is-today" data-date={today} data-drop-date={today}>
-      {nextUp ? (
+      {nextUp && (
         <button type="button" className="next-up" data-sfx="open" onClick={() => openTask(nextUp.id)}>
           <span className="next-up-label">Next up</span>
           <span className="next-up-text">{nextUp.text}</span>
@@ -306,38 +308,53 @@ function TodayBoard({ tasks }: { tasks: Task[] }) {
           </span>
           <ChevronRight className="next-up-chevron" size={18} aria-hidden="true" />
         </button>
-      ) : (
-        <div className="next-up is-clear">
-          <span className="next-up-label">Next up</span>
-          <span className="next-up-text">{timed.length ? 'Schedule clear for the rest of today.' : 'No timed tasks today.'}</span>
-        </div>
       )}
 
-      <div className="board-section-label">
-        <span>Schedule</span>
-        <span className="board-section-count">{timed.length}</span>
-      </div>
-      <div className="task-list timeline" role="list">
-        {timed.map((task, index) => (
-          <Fragment key={task.id}>
-            {index === markerIndex && nowMarker}
-            <TaskRow task={task} />
-          </Fragment>
-        ))}
-        {timed.length > 0 && markerIndex === -1 && nowMarker}
-        {timed.length === 0 && <div className="date-group-empty">Give a task a time, like “Call Alex at 3pm”, and it appears here.</div>}
-      </div>
+      {tasks.length === 0 ? (
+        <ClearHorizon />
+      ) : (
+        <>
+          {timed.length > 0 && (
+            <>
+              <div className="board-section-label">
+                <span>Schedule</span>
+                <span className="board-section-count">{timed.length}</span>
+              </div>
+              <div className="task-list is-schedule" role="list">
+                {timed.map((task, index) => (
+                  <Fragment key={task.id}>
+                    {index === markerIndex && (
+                      <div className="now-marker" role="presentation">
+                        <span className="now-marker-label">Now · {formatClock(nowMinutes)}</span>
+                      </div>
+                    )}
+                    <TaskRow task={task} />
+                  </Fragment>
+                ))}
+                {markerIndex === -1 && (
+                  <div className="now-marker" role="presentation">
+                    <span className="now-marker-label">Now · {formatClock(nowMinutes)}</span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
-      <div className="board-section-label">
-        <span>Anytime</span>
-        <span className="board-section-count">{anytime.length}</span>
-      </div>
-      <div className="task-list" role="list">
-        {anytime.map(task => (
-          <TaskRow key={task.id} task={task} />
-        ))}
-        {anytime.length === 0 && <div className="date-group-empty">Tasks without a time land here.</div>}
-      </div>
+          {anytime.length > 0 && (
+            <>
+              <div className="board-section-label">
+                <span>Anytime</span>
+                <span className="board-section-count">{anytime.length}</span>
+              </div>
+              <div className="task-list" role="list">
+                {anytime.map(task => (
+                  <TaskRow key={task.id} task={task} />
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
 
       <DropSlots dateKey={today} tasks={tasks} />
     </section>
