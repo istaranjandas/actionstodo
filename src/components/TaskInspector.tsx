@@ -1,11 +1,13 @@
 // Task details: an in-world editing screen for one task (side console on desktop, bottom sheet on phones)
 import { useEffect, useRef, useState } from 'react';
-import { CalendarDays, Check, Clock3, RotateCcw, Trash2, X } from 'lucide-react';
+import { CalendarDays, Check, Clock3, Repeat2, RotateCcw, Trash2, X } from 'lucide-react';
 import { formatShortDate } from '../modules/dateUtils';
 import { formatTimeRangeDisplay, getDurationMinutes } from '../modules/timeUtils';
 import { updateTaskItem } from '../modules/store';
-import { moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
+import { changeTaskRepeat, moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
+import { useStore } from '../hooks/useStore';
 import { useOpenTimePopover } from './TimePopover';
+import { RepeatPicker } from './RepeatPicker';
 import type { Task } from '../types';
 import { DatePicker } from './DatePicker';
 
@@ -25,6 +27,22 @@ function formatDuration(minutes: number): string {
 
 export function TaskInspector({ task, isClosing, onClose }: TaskInspectorProps) {
   const openTimePopover = useOpenTimePopover();
+  const { tasks } = useStore();
+  // A generated day borrows its schedule from the master; the title and time stay its own.
+  const seriesMaster = task.isOccurrence && task.seriesId
+    ? tasks.find(item => item.id === task.seriesId && !item.isOccurrence) ?? null
+    : null;
+  const repeatTarget = task.isOccurrence ? seriesMaster : task;
+  const repeatNote = task.isOccurrence
+    ? seriesMaster
+      ? seriesMaster.repeat
+        ? 'Part of a repeating series. Repeat changes apply to future days; title and time here stay on this day.'
+        : 'This day came from a series that has stopped. Repeat can restart it; title and time here stay local.'
+      : 'The series that created this day has ended. This day now stands on its own.'
+    : task.repeat
+      ? 'Future days follow this schedule. Completed days keep their own history.'
+      : '';
+  const deleteLabel = task.repeat ? 'Delete series' : task.isOccurrence ? 'Delete this day' : 'Delete task';
   const [draft, setDraft] = useState(task.text);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement>(null);
@@ -139,6 +157,21 @@ export function TaskInspector({ task, isClosing, onClose }: TaskInspectorProps) 
         </div>
       </div>
 
+      <div className="inspector-repeat-field">
+        <span className="inspector-field-label">
+          <Repeat2 size={13} aria-hidden="true" /> Repeat
+        </span>
+        {repeatTarget ? (
+          <RepeatPicker
+            task={repeatTarget}
+            onChange={(rule, until) => changeTaskRepeat(repeatTarget, rule, until)}
+          />
+        ) : (
+          <span className="inspector-repeat-ended">Series ended</span>
+        )}
+        {repeatNote && <p className="inspector-repeat-note">{repeatNote}</p>}
+      </div>
+
       <dl className="inspector-meta">
         {hasTime && (
           <div>
@@ -158,7 +191,7 @@ export function TaskInspector({ task, isClosing, onClose }: TaskInspectorProps) 
 
       <button type="button" className={`inspector-delete ${isConfirmingDelete ? 'is-confirming' : ''}`} data-sfx={isConfirmingDelete ? 'none' : 'click'} onClick={requestDelete}>
         <Trash2 size={15} strokeWidth={2} aria-hidden="true" />
-        <span>{isConfirmingDelete ? 'Press again to delete' : 'Delete task'}</span>
+        <span>{isConfirmingDelete ? 'Press again to delete' : deleteLabel}</span>
       </button>
     </section>
   );

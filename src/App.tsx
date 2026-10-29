@@ -4,7 +4,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { auth, onAuthStateChanged } from './firebase';
 import { addDays, getLocalISODate, getWeekDates } from './modules/dateUtils';
-import { initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
+import { ensureRecurringOccurrences, initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
 import { setupTaskDragAndDrop } from './modules/listDrag';
 import { moveTask } from './modules/taskActions';
 import { countForView, daysFromToday, NAV_ITEMS } from './modules/navigation';
@@ -124,6 +124,15 @@ export function App() {
       }))
       .sort((a, b) => a.offset - b.offset);
   }, [tasks, today, focusDate]);
+
+  // --- Recurring series ---
+  // Materialise the rolling horizon whenever tasks arrive (login, a new series, a snapshot) and
+  // once a minute so a tab left open overnight rolls into the new day without a refresh.
+  useEffect(() => {
+    ensureRecurringOccurrences();
+    const timer = window.setInterval(ensureRecurringOccurrences, 60_000);
+    return () => window.clearInterval(timer);
+  }, [tasks]);
 
   // --- Theme ("time of day") ---
   useEffect(() => {

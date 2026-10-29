@@ -106,6 +106,14 @@
   color: var(--amber-text);
 }
 
+/* A recurrence token read straight from the command line; it is a preview, not a control */
+.repeat-chip {
+  color: var(--amber-text);
+  border: 1px solid var(--amber-line);
+  background: var(--amber-wash);
+  cursor: default;
+}
+
 /* Date and time stay collapsed until the command bar is in use, so an idle log stays one line */
 .command-bar .quick-add-chips-row {
   display: none;
