@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { RefObject } from 'react';
+import { Repeat2 } from 'lucide-react';
 import { formatShortDate, getLocalISODate } from '../modules/dateUtils';
-import { formatTimeRangeDisplay, getNextSmartSlot, parseTimeFromText } from '../modules/timeUtils';
+import { formatTimeRangeDisplay, getNextSmartSlot } from '../modules/timeUtils';
+import { parseTaskInput, repeatRuleLabel } from '../modules/recurrence';
 import { COMMAND_PREFILL_EVENT } from '../modules/commandBar';
 import { setUiState } from '../modules/store';
 import { logTask } from '../modules/taskActions';
@@ -29,11 +31,11 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
     return () => window.removeEventListener(COMMAND_PREFILL_EVENT, handlePrefill);
   }, []);
 
-  // --- Quick Add Time & Date Helpers ---
-  const parsed = parseTimeFromText(quickAddText);
+  // --- Quick Add Time, Date & Repeat Helpers ---
+  const parsed = parseTaskInput(quickAddText);
   let timeLabel: string;
   let timeIsActive = true;
-  if (parsed) {
+  if (parsed.startTime) {
     timeLabel = `✨ ${formatTimeRangeDisplay(parsed.startTime, parsed.endTime)}`;
   } else if (selectedAddStart) {
     timeLabel = formatTimeRangeDisplay(selectedAddStart, selectedAddEnd);
@@ -52,15 +54,15 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
     const rawVal = quickAddText.trim();
     if (!rawVal) return;
 
-    const parsedInput = parseTimeFromText(rawVal);
-    const text = parsedInput ? parsedInput.cleanText : rawVal;
-    const start = parsedInput ? parsedInput.startTime : selectedAddStart;
-    const end = parsedInput ? parsedInput.endTime : selectedAddEnd;
+    const parsedInput = parseTaskInput(rawVal);
+    const text = parsedInput.cleanText;
+    const start = parsedInput.startTime || selectedAddStart;
+    const end = parsedInput.startTime ? parsedInput.endTime : selectedAddEnd;
 
     setCommitCount(count => count + 1);
     setQuickAddText('');
     setUiState({ selectedAddStart: '', selectedAddEnd: '' });
-    await logTask(text, selectedAddDate, start, end);
+    await logTask(text, selectedAddDate, start, end, parsedInput.repeat);
   };
 
   return (
@@ -109,6 +111,16 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
               onChange={(date) => setUiState({ selectedAddDate: date })}
             />
           </div>
+
+          {parsed.repeat && (
+            <span
+              className="chip-btn repeat-chip is-active"
+              title={`${repeatRuleLabel(parsed.repeat)} · detected from your text. Remove those words to stop repeating.`}
+            >
+              <Repeat2 size={11} strokeWidth={2.2} aria-hidden="true" />
+              <span>{repeatRuleLabel(parsed.repeat)}</span>
+            </span>
+          )}
 
           <div className="picker-chip-wrap">
             <button

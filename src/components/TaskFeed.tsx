@@ -1,8 +1,9 @@
 import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
-import { ChevronRight, Plus } from 'lucide-react';
+import { ChevronRight, Plus, Repeat2 } from 'lucide-react';
 import { formatFriendlyDate, formatShortDate, getLocalISODate } from '../modules/dateUtils';
-import { addMinutesToTime, formatTimeRangeDisplay, parseTimeFromText } from '../modules/timeUtils';
+import { addMinutesToTime, formatTimeRangeDisplay } from '../modules/timeUtils';
+import { parseTaskInput, repeatBadgeLabel, repeatShortLabel } from '../modules/recurrence';
 import { sortTaskList, tallyTasks, updateTaskItem } from '../modules/store';
 import { getDropSlots, taskDuration } from '../modules/listDrag';
 import { logTask, moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
@@ -211,9 +212,9 @@ function DayCardAdd({ date, dayLabel }: { date: string; dayLabel: string }) {
       close();
       return;
     }
-    const parsed = parseTimeFromText(raw);
+    const parsed = parseTaskInput(raw);
     setText('');
-    void logTask(parsed ? parsed.cleanText : raw, date, parsed?.startTime ?? '', parsed?.endTime ?? '');
+    void logTask(parsed.cleanText, date, parsed.startTime, parsed.endTime, parsed.repeat);
   };
 
   if (!isOpen) {
@@ -238,7 +239,7 @@ function DayCardAdd({ date, dayLabel }: { date: string; dayLabel: string }) {
         ref={inputRef}
         type="text"
         className="day-card-add-input"
-        placeholder="New task… try “at 3pm”"
+        placeholder="New task… try “at 3pm” or “daily”"
         aria-label={`New task for ${dayLabel}`}
         autoComplete="off"
         enterKeyHint="done"
@@ -393,6 +394,7 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
   const hasTime = Boolean(task.startTime);
   const timeDisplay = hasTime ? formatTimeRangeDisplay(task.startTime, task.endTime) : '+ 30m';
   const isSelected = selectedTaskId === task.id;
+  const repeatLabel = repeatBadgeLabel(task);
 
   // Inline edit text: double-click (or F2) to edit; single click opens the details panel; drag moves the task
   const { textRef, isEditing, startEditing, handleBlur, handleKeyDown } = useInlineTextEdit({
@@ -509,6 +511,16 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
             handleKeyDown(e);
           }}
         />
+        {repeatLabel && (
+          <span
+            className={`task-repeat-badge ${task.repeat ? 'is-series' : ''}`}
+            title={repeatLabel}
+            aria-label={repeatLabel}
+          >
+            <Repeat2 size={11} strokeWidth={2.2} aria-hidden="true" />
+            {task.repeat && <span>{repeatShortLabel(task.repeat)}</span>}
+          </span>
+        )}
       </div>
 
       <div className="task-meta">
@@ -525,8 +537,8 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
         <button
           type="button"
           className="task-action-btn delete-btn"
-          title="Delete task"
-          aria-label="Delete task"
+          title={task.repeat ? 'Delete series' : task.isOccurrence ? 'Delete this day' : 'Delete task'}
+          aria-label={task.repeat ? 'Delete series' : task.isOccurrence ? 'Delete this day' : 'Delete task'}
           data-sfx="none"
           tabIndex={-1}
           onClick={(e) => {
