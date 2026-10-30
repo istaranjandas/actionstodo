@@ -85,6 +85,7 @@
   --cast: rgba(15, 23, 42, 0.1);
   --cast-near: rgba(15, 23, 42, 0.05);
   --scrim: rgba(15, 23, 42, 0.18);
+  --modal-scrim: rgba(15, 23, 42, 0.46);
   --sheen: rgba(255, 255, 255, 0.7);
 
   /* Ink: Slate 900 / 700 / 500 / 400 */
@@ -174,6 +175,7 @@
   --cast: rgba(0, 0, 0, 0.64);
   --cast-near: rgba(0, 0, 0, 0.42);
   --scrim: rgba(2, 5, 12, 0.56);
+  --modal-scrim: rgba(2, 5, 12, 0.72);
   --sheen: rgba(203, 213, 225, 0.06);
 
   /* Slate-50 ink: cool greys, so text never looks like it is sitting in a sepia photograph */

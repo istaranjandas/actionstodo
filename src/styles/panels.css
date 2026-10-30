@@ -847,13 +847,32 @@
    POLISH PASS: panels
    The system and arcade panels share the card material and radius.
    ========================================================================== */
+/* System settings is a modal surface: a full-screen scrim cuts the workspace back, and the
+   panel itself is opaque so task rows, checks and time labels cannot read through it.
+   The cluster's backdrop-filter would make it the containing block for the fixed scrim,
+   shrinking the scrim to the cluster's own box; drop the filter while the panel is open. */
+.system-menu.is-open {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.system-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: var(--modal-scrim);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: fadeIn var(--dur-quick) ease-out;
+}
+
 .system-panel {
   border-radius: var(--radius-xl);
   border: 1px solid var(--hud-glass-edge);
   border-left: 1px solid var(--hud-glass-edge);
-  background: var(--hud-glass-strong);
-  -webkit-backdrop-filter: var(--hud-glass-blur);
-  backdrop-filter: var(--hud-glass-blur);
+  background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   box-shadow: var(--hud-glass-shadow), 0 24px 60px -24px var(--cast);
 }
 

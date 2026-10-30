@@ -161,7 +161,7 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
   };
 
   return (
-    <div className="system-menu">
+    <div className={`system-menu ${isOpen ? 'is-open' : ''}`}>
       {/* Two keys, one glass cluster: the arcade, then the system panel */}
       <GameMenu onEnterGameMode={() => { setIsOpen(false); onEnterGameMode(); }} />
       <button
@@ -178,6 +178,9 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
         {isOpen ? <X size={18} strokeWidth={2} aria-hidden="true" /> : <Menu size={18} strokeWidth={2} aria-hidden="true" />}
         <span className="system-trigger-label">System</span>
       </button>
+
+      {/* Dim and block the workspace so task rows cannot read through the settings panel */}
+      {isOpen && <div className="system-scrim" aria-hidden="true" onClick={close} />}
 
       {isOpen && (
         <div className="system-panel" role="dialog" aria-labelledby={titleId} ref={panelRef} data-lenis-prevent>
