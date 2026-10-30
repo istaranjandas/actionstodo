@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { RefObject } from 'react';
-import { Repeat2 } from 'lucide-react';
+import { Plus, Repeat2 } from 'lucide-react';
 import { formatShortDate, getLocalISODate } from '../modules/dateUtils';
 import { formatTimeRangeDisplay, getNextSmartSlot } from '../modules/timeUtils';
 import { parseTaskInput, repeatRuleLabel } from '../modules/recurrence';
@@ -74,12 +74,15 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
       onSubmit={handleQuickAddSubmit}
     >
       <div className="quick-add-input-row">
+        <span className="quick-add-icon" aria-hidden="true">
+          <Plus size={17} strokeWidth={2.2} />
+        </span>
         <input
           type="text"
           ref={quickAddInputRef}
           className="quick-add-input"
-          placeholder="Log an objective…"
-          aria-label="Log a new task"
+          placeholder="Add a task…"
+          aria-label="Add a new task"
           aria-keyshortcuts="T"
           autoComplete="off"
           enterKeyHint="done"
@@ -93,68 +96,68 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
           }}
         />
 
-        <div className="quick-add-chips-row">
-          <div className="picker-chip-wrap">
-            <button
-              type="button"
-              className={`chip-btn date-chip ${isTodayTarget ? 'is-icon' : ''}`}
-              title={isTodayTarget ? 'Log to another day' : 'Select task date'}
-              aria-label={isTodayTarget ? 'Select task date' : undefined}
-              tabIndex={-1}
-            >
-              <CalendarIcon size={12} />
-              {!isTodayTarget && <span>{formatShortDate(selectedAddDate)}</span>}
-            </button>
-            <DatePicker
-              ariaLabel="Select date"
-              value={selectedAddDate}
-              onChange={(date) => setUiState({ selectedAddDate: date })}
-            />
-          </div>
+        <button type="submit" className="quick-add-save-btn command-submit" title="Add task (Enter) · press T to focus" aria-label="Add task" data-sfx="none">
+          <Plus size={15} strokeWidth={2.6} aria-hidden="true" />
+          <span className="command-label">Add</span>
+        </button>
+      </div>
 
-          {parsed.repeat && (
-            <span
-              className="chip-btn repeat-chip is-active"
-              title={`${repeatRuleLabel(parsed.repeat)} · detected from your text. Remove those words to stop repeating.`}
-            >
-              <Repeat2 size={11} strokeWidth={2.2} aria-hidden="true" />
-              <span>{repeatRuleLabel(parsed.repeat)}</span>
-            </span>
-          )}
-
-          <div className="picker-chip-wrap">
-            <button
-              type="button"
-              className={`chip-btn ${timeIsActive ? 'is-active' : ''}`}
-              title="Select planned completion time range (30m default)"
-              data-sfx="none"
-              onClick={(e) => {
-                e.stopPropagation();
-                openTimePopover(e.currentTarget, selectedAddStart, selectedAddEnd, { type: 'quick' });
-              }}
-            >
-              <ClockIcon size={11} />
-              <span id="quickAddTimeLabel">{timeLabel}</span>
-            </button>
-            <button
-              type="button"
-              className="clear-chip-btn"
-              style={{ display: timeIsActive ? 'inline-flex' : 'none' }}
-              title="Remove time"
-              onClick={(e) => {
-                e.stopPropagation();
-                setUiState({ selectedAddStart: '', selectedAddEnd: '' });
-              }}
-            >
-              &times;
-            </button>
-          </div>
+      <div className="quick-add-chips-row">
+        <div className="picker-chip-wrap">
+          <button
+            type="button"
+            className={`chip-btn date-chip ${isTodayTarget ? 'is-icon' : ''}`}
+            title={isTodayTarget ? 'Log to another day' : 'Select task date'}
+            aria-label={isTodayTarget ? 'Select task date' : undefined}
+            tabIndex={-1}
+          >
+            <CalendarIcon size={12} />
+            {!isTodayTarget && <span>{formatShortDate(selectedAddDate)}</span>}
+          </button>
+          <DatePicker
+            ariaLabel="Select date"
+            value={selectedAddDate}
+            onChange={(date) => setUiState({ selectedAddDate: date })}
+          />
         </div>
 
-        <button type="submit" className="quick-add-save-btn command-submit" title="Log objective (Enter) · press T to focus" aria-label="Add task" data-sfx="none">
-          <span className="command-label">Log</span>
-          <span className="command-key" aria-hidden="true">↵</span>
-        </button>
+        {parsed.repeat && (
+          <span
+            className="chip-btn repeat-chip is-active"
+            title={`${repeatRuleLabel(parsed.repeat)} · detected from your text. Remove those words to stop repeating.`}
+          >
+            <Repeat2 size={11} strokeWidth={2.2} aria-hidden="true" />
+            <span>{repeatRuleLabel(parsed.repeat)}</span>
+          </span>
+        )}
+
+        <div className="picker-chip-wrap">
+          <button
+            type="button"
+            className={`chip-btn ${timeIsActive ? 'is-active' : ''}`}
+            title="Select planned completion time range (30m default)"
+            data-sfx="none"
+            onClick={(e) => {
+              e.stopPropagation();
+              openTimePopover(e.currentTarget, selectedAddStart, selectedAddEnd, { type: 'quick' });
+            }}
+          >
+            <ClockIcon size={11} />
+            <span id="quickAddTimeLabel">{timeLabel}</span>
+          </button>
+          <button
+            type="button"
+            className="clear-chip-btn"
+            style={{ display: timeIsActive ? 'inline-flex' : 'none' }}
+            title="Remove time"
+            onClick={(e) => {
+              e.stopPropagation();
+              setUiState({ selectedAddStart: '', selectedAddEnd: '' });
+            }}
+          >
+            &times;
+          </button>
+        </div>
       </div>
     </form>
   );
