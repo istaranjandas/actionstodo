@@ -1,10 +1,11 @@
 // Main Application Shell & UI Coordinator
-// Manual mode: the lantern path — a 3D valley where each day is a waypost and each task a lantern —
-// with a day slate, a details slate and the path ribbon floating in it. Game mode: the quest arena.
+// Manual mode: a full-screen dashboard workspace — a compact day header, a focus-first task log,
+// a quick-add command bar and a bottom lens dock. Game mode: the quest arena.
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CheckCheck } from 'lucide-react';
 import { auth, onAuthStateChanged } from './firebase';
-import { addDays, getLocalISODate, getWeekDates } from './modules/dateUtils';
-import { ensureRecurringOccurrences, initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
+import { addDays, getLocalISODate } from './modules/dateUtils';
+import { ensureRecurringOccurrences, initFirestoreSync, setUiState, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
 import { setupTaskDragAndDrop } from './modules/listDrag';
 import { moveTask } from './modules/taskActions';
 import { countForView, daysFromToday, NAV_ITEMS } from './modules/navigation';
@@ -21,15 +22,10 @@ import { usePreservedValue } from './hooks/usePreservedValue';
 import { playUiSound } from './audio/uiSounds';
 import { swellAmbientMusic } from './audio/ambientMusic';
 import { rewardCompletedQuests } from './game/state/gameProgress';
-import { WorldStage } from './world/WorldStage';
-import { worldBridge } from './world/worldBridge';
-import type { WorldDay } from './world/worldBridge';
-import { clampDayOffset, FUTURE_DAY_LIMIT, PAST_DAY_LIMIT } from './world/trail';
-import type { WorldLens } from './world/worldViews';
+import { FUTURE_DAY_LIMIT, PAST_DAY_LIMIT } from './world/trail';
 import { Dock } from './components/Dock';
 import { SystemMenu } from './components/SystemMenu';
 import { DaySlate } from './components/DaySlate';
-import { WorldLabels } from './components/WorldLabels';
 import { TaskFeed } from './components/TaskFeed';
 import { TaskInspector } from './components/TaskInspector';
 import { TaskSelectionContext } from './components/TaskSelection';
@@ -42,7 +38,7 @@ import type { ViewportMode } from './components/ViewportModeToggle';
 import { WeekTable } from './components/WeekTable';
 import { TimePopover, TimePopoverContext } from './components/TimePopover';
 import type { OpenTimePopover, TimePopoverHandle } from './components/TimePopover';
-import type { Task, Theme, TimePopoverContext as PopoverTarget, ViewName } from './types';
+import type { Theme, TimePopoverContext as PopoverTarget, ViewName } from './types';
 
 const HEADER_CONDENSE_OFFSET = 12;
 const VIEWPORT_MODE_KEY = 'actionstodo_viewport_mode';
@@ -60,7 +56,7 @@ function readInitialViewportMode(): ViewportMode {
 
 export function App() {
   const appState = useStore();
-  const { prefersReducedMotion, isTouchDevice, hasFinePointer } = useMotionProfile();
+  const { prefersReducedMotion, isTouchDevice } = useMotionProfile();
   // Animations are off unless the System panel turns them on, so low-end machines stay responsive
   const { animationsEnabled } = useDisplaySettings();
   const reducedMotion = prefersReducedMotion || !animationsEnabled;
@@ -69,8 +65,6 @@ export function App() {
   const isCompact = !isWide;
   const [theme, setTheme] = useState<Theme>(readRenderedTheme);
   const [weekOffset, setWeekOffset] = useState(0);
-  // "DONE" in the slate header is a toggle: finished work stays out of the log unless asked for
-  const [showDone, setShowDone] = useState(true);
   const [scrollPane, setScrollPane] = useState<HTMLElement | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [viewportMode, setViewportMode] = useState<ViewportMode>(readInitialViewportMode);
@@ -87,11 +81,8 @@ export function App() {
   const isTableView = appState.isTableView && !isNonDesktop;
   // A picked date, or the Today lens, focuses one waypost; the other lenses frame a stretch of path
   const focusDate = isTableView ? null : specificDateFilter ?? (currentView === 'today' ? today : null);
-  // One day reads as a single column beside its waypost; the multi-day lenses spread into a grid of day cards
+  // One day reads as a single column; the multi-day lenses spread into a grid of day cards
   const isGridView = !isTableView && !focusDate;
-  const worldLens: WorldLens = isTableView ? 'planner' : focusDate ? 'day' : (currentView as WorldLens);
-  const focusOffset = focusDate ? clampDayOffset(daysFromToday(focusDate)) : 0;
-  const weekStartOffset = daysFromToday(getWeekDates(0)[0]);
   const activeLens: NavKey | null = isTableView ? 'planner' : specificDateFilter ? null : currentView;
   const viewKey = isTableView ? 'planner' : specificDateFilter ? `date:${specificDateFilter}` : currentView;
   const selectedTask = selectedTaskId ? tasks.find(t => t.id === selectedTaskId) ?? null : null;
@@ -100,30 +91,6 @@ export function App() {
   const lensCounts = useMemo(() => Object.fromEntries(NAV_ITEMS.map(item => [item.key, countForView(item.key, tasks)])), [tasks, today]);
   const viewSummary = useMemo(() => summarizeView(tasks, currentView, specificDateFilter), [tasks, currentView, specificDateFilter, today]);
   const viewTasks = viewSummary.tasks;
-
-  // Wayposts for every day on the path that has tasks, plus today and the focused day
-  const worldDays = useMemo<WorldDay[]>(() => {
-    const byDate = new Map<string, Task[]>();
-    const isOnPath = (date: string) => {
-      const offset = daysFromToday(date);
-      return offset >= -PAST_DAY_LIMIT && offset <= FUTURE_DAY_LIMIT;
-    };
-    tasks.forEach(task => {
-      if (!task.date || !isOnPath(task.date)) return;
-      if (!byDate.has(task.date)) byDate.set(task.date, []);
-      byDate.get(task.date)!.push(task);
-    });
-    [today, focusDate].forEach(date => {
-      if (date && isOnPath(date) && !byDate.has(date)) byDate.set(date, []);
-    });
-    return Array.from(byDate.entries())
-      .map(([date, dayTasks]) => ({
-        date,
-        offset: daysFromToday(date),
-        tasks: sortTaskList(dayTasks, true).map(task => ({ id: task.id, text: task.text, completed: task.completed, startTime: task.startTime }))
-      }))
-      .sort((a, b) => a.offset - b.offset);
-  }, [tasks, today, focusDate]);
 
   // --- Recurring series ---
   // Materialise the rolling horizon whenever tasks arrive (login, a new series, a snapshot) and
@@ -218,8 +185,8 @@ export function App() {
     return () => cancelAnimationFrame(frame);
   }, [viewKey, scroller]);
 
-  // Every move along the path is a camera journey: the world flies, the soundtrack breathes with it
-  const journeyKey = `${worldLens}:${focusOffset}`;
+  // Every move through the workspace is a small journey: the soundtrack breathes with it
+  const journeyKey = viewKey;
   const previousJourneyKey = useRef(journeyKey);
   useEffect(() => {
     if (previousJourneyKey.current === journeyKey) return;
@@ -293,17 +260,7 @@ export function App() {
     if (selectedTaskId && !tasks.some(t => t.id === selectedTaskId)) setSelectedTaskId(null);
   }, [tasks, selectedTaskId]);
 
-  // The world reads focus and selection directly, and calls back into the interface on clicks
-  useEffect(() => {
-    worldBridge.focusDate = focusDate;
-    worldBridge.selectedTaskId = selectedTaskId;
-    worldBridge.onOpenTask = (taskId) => {
-      playUiSound('open');
-      openTask(taskId);
-    };
-    worldBridge.onFocusDay = focusDay;
-  }, [focusDate, selectedTaskId, openTask, focusDay]);
-
+  // The world used to read focus and selection directly; the dashboard keeps selection in React
   const taskSelection = useMemo(() => ({ selectedTaskId, openTask }), [selectedTaskId, openTask]);
 
   const handleEscape = useCallback(() => {
@@ -396,24 +353,30 @@ export function App() {
         )}
 
         {viewportMode === 'manual' && (
-          <>
-            <WorldStage
-              lens={worldLens}
-              focusOffset={focusOffset}
-              weekStartOffset={weekStartOffset}
-              days={worldDays}
-              theme={theme}
-              reducedMotion={reducedMotion}
-              hasFinePointer={hasFinePointer}
-              isCompact={isCompact}
-              scroller={scroller}
-            />
+          <div className={`dashboard-shell ${isTableView ? 'is-planner' : ''} ${isGridView ? 'is-grid-view' : ''} ${selectedTask && !isCompact ? 'has-inspector' : ''}`}>
+            <header className="dash-topbar">
+              <div className="dash-brand">
+                <span className="dash-brand-mark" aria-hidden="true">
+                  <CheckCheck size={20} strokeWidth={2.4} />
+                </span>
+                <span className="dash-brand-copy">
+                  <strong>Actionstodo</strong>
+                  <span>Focus workspace</span>
+                </span>
+              </div>
 
-            <div className={`game-shell hud-dark ${isTableView ? 'is-planner' : ''} ${isGridView ? 'is-grid-view' : ''} ${selectedTask && !isCompact ? 'has-inspector' : ''}`}>
-              <WorldLabels days={worldDays} focusDate={focusDate} today={today} onFocusDay={focusDay} />
-              {/* Multi-day boards dim and soften the world behind them so every row stays legible */}
-              {(isGridView || isTableView) && <div className="hud-scrim" aria-hidden="true" />}
+              <div className="dash-topbar-actions">
+                <SystemMenu
+                  appState={appState}
+                  theme={theme}
+                  onSetTheme={applyTheme}
+                  onEnterGameMode={() => changeViewportMode('game')}
+                  onOpenControls={() => setIsShortcutsOpen(true)}
+                />
+              </div>
+            </header>
 
+            <div className="dash-main">
               {isTableView ? (
                 <div className="planner-board">
                   <WeekTable
@@ -429,43 +392,33 @@ export function App() {
                 <DaySlate
                   label="Task log"
                   layout={isGridView ? 'grid' : 'column'}
-                  title={isGridView ? 'All objectives' : null}
+                  title={isGridView ? 'All tasks' : null}
                   summary={viewSummary}
                   isScrolled={isScrolled}
-                  isDoneLens={!focusDate && currentView === 'completed'}
                   backLabel={backLabel}
                   onBack={returnToLens}
                   date={isGridView ? null : headerDate}
                   onPickDate={focusDay}
-                  showDone={showDone}
-                  onToggleDone={() => setShowDone(shown => !shown)}
+                  onPrevDay={() => stepDay(-1)}
+                  onNextDay={() => stepDay(1)}
                   scrollRef={setScrollPane}
                   command={<QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} />}
                 >
-                  {/* Keyed by view so the log re-deploys whenever you move along the path */}
-                  <TaskFeed key={viewKey} appState={appState} viewTasks={viewTasks} layout={isGridView ? 'grid' : 'column'} hideCompleted={!showDone} />
+                  {/* Keyed by view so the log re-deploys whenever you move through the workspace */}
+                  <TaskFeed key={viewKey} appState={appState} viewTasks={viewTasks} layout={isGridView ? 'grid' : 'column'} />
                 </DaySlate>
               )}
 
               {!isCompact && !isTableView && <InspectorSlate task={selectedTask} onClose={closeTask} />}
-
-              <Dock
-                activeLens={activeLens}
-                lensCounts={lensCounts}
-                showPlanner={!isNonDesktop}
-                onSelectLens={selectLens}
-              />
-
-              {/* After the ribbon: on desktop the system cluster closes the same top dock */}
-              <SystemMenu
-                appState={appState}
-                theme={theme}
-                onSetTheme={applyTheme}
-                onEnterGameMode={() => changeViewportMode('game')}
-                onOpenControls={() => setIsShortcutsOpen(true)}
-              />
             </div>
-          </>
+
+            <Dock
+              activeLens={activeLens}
+              lensCounts={lensCounts}
+              showPlanner={!isNonDesktop}
+              onSelectLens={selectLens}
+            />
+          </div>
         )}
 
         <div className="hud-dark hud-portal">

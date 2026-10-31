@@ -1,11 +1,11 @@
 import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
-import { ChevronRight, Plus, Repeat2 } from 'lucide-react';
+import { Check, ChevronRight, Pencil, Plus, Repeat2, Trash2 } from 'lucide-react';
 import { formatFriendlyDate, formatShortDate, getLocalISODate } from '../modules/dateUtils';
 import { addMinutesToTime, formatTimeRangeDisplay } from '../modules/timeUtils';
 import { parseTaskInput, repeatBadgeLabel, repeatShortLabel } from '../modules/recurrence';
 import { sortTaskList, tallyTasks, updateTaskItem } from '../modules/store';
-import { getDropSlots, taskDuration } from '../modules/listDrag';
+import { getDropSlots } from '../modules/listDrag';
 import { logTask, moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
 import { useInlineTextEdit } from '../hooks/useInlineTextEdit';
 import { useMinuteClock } from '../hooks/useMinuteClock';
@@ -22,15 +22,13 @@ interface TaskFeedProps {
   // The view's tasks from summarizeView, the same list the slate header and lens badges count
   viewTasks: Task[];
   layout: FeedLayout;
-  // The DONE toggle in the slate header: off means finished rows stay hidden
-  hideCompleted: boolean;
 }
 
 const EMPTY_MESSAGES: Record<string, string> = {
   upcoming: 'Nothing scheduled ahead. Add a task and pick a future date.',
   'this-week': 'Nothing planned for this week yet.',
   completed: 'No completed tasks yet. Finish one and it lands here.',
-  all: 'No tasks yet. Log one above, or press N.'
+  all: 'No tasks yet. Add one above to get started.'
 };
 
 export function getSortedDateGroups(appState: AppState, filtered: Task[]): { dateKey: string; tasks: Task[] }[] {
@@ -75,7 +73,7 @@ export function getSortedDateGroups(appState: AppState, filtered: Task[]): { dat
   return sortedDates.map(dateKey => ({ dateKey, tasks: sortTaskList(groupsMap.get(dateKey) || [], true) }));
 }
 
-export function TaskFeed({ appState, viewTasks, layout, hideCompleted }: TaskFeedProps) {
+export function TaskFeed({ appState, viewTasks, layout }: TaskFeedProps) {
   const groups = useMemo(
     () => getSortedDateGroups(appState, viewTasks),
     [viewTasks, appState.currentView, appState.specificDateFilter]
@@ -85,34 +83,17 @@ export function TaskFeed({ appState, viewTasks, layout, hideCompleted }: TaskFee
   // Day cards take new tasks inline, except in Done (finished work only)
   const canAddInCard = isGrid && appState.currentView !== 'completed';
 
-  // Hiding done work drops it from the rows (and drops a day that has nothing left open)
-  const visibleGroups = useMemo(
-    () =>
-      hideCompleted
-        ? groups
-            .map(group => ({ ...group, tasks: group.tasks.filter(task => !task.completed) }))
-            .filter(group => group.tasks.length > 0)
-        : groups,
-    [groups, hideCompleted]
-  );
-  const somethingHidden = hideCompleted && groups.some(group => group.tasks.some(task => task.completed));
-
   if (isTodayBoard) {
-    const todayTasks = visibleGroups[0]?.tasks ?? [];
-    return <TodayBoard tasks={todayTasks} allDone={todayTasks.length === 0 && somethingHidden} />;
+    return <TodayBoard tasks={groups[0]?.tasks ?? []} />;
   }
 
-  if (visibleGroups.length === 0) {
-    return (
-      <div className="empty-state">
-        {somethingHidden ? 'Everything here is done. Click DONE to show it.' : EMPTY_MESSAGES[appState.currentView] ?? 'No tasks found for this view.'}
-      </div>
-    );
+  if (groups.length === 0) {
+    return <div className="empty-state">{EMPTY_MESSAGES[appState.currentView] ?? 'No tasks found for this view.'}</div>;
   }
 
   return (
     <>
-      {visibleGroups.map(({ dateKey, tasks }, index) => (
+      {groups.map(({ dateKey, tasks }, index) => (
         <DateGroup key={dateKey} dateKey={dateKey} groupTasks={tasks} staggerIndex={index} isCard={isGrid} canAdd={canAddInCard} />
       ))}
     </>
@@ -149,6 +130,8 @@ function DropSlots({ dateKey, tasks }: { dateKey: string; tasks: Task[] }) {
 const DateGroup = memo(function DateGroup({ dateKey, groupTasks, staggerIndex, isCard, canAdd }: DateGroupProps) {
   const { title, sub } = formatFriendlyDate(dateKey);
   const { done: completedCount, total } = tallyTasks(groupTasks);
+  const pendingTasks = groupTasks.filter(task => !task.completed);
+  const completedTasks = groupTasks.filter(task => task.completed);
   const progressPercent = total ? Math.round((completedCount / total) * 100) : 0;
   const today = getLocalISODate();
   const dayTone = dateKey === today ? 'is-today' : dateKey < today ? 'is-past' : '';
@@ -179,11 +162,14 @@ const DateGroup = memo(function DateGroup({ dateKey, groupTasks, staggerIndex, i
         </div>
       )}
       <div className="task-list" role="list" id={`group-list-${dateKey}`}>
-        {groupTasks.map(task => (
+        {pendingTasks.map(task => (
           <TaskRow key={task.id} task={task} />
         ))}
-        {groupTasks.length === 0 && <div className="date-group-empty">{canAddHere ? 'Nothing planned yet.' : 'Nothing planned yet — log one above.'}</div>}
+        {pendingTasks.length === 0 && (
+          <div className="date-group-empty">{completedTasks.length ? 'All done for this day.' : canAddHere ? 'Nothing planned yet.' : 'Nothing planned yet — log one above.'}</div>
+        )}
       </div>
+      <CompletedTasks tasks={completedTasks} />
       <DropSlots dateKey={dateKey} tasks={groupTasks} />
       {canAddHere && <DayCardAdd date={dateKey} dayLabel={title} />}
     </section>
@@ -267,13 +253,6 @@ const toMinutes = (time: string) => {
   return hours * 60 + minutes;
 };
 
-function formatGap(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return rest ? `${hours} h ${rest} min` : `${hours} h`;
-}
-
 function formatClock(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   return `${hours % 12 || 12}:${String(minutes % 60).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
@@ -281,43 +260,59 @@ function formatClock(minutes: number): string {
 
 // An empty day says one quiet line and stops; the command bar above is the only call to action
 function TodayEmpty({ allDone }: { allDone: boolean }) {
-  return <p className="today-empty">{allDone ? 'All done for today.' : 'No tasks for today.'}</p>;
+  return <p className="today-empty">{allDone ? 'All done for today.' : 'No tasks for today. Add one above to start your day.'}</p>;
 }
 
-function TodayBoard({ tasks, allDone }: { tasks: Task[]; allDone: boolean }) {
+// Finished work is kept, but folded away: pending tasks own the board, completed ones wait below.
+function CompletedTasks({ tasks }: { tasks: Task[] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  // Finished work sits below the pending log: opening it should bring the drawer into view
+  useEffect(() => {
+    if (isOpen) sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [isOpen]);
+  if (tasks.length === 0) return null;
+
+  return (
+    <section ref={sectionRef} className={`completed-section ${isOpen ? 'is-open' : ''}`}>
+      <button
+        type="button"
+        className="completed-toggle"
+        aria-expanded={isOpen}
+        data-sfx="select"
+        onClick={() => setIsOpen(open => !open)}
+      >
+        <span className="completed-toggle-icon" aria-hidden="true">
+          <Check size={13} strokeWidth={2.6} />
+        </span>
+        <span className="completed-toggle-label">Completed</span>
+        <span className="completed-count">{tasks.length}</span>
+        <ChevronRight className="completed-chevron" size={15} strokeWidth={2.2} aria-hidden="true" />
+      </button>
+      {isOpen && (
+        <div className="task-list completed-list" role="list">
+          {tasks.map(task => (
+            <TaskRow key={task.id} task={task} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TodayBoard({ tasks }: { tasks: Task[] }) {
   const today = getLocalISODate();
   const nowMinutes = useMinuteClock();
-  const { openTask } = useTaskSelection();
-  const timed = tasks.filter(t => t.startTime);
-  const anytime = tasks.filter(t => !t.startTime);
-  // Only a task still ahead (or running) earns the banner; an empty day says nothing at all
-  const nextUp = timed.find(t => !t.completed && toMinutes(t.startTime) + taskDuration(t) > nowMinutes);
+  const pending = tasks.filter(task => !task.completed);
+  const completed = tasks.filter(task => task.completed);
+  const timed = pending.filter(t => t.startTime);
+  const anytime = pending.filter(t => !t.startTime);
   const markerIndex = timed.findIndex(t => toMinutes(t.startTime) > nowMinutes);
-
-  let nextUpTiming = '';
-  if (nextUp) {
-    const start = toMinutes(nextUp.startTime);
-    nextUpTiming = start > nowMinutes
-      ? `Starts in ${formatGap(start - nowMinutes)}`
-      : `In progress · ends in ${formatGap(start + taskDuration(nextUp) - nowMinutes)}`;
-  }
 
   return (
     <section className="date-group today-board is-today" data-date={today} data-drop-date={today}>
-      {nextUp && (
-        <button type="button" className="next-up" data-sfx="open" onClick={() => openTask(nextUp.id)}>
-          <span className="next-up-label">Next up</span>
-          <span className="next-up-text">{nextUp.text}</span>
-          <span className="next-up-meta">
-            <span className="next-up-time">{formatTimeRangeDisplay(nextUp.startTime, nextUp.endTime)}</span>
-            <span className="next-up-eta">{nextUpTiming}</span>
-          </span>
-          <ChevronRight className="next-up-chevron" size={18} aria-hidden="true" />
-        </button>
-      )}
-
-      {tasks.length === 0 ? (
-        <TodayEmpty allDone={allDone} />
+      {pending.length === 0 ? (
+        <TodayEmpty allDone={completed.length > 0} />
       ) : (
         <>
           {timed.length > 0 && (
@@ -362,6 +357,7 @@ function TodayBoard({ tasks, allDone }: { tasks: Task[]; allDone: boolean }) {
         </>
       )}
 
+      <CompletedTasks tasks={completed} />
       <DropSlots dateKey={today} tasks={tasks} />
     </section>
   );
@@ -392,7 +388,7 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
   const { selectedTaskId, openTask } = useTaskSelection();
   const [justCompleted, setJustCompleted] = useState(false);
   const hasTime = Boolean(task.startTime);
-  const timeDisplay = hasTime ? formatTimeRangeDisplay(task.startTime, task.endTime) : '+ 30m';
+  const timeDisplay = hasTime ? formatTimeRangeDisplay(task.startTime, task.endTime) : 'Anytime';
   const isSelected = selectedTaskId === task.id;
   const repeatLabel = repeatBadgeLabel(task);
 
@@ -433,7 +429,7 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
       aria-label={`${task.text}${hasTime ? `, ${timeDisplay}` : ''}${task.completed ? ', completed' : ''}`}
       aria-current={isSelected ? 'true' : undefined}
       draggable={!isEditing}
-      title="Click for details · Double-click to rename · Drag to move"
+      title="Click to edit · Double-click to rename · Drag to move"
       onClick={(e) => {
         if ((e.target as Element).closest('button, input') || isEditing) return;
         openTask(task.id);
@@ -536,6 +532,20 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
         </div>
         <button
           type="button"
+          className="task-action-btn edit-btn"
+          title="Edit task"
+          aria-label="Edit task"
+          data-sfx="open"
+          tabIndex={-1}
+          onClick={(e) => {
+            e.stopPropagation();
+            openTask(task.id);
+          }}
+        >
+          <Pencil size={14} strokeWidth={2} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
           className="task-action-btn delete-btn"
           title={task.repeat ? 'Delete series' : task.isOccurrence ? 'Delete this day' : 'Delete task'}
           aria-label={task.repeat ? 'Delete series' : task.isOccurrence ? 'Delete this day' : 'Delete task'}
@@ -546,24 +556,9 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
             removeTask(task);
           }}
         >
-          &times;
+          <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
         </button>
       </div>
-
-      <button
-        type="button"
-        className="task-open-btn"
-        aria-label="Open task details"
-        title="Details (Enter)"
-        data-sfx="open"
-        tabIndex={-1}
-        onClick={(e) => {
-          e.stopPropagation();
-          openTask(task.id);
-        }}
-      >
-        <ChevronRight size={16} strokeWidth={2.2} aria-hidden="true" />
-      </button>
     </div>
   );
 });
