@@ -152,11 +152,35 @@
   color: var(--dash-amber);
 }
 
+/* The trigger is the modal's close key: keep it above the scrim on every screen size */
+.dashboard-shell .system-trigger {
+  position: relative;
+  z-index: 1001;
+}
+
 .dashboard-shell .system-panel {
   top: calc(100% + 10px);
   border-color: var(--dash-border);
   background: var(--dash-panel);
   box-shadow: 0 34px 80px -36px rgba(0, 0, 0, 0.9);
+}
+
+/* On phones and tablets the panel is fixed to the viewport, not to the cluster. The old
+   `top: calc(100% + 10px)` resolved against the viewport once the open menu dropped its
+   backdrop-filter, parking the panel one screen below the scrim. Anchor it under the
+   header and cap it to the visible height. */
+@media (max-width: 1024px) {
+  .dashboard-shell .system-panel {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 60px);
+    right: max(10px, env(safe-area-inset-right, 0px));
+    left: auto;
+    width: min(360px, calc(100vw - 20px));
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 70px - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 70px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 
 /* ---------- Main work surface ---------- */
