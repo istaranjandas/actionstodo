@@ -151,8 +151,18 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
 
   useEffect(() => {
     if (!isOpen) return;
+    // A click can land on a child the anchor's re-render just replaced, leaving the target
+    // detached, so membership needs the geometry fallback (same trick as useDismissiblePopup).
+    const hitsAnchor = (target: Node, x: number, y: number) => {
+      const anchor = anchorEl;
+      if (!anchor) return false;
+      if (anchor.contains(target)) return true;
+      const rect = anchor.getBoundingClientRect();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    };
     const handleDocumentClick = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)
+          && !hitsAnchor(e.target as Node, e.clientX, e.clientY)) {
         dismissTimePopover();
       }
     };
@@ -165,7 +175,7 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
       document.removeEventListener('click', handleDocumentClick);
       document.removeEventListener('keydown', handleKeydown);
     };
-  }, [isOpen, dismissTimePopover]);
+  }, [isOpen, dismissTimePopover, anchorEl]);
 
   return (
     <>
