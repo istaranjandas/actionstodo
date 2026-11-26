@@ -4,7 +4,7 @@
    Today and a picked date keep the single left-anchored column (see shell.css / feed.css).
    ========================================================================== */
 
-/* World dimmer behind the multi-day boards (grid and planner). The valley stays visible: planning
+/* World dimmer behind the multi-day grid board. The valley stays visible: planning
    happens here, so the world is still the backdrop. Only the header band is held darker, because its
    telemetry sits on the world without a plate. The glass cards bring their own blur, so the scrim
    carries none (one full-screen blur over WebGL is the costliest thing a low-end machine can draw). */

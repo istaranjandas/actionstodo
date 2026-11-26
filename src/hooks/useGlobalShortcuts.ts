@@ -8,11 +8,12 @@ export interface ShortcutHandlers {
   onNewTask: () => void;
   onEscape: () => void;
   onToggleShortcuts: () => void;
+  onToggleAllDays: () => void;
   onToday: () => void;
 }
 
 // Popovers that already close themselves on Escape
-const SELF_DISMISSING_SELECTOR = '.time-popover.open, .system-panel, .arcade-panel, .devil-popup.open, .creator-popup.open, .filter-dropdown-wrap.open';
+const SELF_DISMISSING_SELECTOR = '.time-popover.open, .system-panel, .creator-popup.open, .filter-dropdown-wrap.open';
 // Anything that already does something with Enter (or sits in a dialog) keeps it
 const INTERACTIVE_SELECTOR = 'button, a[href], summary, [role="button"], [role="listitem"], [role="dialog"], [tabindex], .sheet-panel, .inspector, .shortcuts-panel, .time-popover';
 
@@ -44,7 +45,7 @@ export function useGlobalShortcuts(handlers: ShortcutHandlers, enabled: boolean)
 
       // Arrow keys step the date too, unless focus sits in a control that uses arrows itself
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-        if (target?.closest('.timeline-track, .view-nav-list, [role="listitem"], button, input, textarea, select, [contenteditable]')) return;
+        if (target?.closest('.timeline-track, [role="listitem"], button, input, textarea, select, [contenteditable]')) return;
         current.onStepNav(event.key === 'ArrowRight' ? 1 : -1);
         event.preventDefault();
         return;
@@ -63,6 +64,7 @@ export function useGlobalShortcuts(handlers: ShortcutHandlers, enabled: boolean)
       if (navItem) current.onSelectNav(navItem.key);
       else if (key === 'q') current.onStepNav(-1);
       else if (key === 'e') current.onStepNav(1);
+      else if (key === 'a') current.onToggleAllDays();
       else if (key === 't' || key === 'n' || key === '/') current.onNewTask();
       else if (event.key === '?') current.onToggleShortcuts();
       else if (event.key === 'Home') current.onToday();

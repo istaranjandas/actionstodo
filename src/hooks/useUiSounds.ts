@@ -8,7 +8,7 @@ import { isUiSound, playUiSound } from '../audio/uiSounds';
 
 const CLICKABLE_SELECTOR = 'button, [role="button"], [role="switch"], [role="radio"], a[href], summary, .inline-add-row, .chip-date-input';
 const HOVER_SELECTOR = [
-  '.view-nav-item',
+  '.slate-expander',
   '.post-label',
   '.next-up',
   '.system-trigger',

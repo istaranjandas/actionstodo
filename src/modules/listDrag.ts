@@ -57,7 +57,7 @@ const TASK_MIME = 'text/task-id';
 
 // Drop zones live anywhere in the document: day cards in the feed, beads on the timeline ribbon.
 // Any element with data-drop-date="YYYY-MM-DD" accepts a task; .date-group zones also offer time slots.
-// Feed rows start drags here; other draggers (planner chips) only need to set the text/task-id payload.
+// Feed rows start drags here; other draggers only need to set the text/task-id payload.
 export function setupTaskDragAndDrop({ getTask, onMove }: TaskDragOptions): () => void {
   let drag: DragState | null = null;
   const closestFrom = (target: EventTarget | null, selector: string) =>
@@ -103,7 +103,7 @@ export function setupTaskDragAndDrop({ getTask, onMove }: TaskDragOptions): () =
       e.dataTransfer.setData(TASK_MIME, task.id);
       e.dataTransfer.effectAllowed = 'move';
     } else {
-      // Another surface (the planner) already put its task on the payload
+      // Another surface already put its task on the payload
       task = getTask(e.dataTransfer.getData(TASK_MIME));
       if (!task) return;
     }

@@ -37,7 +37,6 @@ export interface AppState {
   selectedAddDate: string;
   selectedAddStart: string;
   selectedAddEnd: string;
-  isTableView: boolean;
   unsubscribeFirestore: (() => void) | null;
 }
 

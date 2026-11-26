@@ -2,6 +2,7 @@
 // Manual mode: the lantern path — a 3D valley where each day is a waypost and each task a lantern —
 // with a day slate, a details slate and the path ribbon floating in it. Game mode: the quest arena.
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { auth, onAuthStateChanged } from './firebase';
 import { addDays, getLocalISODate, getWeekDates } from './modules/dateUtils';
 import { ensureRecurringOccurrences, initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
@@ -13,7 +14,7 @@ import { useDisplaySettings } from './modules/displaySettings';
 import { THEME_KEY, applyThemeAttribute, readRenderedTheme } from './modules/theme';
 import { useStore } from './hooks/useStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
-import { DESKTOP_SCROLL_PANE_QUERY, NON_DESKTOP_QUERY, useMotionProfile } from './hooks/useMotionProfile';
+import { DESKTOP_SCROLL_PANE_QUERY, useMotionProfile } from './hooks/useMotionProfile';
 import { readScrollTop, restoreScrollPosition, useSmoothScroll } from './hooks/useSmoothScroll';
 import { useUiSounds } from './hooks/useUiSounds';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
@@ -26,7 +27,6 @@ import { worldBridge } from './world/worldBridge';
 import type { WorldDay } from './world/worldBridge';
 import { clampDayOffset, FUTURE_DAY_LIMIT, PAST_DAY_LIMIT } from './world/trail';
 import type { WorldLens } from './world/worldViews';
-import { Dock } from './components/Dock';
 import { SystemMenu } from './components/SystemMenu';
 import { DaySlate } from './components/DaySlate';
 import { WorldLabels } from './components/WorldLabels';
@@ -39,7 +39,6 @@ import { Toasts } from './components/Toasts';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { InspectorSlate } from './components/InspectorSlate';
 import type { ViewportMode } from './components/ViewportModeToggle';
-import { WeekTable } from './components/WeekTable';
 import { TimePopover, TimePopoverContext } from './components/TimePopover';
 import type { OpenTimePopover, TimePopoverHandle } from './components/TimePopover';
 import type { Task, Theme, TimePopoverContext as PopoverTarget, ViewName } from './types';
@@ -64,11 +63,9 @@ export function App() {
   // Animations are off unless the System panel turns them on, so low-end machines stay responsive
   const { animationsEnabled } = useDisplaySettings();
   const reducedMotion = prefersReducedMotion || !animationsEnabled;
-  const isNonDesktop = useMediaQuery(NON_DESKTOP_QUERY);
   const isWide = useMediaQuery(DESKTOP_SCROLL_PANE_QUERY);
   const isCompact = !isWide;
   const [theme, setTheme] = useState<Theme>(readRenderedTheme);
-  const [weekOffset, setWeekOffset] = useState(0);
   // "DONE" in the slate header is a toggle: finished work stays out of the log unless asked for
   const [showDone, setShowDone] = useState(true);
   const [scrollPane, setScrollPane] = useState<HTMLElement | null>(null);
@@ -86,20 +83,19 @@ export function App() {
   // Held in state so the shell re-renders when the local date changes, even with no store update
   const [today, setToday] = useState(getLocalISODate);
   const todayRef = useRef(today);
-  const isTableView = appState.isTableView && !isNonDesktop;
   // A picked date, or the Today lens, focuses one waypost; the other lenses frame a stretch of path
-  const focusDate = isTableView ? null : specificDateFilter ?? (currentView === 'today' ? today : null);
+  const focusDate = specificDateFilter ?? (currentView === 'today' ? today : null);
   // One day reads as a single column beside its waypost; the multi-day lenses spread into a grid of day cards
-  const isGridView = !isTableView && !focusDate;
-  const worldLens: WorldLens = isTableView ? 'planner' : focusDate ? 'day' : (currentView as WorldLens);
+  const isGridView = !focusDate;
+  const worldLens: WorldLens = focusDate ? 'day' : (currentView as WorldLens);
   const focusOffset = focusDate ? clampDayOffset(daysFromToday(focusDate)) : 0;
   const weekStartOffset = daysFromToday(getWeekDates(0)[0]);
-  const activeLens: NavKey | null = isTableView ? 'planner' : specificDateFilter ? null : currentView;
-  const viewKey = isTableView ? 'planner' : specificDateFilter ? `date:${specificDateFilter}` : currentView;
+  const viewKey = specificDateFilter ? `date:${specificDateFilter}` : currentView;
   const selectedTask = selectedTaskId ? tasks.find(t => t.id === selectedTaskId) ?? null : null;
   // Lens badges, the slate header and the day cards all count through summarizeView (store.ts).
   // `today` is a dependency so every count rolls over together at midnight.
-  const lensCounts = useMemo(() => Object.fromEntries(NAV_ITEMS.map(item => [item.key, countForView(item.key, tasks)])), [tasks, today]);
+  // Open tasks waiting on every other day: the count on the "Show all days" row under today's log
+  const otherDaysOpen = useMemo(() => countForView('all', tasks)! - countForView('today', tasks)!, [tasks, today]);
   const viewSummary = useMemo(() => summarizeView(tasks, currentView, specificDateFilter), [tasks, currentView, specificDateFilter, today]);
   const viewTasks = viewSummary.tasks;
 
@@ -169,15 +165,6 @@ export function App() {
       // Storage can be blocked; the theme still applies for this visit
     }
   }, []);
-
-  // --- Planner (week table) is desktop-only, as before ---
-  useEffect(() => {
-    if (isNonDesktop && state.isTableView) setUiState({ isTableView: false });
-  }, [isNonDesktop]);
-
-  useEffect(() => {
-    document.body.classList.toggle('is-table-view', isTableView);
-  }, [isTableView]);
 
   // Upcoming, Week and Done left the dock; a stale lens falls back to today's log
   useEffect(() => {
@@ -252,7 +239,7 @@ export function App() {
 
   // --- Navigation along the path ---
   const selectView = useCallback((view: ViewName) => {
-    const updates: Parameters<typeof setUiState>[0] = { isTableView: false, currentView: view, specificDateFilter: null };
+    const updates: Parameters<typeof setUiState>[0] = { currentView: view, specificDateFilter: null };
     if (state.specificDateFilter) {
       updates.selectedAddDate = getLocalISODate();
     }
@@ -261,20 +248,16 @@ export function App() {
 
   const selectLens = useCallback((key: NavKey) => {
     rememberScroll();
-    if (key === 'planner') {
-      if (!isNonDesktop) setUiState({ isTableView: true });
-      return;
-    }
     selectView(key);
-  }, [isNonDesktop, rememberScroll, selectView]);
+  }, [rememberScroll, selectView]);
 
   // Focusing a day walks to its waypost; new tasks then go to that day
   const focusDay = useCallback((date: string) => {
     rememberScroll();
     if (date === getLocalISODate()) {
-      setUiState({ isTableView: false, currentView: 'today', specificDateFilter: null, selectedAddDate: date });
+      setUiState({ currentView: 'today', specificDateFilter: null, selectedAddDate: date });
     } else {
-      setUiState({ isTableView: false, specificDateFilter: date, selectedAddDate: date });
+      setUiState({ specificDateFilter: date, selectedAddDate: date });
     }
   }, [rememberScroll]);
 
@@ -286,14 +269,13 @@ export function App() {
     focusDay(next);
   }, [focusDay]);
 
-  // Back from a picked date or the planner to the lens underneath, with its scroll intact
+  // Back from a picked date to the lens underneath, with its scroll intact
   const returnToLens = useCallback(() => {
     rememberScroll();
-    setUiState({ isTableView: false, specificDateFilter: null, selectedAddDate: getLocalISODate() });
+    setUiState({ specificDateFilter: null, selectedAddDate: getLocalISODate() });
   }, [rememberScroll]);
 
   const focusQuickAdd = useCallback(() => {
-    if (state.isTableView) setUiState({ isTableView: false });
     window.setTimeout(() => quickAddInputRef.current?.focus(), 60);
   }, []);
 
@@ -331,8 +313,14 @@ export function App() {
   const handleEscape = useCallback(() => {
     if (isShortcutsOpen) setIsShortcutsOpen(false);
     else if (selectedTaskId) closeTask();
-    else if (state.specificDateFilter || state.isTableView) returnToLens();
-  }, [isShortcutsOpen, selectedTaskId, closeTask, returnToLens]);
+    else if (state.specificDateFilter) returnToLens();
+    else if (state.currentView !== 'today') selectLens('today');
+  }, [isShortcutsOpen, selectedTaskId, closeTask, returnToLens, selectLens]);
+
+  // One tab: today's log opens into every day and folds back again
+  const toggleAllDays = useCallback(() => {
+    selectLens(state.currentView === 'all' && !state.specificDateFilter ? 'today' : 'all');
+  }, [selectLens]);
 
   useGlobalShortcuts(
     {
@@ -341,6 +329,7 @@ export function App() {
       onNewTask: focusQuickAdd,
       onEscape: handleEscape,
       onToggleShortcuts: () => setIsShortcutsOpen(open => !open),
+      onToggleAllDays: toggleAllDays,
       onToday: () => focusDay(getLocalISODate())
     },
     viewportMode === 'manual'
@@ -391,7 +380,7 @@ export function App() {
   const backTargetLabel = NAV_ITEMS.find(item => item.key === currentView)?.label ?? 'path';
   const backLabel = specificDateFilter && currentView !== 'today' ? `Back to ${backTargetLabel}` : specificDateFilter ? 'Back to today' : null;
   // The date the header shows: the focused day, or today's log
-  const headerDate = isTableView ? null : focusDate ?? today;
+  const headerDate = focusDate ?? today;
 
   const lastSheetTask = usePreservedValue(selectedTask);
 
@@ -431,24 +420,12 @@ export function App() {
               scroller={scroller}
             />
 
-            <div className={`game-shell hud-dark ${isTableView ? 'is-planner' : ''} ${isGridView ? 'is-grid-view' : ''} ${selectedTask && !isCompact ? 'has-inspector' : ''}`}>
+            <div className={`game-shell hud-dark ${isGridView ? 'is-grid-view' : ''} ${selectedTask && !isCompact ? 'has-inspector' : ''}`}>
               <WorldLabels days={worldDays} focusDate={focusDate} today={today} onFocusDay={focusDay} />
               {/* Multi-day boards dim and soften the world behind them so every row stays legible */}
-              {(isGridView || isTableView) && <div className="hud-scrim" aria-hidden="true" />}
+              {isGridView && <div className="hud-scrim" aria-hidden="true" />}
 
-              {isTableView ? (
-                <div className="planner-board">
-                  <WeekTable
-                    tasks={tasks}
-                    weekOffset={weekOffset}
-                    onPrevWeek={() => setWeekOffset(offset => offset - 1)}
-                    onNextWeek={() => setWeekOffset(offset => offset + 1)}
-                    onThisWeek={() => setWeekOffset(0)}
-                    onExitTable={returnToLens}
-                  />
-                </div>
-              ) : (
-                <DaySlate
+              <DaySlate
                   label="Tasks"
                   layout={isGridView ? 'grid' : 'column'}
                   title={isGridView ? 'All tasks' : null}
@@ -463,22 +440,28 @@ export function App() {
                   onToggleDone={() => setShowDone(shown => !shown)}
                   scrollRef={setScrollPane}
                   command={<QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} />}
+                  footer={
+                    isGridView ? (
+                      <button type="button" className="slate-expander is-back" data-sfx="close" aria-keyshortcuts="a" title="Back to today (A)" onClick={toggleAllDays}>
+                        <span>Back to today</span>
+                        <ChevronLeft size={15} strokeWidth={2.2} aria-hidden="true" />
+                      </button>
+                    ) : !specificDateFilter ? (
+                      <button type="button" className="slate-expander" data-sfx="open" aria-keyshortcuts="a" title="Show all days (A)" onClick={toggleAllDays}>
+                        <span>Show all days</span>
+                        {otherDaysOpen > 0 && <span className="slate-expander-count">{otherDaysOpen} more</span>}
+                        <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" />
+                      </button>
+                    ) : null
+                  }
                 >
                   {/* Keyed by view so the log re-deploys whenever you move along the path */}
                   <TaskFeed key={viewKey} appState={appState} viewTasks={viewTasks} layout={isGridView ? 'grid' : 'column'} hideCompleted={!showDone} />
                 </DaySlate>
-              )}
 
-              {!isCompact && !isTableView && <InspectorSlate task={selectedTask} onClose={closeTask} />}
+              {!isCompact && <InspectorSlate task={selectedTask} onClose={closeTask} />}
 
-              <Dock
-                activeLens={activeLens}
-                lensCounts={lensCounts}
-                showPlanner={!isNonDesktop}
-                onSelectLens={selectLens}
-              />
-
-              {/* After the ribbon: on desktop the system cluster closes the same top dock */}
+              {/* The mascot key in the top-right corner: profile, games and settings */}
               <SystemMenu
                 appState={appState}
                 theme={theme}

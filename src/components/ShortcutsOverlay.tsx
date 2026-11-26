@@ -9,7 +9,7 @@ const SHORTCUT_GROUPS: { title: string; items: [string[], string][] }[] = [
       [['Q'], 'Walk to the previous day'],
       [['E'], 'Walk to the next day'],
       [['Home'], 'Back to today'],
-      [['1', '–', '3'], 'Lens: Today, All, Planner'],
+      [['A'], 'Show all days · back to today'],
       [['Esc'], 'Close details · back to your lens']
     ]
   },

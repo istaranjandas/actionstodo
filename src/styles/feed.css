@@ -772,12 +772,6 @@ button.next-up:active {
   }
 }
 
-body.is-table-view .date-groups {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
 /* ---------- Tablet & phone: drag slots become a bottom sheet ---------- */
 @media (max-width: 1024px) {
   .date-group.is-drag-source .drop-slots {

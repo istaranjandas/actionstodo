@@ -1,7 +1,7 @@
 // Recurring task rules.
 //
 // One task is the series master. The app materialises other days as ordinary task rows on a
-// rolling horizon, so the calendar, planner and lantern path all show real tasks without the
+// rolling horizon, so the calendar and lantern path all show real tasks without the
 // store ever holding an infinite list. Occurrence ids are deterministic, which makes generation
 // idempotent across tabs, devices and Firestore snapshots.
 import { addDays, formatShortDate, getLocalISODate, parseISODate } from './dateUtils';

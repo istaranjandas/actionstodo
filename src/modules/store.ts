@@ -25,7 +25,6 @@ export const state: AppState = {
   selectedAddDate: getLocalISODate(),
   selectedAddStart: '',
   selectedAddEnd: '',
-  isTableView: false,
   unsubscribeFirestore: null
 };
 

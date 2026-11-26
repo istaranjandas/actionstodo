@@ -12,24 +12,24 @@ The owner, plus a small group of friends they have shared it with. Each person p
 
 ## Product Purpose
 
-Actionstodo (README name: "Todo - Do") is a daily task manager and week planner. It exists to make planning fast and to make the act of planning enjoyable, with equal weight on both. Success means capturing and scheduling a task takes seconds, and coming back to the plan each day feels calm and rewarding rather than like a chore.
+Actionstodo (README name: "Todo - Do") is a daily task manager. It exists to make planning fast and to make the act of planning enjoyable, with equal weight on both. Success means capturing and scheduling a task takes seconds, and coming back to the plan each day feels calm and rewarding rather than like a chore.
 
 ## Positioning
 
-Tasks live in a 3D valley called the Lantern Path: each day is a waypost on a trail, each task is a lantern on its day's post, and completing a task lights its lantern. The planning tools are serious (natural-language entry, time ranges, recurrence, a week planner), and the world around them is the reward.
+Tasks live in a 3D valley called the Lantern Path: each day is a waypost on a trail, each task is a lantern on its day's post, and completing a task lights its lantern. The planning tools are serious (natural-language entry, time ranges, recurrence), and the world around them is the reward.
 
 ## Operating Context
 
 - Daily use on desktop and phone, signed in with Google so tasks sync across devices in real time.
 - Works offline through `localStorage`; optional `.json` disk sync and JSON import/export for backups.
 - Quick add parses natural language ("Call Alex at 5pm", "Gym every day at 6pm").
-- Keyboard-driven navigation on desktop: `Q` / `E` walk the path, `1`–`3` switch lens.
+- Keyboard-driven navigation on desktop: `Q` / `E` walk the path, `A` shows all days and folds back to today.
 
 ## Capabilities and Constraints
 
-- Lenses: Today, All, Planner (Planner is desktop only). Done is a toggle in the slate header. Planner is a week matrix (time slots by weekday) shown as a full board over the valley.
+- One tab: today's log opens first; its "Show all days" row opens every day as a grid, and "Back to today" folds it back. Done is a toggle in the slate header.
 - Day slate beside the focused waypost; details slate for editing title, date, time and repeat rule.
-- Path ribbon: lens tabs, day beads that double as the calendar, month, jump-to-date dial and system controls. On phones it docks at the bottom.
+- Profile key: the mascot in the top-right corner opens games, sound, time of day, motion and account.
 - Recurring tasks create a rolling series of real daily tasks; each day completes independently.
 - Game mode: a separate quest arena (lazy-loaded).
 - Synthesised UI sounds and an optional ambient soundtrack, each with its own switch and volume.

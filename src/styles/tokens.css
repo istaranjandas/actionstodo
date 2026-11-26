@@ -7,7 +7,7 @@
    the matching JS constants are in src/hooks/useMotionProfile.ts):
      680px   phone          — import this, never a one-off width
      1024px  non-desktop    — narrow window or coarse pointer
-     1025px+ desktop        — the scroll pane and the planner board
+     1025px+ desktop        — the scroll pane
    ========================================================================== */
 :root {
   color-scheme: light;

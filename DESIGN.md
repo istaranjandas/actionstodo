@@ -1,6 +1,6 @@
 ---
 name: Actionstodo
-description: A lantern-path task manager and week planner; frosted glass consoles floating over a 3D valley.
+description: A lantern-path task manager; frosted glass consoles floating over a 3D valley.
 colors:
   lantern-amber: "#d97706"
   lantern-amber-deep: "#b45309"
@@ -218,14 +218,14 @@ Nothing is set below 10.5px; anything a person must read is 11px or larger.
 
 ## Layout
 
-The 3D valley fills the viewport. The console floats over it as fixed HUD pieces, inset from the edges by `--hud-inset` (36px on desktop, 24px on narrower screens, 14px on phones): the path ribbon (lens bar, day beads, month, system controls) docks at the top at 44px tall, and the day slate floats at the left at 456px wide (420px narrower). On phones the ribbon docks at the bottom (132px) with each view named beside its icon, and the slate goes full-width with square corners. Phone task rows let a long title wrap to two lines; delete lives in the details sheet, not on the row.
+The 3D valley fills the viewport. The console floats over it as fixed HUD pieces, inset from the edges by `--hud-inset` (36px on desktop, 24px on narrower screens, 14px on phones): there is no dock: the day slate opens at the top-left at 456px wide (420px narrower), and the mascot profile key sits alone in the top-right corner. On phones the slate goes full-width with square corners. Phone task rows let a long title wrap to two lines; delete lives in the details sheet, not on the row.
 
-In the All and Planner boards the valley stays visible as the backdrop: a light scrim holds only the header band darker, the cards carry their own glass blur, and waypost signs are hidden so nothing drifts between cards.
+In the All board the valley stays visible as the backdrop: a light scrim holds only the header band darker, the cards carry their own glass blur, and waypost signs are hidden so nothing drifts between cards.
 
 Breakpoints are a fixed scale; never introduce a one-off width:
 - **≤680px:** phone.
 - **≤1024px:** non-desktop (narrow window or coarse pointer).
-- **≥1025px:** desktop (scroll pane and the Planner board).
+- **≥1025px:** desktop (scroll pane).
 Hover styling is gated behind `(hover: hover)` so touch devices never get stuck hover states.
 
 Spacing is a compact 2px-step rhythm (2, 4, 6, 8, 10, 12, 14, 16px). Gaps of 8–12px between controls, 10px between task rows' parts, 12–16px inside cards. Rows are tight; the valley provides the breathing room.
@@ -237,7 +237,7 @@ Depth is layered and lifted. Three layers stack in order: the world (sky, ridges
 The current implementation leans flat (1px edges with restrained shadows). New work should push towards the layered-and-lifted intent without losing the crisp 1px frame.
 
 ### Shadow Vocabulary
-- **Panel** (`inset 0 0 0 1px var(--line), 0 18px 40px -26px var(--cast)`): day groups, the quick-add box, the planner container.
+- **Panel** (`inset 0 0 0 1px var(--line), 0 18px 40px -26px var(--cast)`): day groups, the quick-add box.
 - **Float** (`inset 0 0 0 1px var(--line-strong), 0 24px 60px -24px var(--cast)`): popovers and anything above a panel.
 - **Glass** (`--hud-glass-shadow`): the dock and frosted HUD pieces.
 - **Key hover** (`inset 0 0 0 1px var(--amber-line)`): the amber frame on a hovered key.
@@ -284,9 +284,8 @@ Tactile and confident: quiet at rest, lit when touched, pressed when used.
 - **Commit:** a brief warm sweep across the bar (520ms) confirms a task was logged.
 
 ### Navigation
-- **Lens tabs:** uppercase label type (600, 13.5px, 0.08em), 32px tall, 8px radius, tertiary ink at rest, full ink on hover. A sliding indicator key with an amber underline (2px inset) and faint glow marks the active tab; the active icon turns amber and its count badge becomes solid amber. `1`–`3` switch lenses.
-- **Lens bar:** a full-pill glass strip, 44px tall, blurred.
-- **Mobile:** the whole ribbon docks to the bottom of the screen.
+- **One tab:** no lens tabs. The day slate closes with a full-width footer row, "Show all days", with a count pill of open tasks on other days and an amber chevron; it opens the grid. In the grid the way back is one floating glass pill, "Back to today". `A` toggles; `Esc` goes back.
+- **Profile key:** the mascot, a 46px amber disc (44px on phones), alone in the top-right corner. It opens the profile panel: who is signed in, the games, then the settings.
 
 ### Task Row (signature)
 - 10px radius, 5px 8px padding, bleeding 8px into the card edge. Hover reveals the drag handle.

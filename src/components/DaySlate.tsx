@@ -1,7 +1,8 @@
 // The day slate: a field log floating beside its waypost. The header carries the day's date, the
 // open/done telemetry (DONE toggles completed work in and out of the log) and the command line, so the
 // primary action sits at the top. One day (Today, a picked date) is a single left-anchored column;
-// the All lens widens it into a grid of day cards that share the same header.
+// the All lens widens it into a grid of day cards that share the same header. The footer row under the
+// log opens today into every day, and folds the grid back to today.
 import type { ReactNode, RefCallback } from 'react';
 import { ArrowLeft, CalendarDays } from 'lucide-react';
 import { parseISODate } from '../modules/dateUtils';
@@ -27,6 +28,7 @@ interface DaySlateProps {
   onToggleDone: () => void;
   scrollRef: RefCallback<HTMLElement>;
   command: ReactNode;
+  footer: ReactNode;
   children: ReactNode;
 }
 
@@ -48,6 +50,7 @@ export function DaySlate({
   onToggleDone,
   scrollRef,
   command,
+  footer,
   children
 }: DaySlateProps) {
   const { open: openCount, done: doneCount, total } = summary;
@@ -108,6 +111,8 @@ export function DaySlate({
           {children}
         </main>
       </div>
+
+      {footer && <div className="slate-footer">{footer}</div>}
     </section>
   );
 }

@@ -56,7 +56,7 @@ export function useSmoothScroll({ scrollPane, usePaneAsScroller, smoothingEnable
       autoRaf: false,
       lerp: 0.1,
       smoothWheel: true,
-      prevent: (node: HTMLElement) => Boolean(node.closest?.('[data-lenis-prevent], .week-table-scroll, .time-popover, .settings-panel, .side-console'))
+      prevent: (node: HTMLElement) => Boolean(node.closest?.('[data-lenis-prevent], .time-popover, .settings-panel, .side-console'))
     });
     activeLenis = lenis;
 
