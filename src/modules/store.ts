@@ -12,6 +12,7 @@ import {
 } from '../firebase';
 import { addDays, getLocalISODate, getWeekDates } from './dateUtils';
 import { occurrenceId, planOccurrences } from './recurrence';
+import { pushToast } from './toasts';
 import type { AppState, RepeatRule, Task, ViewName } from '../types';
 
 export const STORAGE_KEY = 'todo_do_tasks_v1';
@@ -24,7 +25,6 @@ export const state: AppState = {
   selectedAddDate: getLocalISODate(),
   selectedAddStart: '',
   selectedAddEnd: '',
-  isTableView: false,
   unsubscribeFirestore: null
 };
 
@@ -35,6 +35,14 @@ let stateVersion = 0;
 // While a series is being rebuilt, its old future rows are still being deleted in Firestore.
 // Generation skips it until that finishes so a late delete can never erase a fresh occurrence.
 const resettingSeries = new Set<string>();
+
+// Signed-out tasks whose migration batch has not been acknowledged yet. They stay local (uid-less)
+// until the cloud confirms them, so a reload or a rejected batch never loses them.
+const pendingMigrationIds = new Set<string>();
+// The last cloud task list, and whether the listener has caught up with the server since the
+// last cache-only snapshot. Generation waits for that so a stale device cannot rewrite a series.
+let lastCloudTasks: Task[] | null = null;
+let isServerSynced = false;
 
 export function subscribeStore(listener: () => void): () => void {
   listeners.add(listener);
@@ -58,7 +66,12 @@ export function setUiState(updates: Partial<AppState>): void {
 export function loadTasks(): Task[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      // Valid JSON of the wrong shape ("null", "{}") must not crash the first render
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((t): t is Task => Boolean(t) && typeof t.id === 'string' && typeof t.date === 'string');
+    }
   } catch (e) {
     console.error('Failed to load from localStorage', e);
   }
@@ -188,14 +201,17 @@ async function commitTaskWrites(tasks: Task[]): Promise<void> {
   if (!uid) return;
   const writable = tasks.filter(task => canWriteTask(task, uid));
   for (let start = 0; start < writable.length; start += TASK_BATCH_SIZE) {
+    const chunk = writable.slice(start, start + TASK_BATCH_SIZE);
     const batch = writeBatch(db);
-    writable.slice(start, start + TASK_BATCH_SIZE).forEach(task => {
+    chunk.forEach(task => {
       batch.set(doc(db, 'tasks', task.id), toFirestoreTask(task, task.uid ?? uid));
     });
     try {
       await batch.commit();
     } catch (err) {
       console.error('Error writing cloud tasks:', err);
+      // Firestore rolls the optimistic write back, so say so instead of letting the change vanish
+      reportSyncFailure('Couldn’t save to the cloud', chunk.length, () => void commitTaskWrites(chunk));
     }
   }
 }
@@ -203,14 +219,45 @@ async function commitTaskWrites(tasks: Task[]): Promise<void> {
 async function commitTaskDeletes(taskIds: string[]): Promise<void> {
   if (!state.currentUser || taskIds.length === 0) return;
   for (let start = 0; start < taskIds.length; start += TASK_BATCH_SIZE) {
+    const chunk = taskIds.slice(start, start + TASK_BATCH_SIZE);
     const batch = writeBatch(db);
-    taskIds.slice(start, start + TASK_BATCH_SIZE).forEach(id => batch.delete(doc(db, 'tasks', id)));
+    chunk.forEach(id => batch.delete(doc(db, 'tasks', id)));
     try {
       await batch.commit();
     } catch (err) {
       console.error('Error deleting cloud tasks:', err);
+      reportSyncFailure('Couldn’t delete from the cloud', chunk.length, () => void commitTaskDeletes(chunk));
     }
   }
+}
+
+// Series bookkeeping patches only its own field, so a device with a stale copy of the master
+// never rewrites the rule, title or dates another device changed.
+async function commitGeneratedThrough(masters: Task[]): Promise<void> {
+  const uid = state.currentUser?.uid;
+  if (!uid) return;
+  const writable = masters.filter(task => canWriteTask(task, uid));
+  for (let start = 0; start < writable.length; start += TASK_BATCH_SIZE) {
+    const batch = writeBatch(db);
+    writable.slice(start, start + TASK_BATCH_SIZE).forEach(task => {
+      batch.update(doc(db, 'tasks', task.id), { repeatGeneratedThrough: task.repeatGeneratedThrough });
+    });
+    try {
+      await batch.commit();
+    } catch (err) {
+      console.error('Error updating series progress:', err);
+    }
+  }
+}
+
+function reportSyncFailure(message: string, count: number, retry: () => void): void {
+  pushToast({
+    message,
+    detail: count === 1 ? '1 task was not synced' : `${count} tasks were not synced`,
+    tone: 'danger',
+    actionLabel: 'Retry',
+    onAction: retry
+  });
 }
 
 /**
@@ -222,6 +269,9 @@ async function commitTaskDeletes(taskIds: string[]): Promise<void> {
 export function ensureRecurringOccurrences(): void {
   const today = getLocalISODate();
   const uid = state.currentUser?.uid;
+  // Signed in, generate only from server-confirmed state: a device waking from sleep must not
+  // seed days for a series another device has since changed or stopped.
+  if (uid && !isServerSynced) return;
   const existing = new Set(state.tasks.map(task => task.id));
   const created: Task[] = [];
   const masters: Task[] = [];
@@ -266,7 +316,8 @@ export function ensureRecurringOccurrences(): void {
   ];
   saveLocalTasks();
   notifyStore();
-  void commitTaskWrites([...masters, ...created]);
+  void commitTaskWrites(created);
+  void commitGeneratedThrough(masters);
 }
 
 /**
@@ -310,8 +361,9 @@ export function setTaskRepeat(taskId: string, rule: RepeatRule | undefined, unti
   notifyStore();
 
   void (async () => {
-    if (stale.length > 0) await commitTaskDeletes([...staleIds]);
-    await commitTaskWrites([next]);
+    // Queue the deletes and the master write together: waiting on the deletes' server ack would
+    // let a snapshot revert the master, and offline the master write would never be queued.
+    await Promise.all([commitTaskDeletes([...staleIds]), commitTaskWrites([next])]);
     resettingSeries.delete(task.id);
     if (rule) ensureRecurringOccurrences();
   })();
@@ -397,8 +449,8 @@ export async function updateTaskItem(taskId: string, updates: Partial<Task>): Pr
   saveLocalTasks();
   notifyStore();
 
-  if (staleIds.size > 0) await commitTaskDeletes([...staleIds]);
-  await commitTaskWrites([nextTask, ...futureOccurrences]);
+  // Both are queued at once so the master write never waits on the deletes' server ack
+  await Promise.all([commitTaskDeletes([...staleIds]), commitTaskWrites([nextTask, ...futureOccurrences])]);
 
   if (task.repeat && dateChanged && nextTask.date) {
     resettingSeries.delete(task.id);
@@ -431,8 +483,27 @@ export async function deleteTaskItem(taskId: string): Promise<void> {
   saveLocalTasks();
   notifyStore();
 
-  await commitTaskDeletes([...ids]);
-  await commitTaskWrites(detached);
+  // Both are queued at once so an Undo (restoreTasks) is always written after them, never between
+  await Promise.all([commitTaskDeletes([...ids]), commitTaskWrites(detached)]);
+}
+
+/** Every task deleteTaskItem would remove or detach, as it stands now, so the delete can be undone. */
+export function snapshotTaskDeletion(taskId: string): Task[] {
+  return state.tasks
+    .filter(item => item.id === taskId || (item.seriesId === taskId && item.isOccurrence))
+    .map(item => ({ ...item }));
+}
+
+/** Undo a delete: put the snapshot back exactly, replacing any detached copies of the same days. */
+export async function restoreTasks(snapshot: Task[]): Promise<void> {
+  if (snapshot.length === 0) return;
+  const ids = new Set(snapshot.map(item => item.id));
+  state.tasks = [...state.tasks.filter(item => !ids.has(item.id)), ...snapshot];
+  saveLocalTasks();
+  notifyStore();
+
+  await commitTaskWrites(snapshot);
+  if (snapshot.some(item => item.repeat && !item.isOccurrence)) ensureRecurringOccurrences();
 }
 
 // Firestore Realtime Listener
@@ -450,38 +521,60 @@ export function initFirestoreSync(user: User): void {
 
   // One-time migration of un-synced local offline tasks created before login.
   // Keep the local ids: a series master and its occurrences reference each other by id.
+  // The local copies are dropped only once their batch is acknowledged; until then they stay in
+  // state and localStorage alongside the cloud list (see applyCloudTasks).
+  pendingMigrationIds.clear();
+  lastCloudTasks = null;
+  isServerSynced = false;
   const localOfflineTasks = state.tasks.filter(t => !t.uid && t.id.startsWith('task_'));
-  if (localOfflineTasks.length > 0) {
-    for (let start = 0; start < localOfflineTasks.length; start += TASK_BATCH_SIZE) {
-      const batch = writeBatch(db);
-      localOfflineTasks.slice(start, start + TASK_BATCH_SIZE).forEach(localTask => {
-        batch.set(
-          doc(db, 'tasks', localTask.id),
-          toFirestoreTask({ ...localTask, uid: user.uid }, user.uid)
-        );
-      });
-      batch.commit().catch(err => console.error('Migration error:', err));
-    }
-    const migratedIds = new Set(localOfflineTasks.map(t => t.id));
-    state.tasks = state.tasks.filter(t => !migratedIds.has(t.id));
-    saveLocalTasks();
-    notifyStore();
+  for (let start = 0; start < localOfflineTasks.length; start += TASK_BATCH_SIZE) {
+    const chunk = localOfflineTasks.slice(start, start + TASK_BATCH_SIZE);
+    const batch = writeBatch(db);
+    chunk.forEach(localTask => {
+      pendingMigrationIds.add(localTask.id);
+      batch.set(
+        doc(db, 'tasks', localTask.id),
+        toFirestoreTask({ ...localTask, uid: user.uid }, user.uid)
+      );
+    });
+    batch.commit()
+      .then(() => {
+        chunk.forEach(t => pendingMigrationIds.delete(t.id));
+        if (lastCloudTasks) applyCloudTasks(lastCloudTasks);
+      })
+      // A rejected batch leaves the tasks local; the next sign-in migrates them again
+      .catch(err => console.error('Migration error:', err));
   }
 
   const q = query(collection(db, 'tasks'), where('uid', '==', user.uid));
 
-  state.unsubscribeFirestore = onSnapshot(q, (snapshot) => {
+  let hasServerSnapshot = false;
+  state.unsubscribeFirestore = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+    const fromCache = snapshot.metadata.fromCache;
+    isServerSynced = !fromCache;
+    // Before the server has answered once, a cache-only result can be empty or partial
+    // (offline reload); keep the local list rather than overwrite it.
+    if (fromCache && !hasServerSnapshot) return;
+    hasServerSnapshot = true;
+
     const cloudTasks = snapshot.docs.map(docSnap => ({
       id: docSnap.id,
       ...docSnap.data()
     }) as Task);
 
-    state.tasks = cloudTasks;
-    saveLocalTasks();
-    notifyStore();
+    applyCloudTasks(cloudTasks);
   }, (err) => {
     console.error('Firestore sync error:', err);
   });
+}
+
+// Cloud list plus the local versions of tasks still waiting on their migration batch
+function applyCloudTasks(cloudTasks: Task[]): void {
+  lastCloudTasks = cloudTasks;
+  const pending = state.tasks.filter(t => pendingMigrationIds.has(t.id));
+  state.tasks = [...cloudTasks.filter(t => !pendingMigrationIds.has(t.id)), ...pending];
+  saveLocalTasks();
+  notifyStore();
 }
 
 export function stopFirestoreSync(): void {
@@ -489,6 +582,11 @@ export function stopFirestoreSync(): void {
     state.unsubscribeFirestore();
     state.unsubscribeFirestore = null;
   }
-  state.tasks = loadTasks();
+  pendingMigrationIds.clear();
+  lastCloudTasks = null;
+  isServerSynced = false;
+  // Only signed-out (uid-less) tasks stay on this device; the previous account's cloud copy goes
+  state.tasks = loadTasks().filter(t => !t.uid);
+  saveLocalTasks();
   notifyStore();
 }

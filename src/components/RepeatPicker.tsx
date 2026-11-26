@@ -28,6 +28,9 @@ export function RepeatPicker({ task, onChange }: RepeatPickerProps) {
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      // The "Ends" calendar closes itself first; only a second Escape folds the schedule
+      if (event.target instanceof Element && event.target.closest('.date-popover')) return;
+      event.preventDefault();
       event.stopPropagation();
       setIsOpen(false);
     };

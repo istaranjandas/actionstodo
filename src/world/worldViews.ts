@@ -2,7 +2,7 @@
 // the stretch of trail they cover, so switching lens is a camera journey along the path.
 import { dayPostPlacement } from './trail';
 
-export type WorldLens = 'day' | 'upcoming' | 'this-week' | 'all' | 'completed' | 'planner';
+export type WorldLens = 'day' | 'upcoming' | 'this-week' | 'all' | 'completed';
 
 export interface CameraPose {
   position: [number, number, number];
@@ -34,8 +34,6 @@ export function cameraPoseFor(lens: WorldLens, focusOffset: number, weekStartOff
       const behind = dayPostPlacement(-5);
       return { position: [today.x - 7, 5.5, today.z - 14], target: [behind.x, 2, behind.z] };
     }
-    case 'planner':
-      return { position: [0, 150, 30], target: [0, 0, -95] };
     default: {
       // Stand back along the trail, always left of the post so it frames to the right of the day slate.
       // The eye is held almost level, which drops the ridge and the lighthouse into open sky below the

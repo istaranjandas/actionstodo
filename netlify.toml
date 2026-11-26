@@ -2,6 +2,18 @@
   command = "npm run build"
   publish = "dist"
 
+# Match package.json engines.node
+[build.environment]
+  NODE_VERSION = "24.12.0"
+
+# Conservative security headers. No full CSP: it would need tuning for Firebase auth, Google Fonts and three.js.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
 [[redirects]]
   from = "/alpineoverride"
   to = "/alpineoverride/"

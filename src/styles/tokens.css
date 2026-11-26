@@ -7,7 +7,7 @@
    the matching JS constants are in src/hooks/useMotionProfile.ts):
      680px   phone          — import this, never a one-off width
      1024px  non-desktop    — narrow window or coarse pointer
-     1025px+ desktop        — the scroll pane and the planner board
+     1025px+ desktop        — the scroll pane
    ========================================================================== */
 :root {
   color-scheme: light;
@@ -42,7 +42,7 @@
   --track: rgba(15, 23, 42, 0.08);
   --field-border: rgba(15, 23, 42, 0.1);
   --field-fill: rgba(255, 255, 255, 0.72);
-  --muted-ink: #64748b;
+  --muted-ink: #5b6b80;
 
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
@@ -88,11 +88,12 @@
   --modal-scrim: rgba(15, 23, 42, 0.46);
   --sheen: rgba(255, 255, 255, 0.7);
 
-  /* Ink: Slate 900 / 700 / 500 / 400 */
+  /* Ink: Slate 900 / 700, then a tertiary held at 4.5:1 on every panel, well and wash (text),
+     and a faint tone for non-text marks only (handles, inactive dates, ticks) */
   --ink: #0f172a;
   --ink-2: #334155;
-  --ink-3: #64748b;
-  --ink-faint: #94a3b8;
+  --ink-3: #5b6b80;
+  --ink-faint: #7b8ba1;
 
   /* Signals: burnt amber fills and rails, a deeper ochre for text; Jade for done, Tomato for danger */
   --amber: #d97706;
@@ -112,6 +113,8 @@
   --teal: #208368;
   --teal-hi: #29a383;
   --teal-ink: #ffffff;
+  /* Jade as text (done counts): held at 5:1 on paper and washes */
+  --teal-text: #1b7660;
   --teal-wash: #e6f7ed;
   --coral: #d13415;
   --coral-hi: #e54d2e;
@@ -181,8 +184,8 @@
   /* Slate-50 ink: cool greys, so text never looks like it is sitting in a sepia photograph */
   --ink: #f1f5f9;
   --ink-2: #94a3b8;
-  --ink-3: #64748b;
-  --ink-faint: #475569;
+  --ink-3: #7c8aa0;
+  --ink-faint: #5b6b80;
 
   --amber: #f59e0b;
   --amber-hi: #fde68a;
@@ -194,11 +197,12 @@
   --amber-line: rgba(245, 158, 11, 0.55);
   --amber-glow: rgba(245, 158, 11, 0.3);
   --amber-core: #fde68a;
-  --telemetry-ink: #64748b;
+  --telemetry-ink: #7c8aa0;
   --telemetry-line: rgba(148, 163, 184, 0.22);
   --teal: #46c7ab;
   --teal-hi: #72e1c7;
   --teal-ink: #04201a;
+  --teal-text: #46c7ab;
   --teal-wash: rgba(70, 199, 171, 0.13);
   --coral: #ec7b63;
   --coral-hi: #f4957f;

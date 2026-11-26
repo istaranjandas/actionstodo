@@ -1,10 +1,12 @@
 /* ==========================================================================
    Floating panels: time slot picker and the system menu's settings rows
    ========================================================================== */
+/* Above the bottom sheet (1100) and controls overlay (1150) so pickers opened from Task Details
+   show on phones and tablets; still beneath the toasts (1200) */
 .popover-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 998;
+  z-index: 1160;
   display: none;
   background: var(--scrim);
   -webkit-backdrop-filter: blur(2px);
@@ -19,7 +21,7 @@
 /* ---------- Time slot picker ---------- */
 .time-popover {
   position: fixed;
-  z-index: 1000;
+  z-index: 1170;
   width: 330px;
   padding: 14px 16px;
   border-radius: var(--radius-lg);
@@ -283,11 +285,11 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-align: center;
-  color: var(--ink-3);
+  color: var(--ink-2);
 }
 
 .date-grid-weekday.is-weekend {
-  color: var(--ink-faint);
+  color: var(--ink-3);
 }
 
 .date-cell {

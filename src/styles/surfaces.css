@@ -8,7 +8,6 @@
 /* ---------- 1. Panels: smoked obsidian glass, crisp 1px frame ---------- */
 .date-group,
 .quick-add-box,
-.week-table-container,
 .empty-state {
   background: var(--hud-glass);
   border: 1px solid var(--line);
@@ -131,8 +130,6 @@
 /* ---------- 3. Wells ---------- */
 .task-time-pill,
 .popover-time-control,
-.matrix-add-input,
-.week-date-nav,
 .viewport-mode-toggle,
 .date-group-meter {
   background: rgba(0, 0, 0, 0.35);
@@ -140,13 +137,17 @@
   box-shadow: var(--shadow-well);
 }
 
+/* These wells have no themed override, so they take the theme's well token (no grey slab in Daylight) */
+.popover-time-control {
+  background: var(--well);
+}
+
 /* Shared micro-label: condensed caps, like stencilled panel legends */
 .popover-title,
 .grid-group-label,
 .settings-section-label,
 .settings-title,
-.drop-slots-hint,
-.matrix-time-header {
+.drop-slots-hint {
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: 0.12em;

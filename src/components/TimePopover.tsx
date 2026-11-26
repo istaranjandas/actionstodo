@@ -80,7 +80,9 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
       activeContext.current = context;
 
       if (!startVal) {
-        const autoSlot = getNextSmartSlot(state.selectedAddDate, state.tasks);
+        // A task's default slot comes from its own day, not the day picked for quick-add
+        const task = context.type === 'task' ? state.tasks.find(t => t.id === context.taskId) : undefined;
+        const autoSlot = getNextSmartSlot(task?.date || state.selectedAddDate, state.tasks);
         startVal = autoSlot.startTime;
         endVal = autoSlot.endTime;
       }
@@ -135,8 +137,11 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
     applyPopoverTime(currentStart, newEnd);
   };
 
-  // Manual inputs change
+  // Manual inputs change; a cleared or half-typed field must not wipe the saved time
+  const isCompleteTime = (value: string) => /^\d{2}:\d{2}/.test(value);
+
   const handleStartChange = (newStart: string) => {
+    if (!isCompleteTime(newStart)) return;
     const activePill = DURATION_PILLS.find(pill => pill.mins === durationMins);
     const duration = activePill ? activePill.mins : 30;
     const newEnd = addMinutesToTime(newStart, duration);
@@ -145,6 +150,7 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
   };
 
   const handleEndChange = (newEnd: string) => {
+    if (!isCompleteTime(newEnd)) return;
     setEndValue(newEnd);
     applyPopoverTime(startValue, newEnd);
   };
@@ -167,7 +173,10 @@ export const TimePopover = forwardRef<TimePopoverHandle, TimePopoverProps>(funct
       }
     };
     const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') dismissTimePopover();
+      if (e.key !== 'Escape') return;
+      // Claim the key so the global Escape handler leaves the inspector/view alone
+      e.preventDefault();
+      dismissTimePopover();
     };
     document.addEventListener('click', handleDocumentClick);
     document.addEventListener('keydown', handleKeydown);

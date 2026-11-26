@@ -1,16 +1,15 @@
 # ✦ Todo - Do
 
-A minimalist, high-productivity daily task manager and week planner with real-time Firebase Cloud Sync and offline support.
+A minimalist, high-productivity daily task manager with real-time Firebase Cloud Sync and offline support.
 
 ## 🚀 Features
 
 - ⚡ **1-Click Smart Time Range Picker**: Fast preset grid (Morning / Afternoon / Evening), custom duration pills (15m, 30m, 1h, 1.5h), and micro-nudge buttons (`-30m` / `+30m`).
 - ✍️ **Natural Language Parsing**: Type `"Call Alex at 5pm"` or `"Design sprint 2pm to 3:30pm"` to automatically parse and slot time.
 - 🔁 **Recurring Tasks**: Add `"Gym every day at 6pm"`, `"Standup weekdays 9am"`, or `"Rent monthly"` and the app builds a rolling series of real daily tasks. Each day is completed independently, title/time edits flow to future open days, and the details panel can change the rule or add an end date.
-- 🏮 **The Lantern Path**: Your days are wayposts along a trail through a living 3D valley; every task is a lantern on its day's post, and completing one lights it. Walk the path with `Q` / `E`, or switch lens (Today, Upcoming, Week, All, Done, Planner) with `1`–`6`.
+- 🏮 **The Lantern Path**: Your days are wayposts along a trail through a living 3D valley; every task is a lantern on its day's post, and completing one lights it. Walk the path with `Q` / `E`. Today's log opens first; **Show all days** (or `A`) opens every day as a grid.
 - 🗒️ **Day slate & details**: The focused day's tasks float beside its waypost; click a task or its lantern to edit title, date and time on the details slate.
-- 📅 **Path ribbon**: The top dock carries the lens tabs and a strip of day beads that doubles as the calendar — with the month, the jump-to-date dial and the system controls on its right. Phones dock it below instead. Jump a week with `«` `»`.
-- 📊 **Planner**: The week matrix (time slots by weekday) opens as a full board over the valley.
+- 😈 **Profile key**: The mascot in the top-right corner opens the profile panel: the games first, then sound, time of day, motion and account.
 - 🔊 **Sound & music**: Synthesised interface sounds and an optional ambient soundtrack, each with its own switch and volume in the System menu.
 - ☁️ **Real-Time Firebase Cloud Sync**: Google Sign-In with instant Firestore multi-device synchronization.
 - 💾 **Offline First & Disk Sync**: Seamless offline mode with `localStorage`, direct `.json` disk sync via File System Access API, and 1-click JSON backup import/export.

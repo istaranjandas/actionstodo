@@ -7,13 +7,12 @@
 @import './styles/environment.css';
 @import './styles/surfaces.css';
 @import './styles/shell.css';
-@import './styles/ribbon.css';
 @import './styles/quick-add.css';
 @import './styles/feed.css';
 @import './styles/day-grid.css';
-@import './styles/week-table.css';
 @import './styles/popovers.css';
 @import './styles/panels.css';
+@import './styles/one-tab.css';
 @import './styles/arena.css';
 @import './styles/daylight.css';
 @import './styles/daylight-dock.css';

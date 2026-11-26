@@ -22,9 +22,26 @@ export interface AudioOutput {
 let graph: AudioGraph | null = null;
 const unlockListeners = new Set<() => void>();
 
+// Browsers without navigator.userActivation (older Safari) only count once a real gesture is seen
+const userActivation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
+let gestureSeen = false;
+if (!userActivation) {
+  const markGesture = () => {
+    gestureSeen = true;
+    ['pointerdown', 'keydown', 'touchend'].forEach((type) => window.removeEventListener(type, markGesture, true));
+  };
+  ['pointerdown', 'keydown', 'touchend'].forEach((type) => window.addEventListener(type, markGesture, true));
+}
+
 function hasUserActivation(): boolean {
-  const activation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
-  return !activation || activation.hasBeenActive;
+  return userActivation ? userActivation.hasBeenActive : gestureSeen;
+}
+
+// Listeners (the music) wait for a running context, so nothing queues up against a frozen clock.
+// Re-announced after each resume (e.g. an iOS interruption); listeners must be idempotent.
+function announceUnlockIfRunning() {
+  if (!graph || graph.context.state !== 'running') return;
+  unlockListeners.forEach((listener) => listener());
 }
 
 function createNoiseBuffer(context: AudioContext): AudioBuffer {
@@ -47,7 +64,8 @@ subscribeSoundSettings(applyBusLevels);
 // Browsers only allow audio after a user gesture, so the graph is built lazily on the first one
 function ensureGraph(): AudioGraph | null {
   if (graph) {
-    if (graph.context.state === 'suspended') void graph.context.resume();
+    // 'interrupted' (iOS after a lock or call) needs a resume just like 'suspended'
+    if (graph.context.state !== 'running' && graph.context.state !== 'closed') void graph.context.resume().catch(() => undefined);
     return graph;
   }
   if (!hasUserActivation() || typeof window.AudioContext !== 'function') return null;
@@ -70,7 +88,9 @@ function ensureGraph(): AudioGraph | null {
 
   graph = { context, effects, music, noise: createNoiseBuffer(context) };
   applyBusLevels();
-  unlockListeners.forEach((listener) => listener());
+  context.addEventListener('statechange', announceUnlockIfRunning);
+  if (context.state === 'suspended') void context.resume().catch(() => undefined);
+  announceUnlockIfRunning();
   return graph;
 }
 
@@ -79,7 +99,7 @@ export function unlockAudio(): void {
 }
 
 export function isAudioUnlocked(): boolean {
-  return graph !== null;
+  return graph !== null && graph.context.state === 'running';
 }
 
 export function onAudioUnlocked(listener: () => void): () => void {
@@ -151,6 +171,7 @@ export function playNoise(output: AudioOutput, { startAt, duration, gain, filter
   envelope.gain.exponentialRampToValueAtTime(gain, startAt + attack);
   envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
   source.connect(filter).connect(envelope).connect(destination);
-  source.start(startAt, Math.random() * 1.5);
+  // Random offset, kept short enough that the buffer outlasts the sound and its fade
+  source.start(startAt, Math.random() * Math.max(0, Math.min(1.5, noise.duration - duration - 0.05)));
   source.stop(startAt + duration + 0.05);
 }

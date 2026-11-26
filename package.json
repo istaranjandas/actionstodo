@@ -2,7 +2,7 @@
   "name": "actionstodo",
   "private": true,
   "version": "1.0.0",
-  "description": "A lantern-path task manager and week planner: a 3D valley where every day is a waypost and every task a lantern.",
+  "description": "A lantern-path task manager: a 3D valley where every day is a waypost and every task a lantern.",
   "license": "UNLICENSED",
   "repository": {
     "type": "git",
@@ -17,7 +17,8 @@
     "build": "tsc && vite build",
     "typecheck": "tsc",
     "preview": "vite preview",
-    "capture": "node scripts/capture.mjs"
+    "capture": "node scripts/capture.mjs",
+    "build:game": "npm --prefix games/alpineoverride ci && npm --prefix games/alpineoverride run build"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

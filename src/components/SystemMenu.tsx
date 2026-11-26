@@ -1,15 +1,17 @@
-// The one system control in the HUD: sound, time of day, account, mode, help and the creator's contact
+// The one system control in the HUD: the mascot key opens the profile panel — games first, then sound,
+// time of day, motion, account, help and the creator's contact
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
-import { Gamepad2, Keyboard, Menu, Moon, Music, Sparkles, Sun, Volume2, X } from 'lucide-react';
+import { ChevronRight, Keyboard, Moon, Music, Sparkles, Sun, Volume2 } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup, signOut } from '../firebase';
 import { updateSoundSettings, useSoundSettings } from '../audio/soundSettings';
 import { updateDisplaySettings, useDisplaySettings } from '../modules/displaySettings';
 import { playUiSound } from '../audio/uiSounds';
 import { pushToast } from '../modules/toasts';
 import { useDismissiblePopup } from '../hooks/useDismissiblePopup';
-import { CreatorAvatarIcon, GoogleIcon } from './Icons';
-import { GameMenu } from './GameMenu';
+import { CreatorAvatarIcon, DevilIcon, GoogleIcon } from './Icons';
+import { GAMES } from './games';
+import type { GameId } from './games';
 import type { AppState, Theme } from '../types';
 
 const CREATOR_EMAIL = 'istaranjandas@gmail.com';
@@ -160,23 +162,29 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
     copyTimer.current = window.setTimeout(() => setCopyLabel('Copy'), 2000);
   };
 
+  const launchGame = (id: GameId) => {
+    setIsOpen(false);
+    playUiSound('open');
+    if (id === 'arena') onEnterGameMode();
+    else window.location.href = '/alpineoverride/';
+  };
+
+  const profileName = currentUser ? currentUser.displayName || currentUser.email || 'Signed in' : 'Guest';
+
   return (
     <div className={`system-menu ${isOpen ? 'is-open' : ''}`}>
-      {/* Two keys, one glass cluster: the arcade, then the system panel */}
-      <GameMenu onEnterGameMode={() => { setIsOpen(false); onEnterGameMode(); }} />
       <button
         type="button"
-        className={`system-trigger ${isOpen ? 'is-active' : ''}`}
-        aria-label="System menu"
+        className={`system-trigger is-profile ${isOpen ? 'is-active' : ''}`}
+        aria-label="Profile and settings"
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        title="System"
+        title="Profile"
         data-sfx={isOpen ? 'close' : 'open'}
         ref={triggerRef}
         onClick={() => setIsOpen(open => !open)}
       >
-        {isOpen ? <X size={18} strokeWidth={2} aria-hidden="true" /> : <Menu size={18} strokeWidth={2} aria-hidden="true" />}
-        <span className="system-trigger-label">System</span>
+        <DevilIcon size={18} aria-hidden="true" />
       </button>
 
       {/* Dim and block the workspace so task rows cannot read through the settings panel */}
@@ -184,9 +192,31 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
 
       {isOpen && (
         <div className="system-panel" role="dialog" aria-labelledby={titleId} ref={panelRef} data-lenis-prevent>
-          <div className="settings-header">
-            <span className="settings-title" id={titleId}>System</span>
+          <div className="settings-header profile-head">
+            <span className="profile-avatar" aria-hidden="true"><DevilIcon size={20} /></span>
+            <span className="profile-copy">
+              <span className="settings-title" id={titleId}>{profileName}</span>
+              <span className="profile-hint">{currentUser ? 'Synced across your devices' : 'Tasks are saved on this device'}</span>
+            </span>
           </div>
+
+          <section className="settings-section">
+            <span className="settings-section-label">Games</span>
+            <ul className="arcade-list">
+              {GAMES.map(({ id, title, detail, Icon }) => (
+                <li key={id}>
+                  <button type="button" className="arcade-game" data-sfx="select" onClick={() => launchGame(id)}>
+                    <span className="arcade-game-icon" aria-hidden="true"><Icon size={18} strokeWidth={1.9} /></span>
+                    <span className="arcade-game-copy">
+                      <span className="arcade-game-title">{title}</span>
+                      <span className="arcade-game-detail">{detail}</span>
+                    </span>
+                    <ChevronRight className="arcade-game-go" size={16} aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
 
           <section className="settings-section">
             <span className="settings-section-label">Audio</span>
@@ -261,10 +291,6 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
           </section>
 
           <section className="settings-section system-grid">
-            <button type="button" className="system-action" data-sfx="select" onClick={() => { setIsOpen(false); onEnterGameMode(); }}>
-              <Gamepad2 size={16} strokeWidth={2} aria-hidden="true" />
-              <span>Game mode</span>
-            </button>
             <button type="button" className="system-action" data-sfx="open" onClick={() => { setIsOpen(false); onOpenControls(); }}>
               <Keyboard size={16} strokeWidth={2} aria-hidden="true" />
               <span>Controls</span>

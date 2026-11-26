@@ -157,9 +157,12 @@ export function DatePicker({ value, onChange, ariaLabel, className = '', tabInde
             ref={panelRef}
             style={placement}
             data-lenis-prevent
+            // Focusable so a click on blank panel space keeps focus here and Escape still reaches it
+            tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
+                e.preventDefault();
                 e.stopPropagation();
                 close(true);
               }

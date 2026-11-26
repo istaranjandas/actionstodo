@@ -34,14 +34,17 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
   // --- Quick Add Time, Date & Repeat Helpers ---
   const parsed = parseTaskInput(quickAddText);
   let timeLabel: string;
+  let timeTitle = 'Change the time range';
   let timeIsActive = true;
   if (parsed.startTime) {
     timeLabel = `✨ ${formatTimeRangeDisplay(parsed.startTime, parsed.endTime)}`;
   } else if (selectedAddStart) {
     timeLabel = formatTimeRangeDisplay(selectedAddStart, selectedAddEnd);
   } else {
+    // Without a time the task lands in Anytime, so the chip says so; the free slot is only a hint
     const autoSlot = getNextSmartSlot(selectedAddDate, tasks);
-    timeLabel = formatTimeRangeDisplay(autoSlot.startTime, autoSlot.endTime);
+    timeLabel = 'Anytime';
+    timeTitle = `No time set, so the task goes to Anytime. Pick a time (next free: ${formatTimeRangeDisplay(autoSlot.startTime, autoSlot.endTime)})`;
     timeIsActive = false;
   }
 
@@ -78,8 +81,8 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
           type="text"
           ref={quickAddInputRef}
           className="quick-add-input"
-          placeholder="Log an objective…"
-          aria-label="Log a new task"
+          placeholder="Add a task, like “Gym at 6pm”"
+          aria-label="Add a task"
           aria-keyshortcuts="T"
           autoComplete="off"
           enterKeyHint="done"
@@ -87,6 +90,8 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
           onChange={(e) => setQuickAddText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
+              // Enter that confirms an IME candidate is not a submit
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
               e.preventDefault();
               handleQuickAddSubmit(e);
             }
@@ -98,7 +103,7 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
             <button
               type="button"
               className={`chip-btn date-chip ${isTodayTarget ? 'is-icon' : ''}`}
-              title={isTodayTarget ? 'Log to another day' : 'Select task date'}
+              title={isTodayTarget ? 'Add to another day' : 'Select task date'}
               aria-label={isTodayTarget ? 'Select task date' : undefined}
               tabIndex={-1}
             >
@@ -126,7 +131,7 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
             <button
               type="button"
               className={`chip-btn ${timeIsActive ? 'is-active' : ''}`}
-              title="Select planned completion time range (30m default)"
+              title={timeTitle}
               data-sfx="none"
               onClick={(e) => {
                 e.stopPropagation();
@@ -151,8 +156,8 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
           </div>
         </div>
 
-        <button type="submit" className="quick-add-save-btn command-submit" title="Log objective (Enter) · press T to focus" aria-label="Add task" data-sfx="none">
-          <span className="command-label">Log</span>
+        <button type="submit" className="quick-add-save-btn command-submit" title="Add task (Enter) · press T to focus" aria-label="Add task" data-sfx="none">
+          <span className="command-label">Add</span>
           <span className="command-key" aria-hidden="true">↵</span>
         </button>
       </div>

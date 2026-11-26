@@ -176,6 +176,16 @@ export function Trail({ animate, focusOffset }: { animate: boolean; focusOffset:
     [animate]
   );
 
+  // When focus moves on, the former hero settles back to its neighbours' size
+  const lastHeroIndex = useRef(heroIndex);
+  useEffect(() => {
+    const previous = lastHeroIndex.current;
+    lastHeroIndex.current = heroIndex;
+    if (previous === heroIndex) return;
+    markerMesh.setMatrixAt(previous, heroMatrix.makeTranslation(...markers[previous]));
+    markerMesh.instanceMatrix.needsUpdate = true;
+  }, [heroIndex, markers, markerMesh]);
+
   useFrame(({ clock }, delta) => {
     pulse.current = Math.max(0, pulse.current - Math.min(delta, 1 / 20) * PULSE_DECAY_PER_SECOND);
     material.color.copy(live.colors.terrainTint).lerp(live.colors.snow, 0.25).lerp(live.colors.roadColor, live.numbers.roadColorBlend);
