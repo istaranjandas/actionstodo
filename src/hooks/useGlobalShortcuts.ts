@@ -12,7 +12,7 @@ export interface ShortcutHandlers {
 }
 
 // Popovers that already close themselves on Escape
-const SELF_DISMISSING_SELECTOR = '.time-popover.open, .settings-panel, .devil-popup.open, .creator-popup.open, .filter-dropdown-wrap.open';
+const SELF_DISMISSING_SELECTOR = '.time-popover.open, .system-panel, .arcade-panel, .devil-popup.open, .creator-popup.open, .filter-dropdown-wrap.open';
 // Anything that already does something with Enter (or sits in a dialog) keeps it
 const INTERACTIVE_SELECTOR = 'button, a[href], summary, [role="button"], [role="listitem"], [role="dialog"], [tabindex], .sheet-panel, .inspector, .shortcuts-panel, .time-popover';
 

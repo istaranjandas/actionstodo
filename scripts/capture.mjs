@@ -88,8 +88,9 @@ async function launchBrowser(profileDir) {
       const page = targets.find((target) => target.type === 'page');
       if (page) return { browser, page };
     } catch {
-      await sleep(250);
+      // Endpoint not up yet
     }
+    await sleep(250);
   }
   throw new Error('Chrome DevTools endpoint did not start');
 }

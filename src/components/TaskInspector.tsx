@@ -99,6 +99,8 @@ export function TaskInspector({ task, isClosing, onClose }: TaskInspectorProps) 
         onBlur={commitTitle}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
+            // Enter that confirms an IME candidate is not a commit
+            if (e.nativeEvent.isComposing || e.keyCode === 229) return;
             e.preventDefault();
             e.currentTarget.blur();
           } else if (e.key === 'Escape') {
@@ -180,7 +182,7 @@ export function TaskInspector({ task, isClosing, onClose }: TaskInspectorProps) 
           </div>
         )}
         <div>
-          <dt>Logged</dt>
+          <dt>Created</dt>
           <dd>{createdLabel}</dd>
         </div>
         <div>

@@ -16,7 +16,7 @@ const SHORTCUT_GROUPS: { title: string; items: [string[], string][] }[] = [
   {
     title: 'Tasks',
     items: [
-      [['T'], 'Open the command bar to log a task'],
+      [['T'], 'Jump to the add box to add a task'],
       [['Enter'], 'Same, when nothing is selected'],
       [['↑', '↓'], 'Move between tasks'],
       [['Enter'], 'Open task details (on a task)'],

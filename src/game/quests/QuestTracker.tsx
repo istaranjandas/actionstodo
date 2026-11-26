@@ -4,6 +4,7 @@ import { gameInput } from '../input/gameInput';
 import { arenaRuntime, publishQuestSignals } from '../state/arenaRuntime';
 import type { QuestBeacon } from '../state/arenaRuntime';
 import { relicStatusFor } from './relicLayout';
+import { getLocalISODate } from '../../modules/dateUtils';
 import type { Task } from '../../types';
 
 interface QuestTrackerProps {
@@ -20,6 +21,7 @@ export function QuestTracker({ tasks, onCompleteQuest }: QuestTrackerProps) {
   const tasksById = useRef(new Map<string, Task>());
   const lastPublishedAt = useRef(0);
   const lastFocusedId = useRef<string | null>(null);
+  const beaconsScratch = useRef<(QuestBeacon & { verticalGap: number })[]>([]);
 
   useEffect(() => {
     tasksById.current = new Map(tasks.map((task) => [task.id, task]));
@@ -37,7 +39,9 @@ export function QuestTracker({ tasks, onCompleteQuest }: QuestTrackerProps) {
     const player = arenaRuntime.player;
     if (!player) return;
     const playerPosition = player.translation();
-    const beacons: (QuestBeacon & { verticalGap: number })[] = [];
+    const beacons = beaconsScratch.current;
+    beacons.length = 0;
+    const today = getLocalISODate();
 
     arenaRuntime.relics.forEach((body, taskId) => {
       const task = tasksById.current.get(taskId);
@@ -47,7 +51,7 @@ export function QuestTracker({ tasks, onCompleteQuest }: QuestTrackerProps) {
         taskId,
         text: task.text,
         distance: Math.hypot(relicPosition.x - playerPosition.x, relicPosition.z - playerPosition.z),
-        isUrgent: relicStatusFor(task) === 'urgent',
+        isUrgent: relicStatusFor(task, today) === 'urgent',
         verticalGap: Math.abs(relicPosition.y - playerPosition.y)
       });
     });

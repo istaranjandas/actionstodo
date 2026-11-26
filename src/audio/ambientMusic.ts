@@ -23,7 +23,8 @@ interface AmbientSession {
   padInput: GainNode;
   chimeInput: GainNode;
   sustainedNodes: AudioScheduledSourceNode[];
-  timers: number[];
+  chordTimer: number;
+  chimeTimer: number;
   chordIndex: number;
 }
 
@@ -66,29 +67,27 @@ function playChord(active: AmbientSession) {
     });
   });
 
-  active.timers.push(window.setTimeout(() => playChord(active), CHORD_SECONDS * 1000));
+  active.chordTimer = window.setTimeout(() => playChord(active), CHORD_SECONDS * 1000);
 }
 
 function scheduleChime(active: AmbientSession) {
   const delayMs = 7000 + Math.random() * 6000;
-  active.timers.push(
-    window.setTimeout(() => {
-      const { context } = active.output;
-      const notes = CHORD_PROGRESSION[(active.chordIndex + CHORD_PROGRESSION.length - 1) % CHORD_PROGRESSION.length];
-      const frequency = notes[1 + Math.floor(Math.random() * (notes.length - 1))] * 4;
-      const startAt = context.currentTime + 0.05;
-      const oscillator = context.createOscillator();
-      const envelope = context.createGain();
-      oscillator.frequency.value = frequency;
-      envelope.gain.setValueAtTime(0.0001, startAt);
-      envelope.gain.exponentialRampToValueAtTime(0.02, startAt + 0.03);
-      envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + 3.2);
-      oscillator.connect(envelope).connect(active.chimeInput);
-      oscillator.start(startAt);
-      oscillator.stop(startAt + 3.3);
-      scheduleChime(active);
-    }, delayMs)
-  );
+  active.chimeTimer = window.setTimeout(() => {
+    const { context } = active.output;
+    const notes = CHORD_PROGRESSION[(active.chordIndex + CHORD_PROGRESSION.length - 1) % CHORD_PROGRESSION.length];
+    const frequency = notes[1 + Math.floor(Math.random() * (notes.length - 1))] * 4;
+    const startAt = context.currentTime + 0.05;
+    const oscillator = context.createOscillator();
+    const envelope = context.createGain();
+    oscillator.frequency.value = frequency;
+    envelope.gain.setValueAtTime(0.0001, startAt);
+    envelope.gain.exponentialRampToValueAtTime(0.02, startAt + 0.03);
+    envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + 3.2);
+    oscillator.connect(envelope).connect(active.chimeInput);
+    oscillator.start(startAt);
+    oscillator.stop(startAt + 3.3);
+    scheduleChime(active);
+  }, delayMs);
 }
 
 export function startAmbientMusic(): void {
@@ -143,7 +142,7 @@ export function startAmbientMusic(): void {
   wind.connect(windFilter).connect(windLevel).connect(master);
   wind.start(now);
 
-  session = { output, master, padFilter, padInput, chimeInput, sustainedNodes: [filterSweep, wind], timers: [], chordIndex: 0 };
+  session = { output, master, padFilter, padInput, chimeInput, sustainedNodes: [filterSweep, wind], chordTimer: 0, chimeTimer: 0, chordIndex: 0 };
   playChord(session);
   scheduleChime(session);
 }
@@ -152,7 +151,8 @@ export function stopAmbientMusic(): void {
   const active = session;
   if (!active) return;
   session = null;
-  active.timers.forEach((timer) => window.clearTimeout(timer));
+  window.clearTimeout(active.chordTimer);
+  window.clearTimeout(active.chimeTimer);
   const { context } = active.output;
   const now = context.currentTime;
   active.master.gain.cancelScheduledValues(now);

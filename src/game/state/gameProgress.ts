@@ -28,10 +28,16 @@ export interface GameProgressSnapshot {
   lastLevelUp: LevelUpEvent | null;
 }
 
-function loadProgress(): StoredProgress {
+const STALE_CHECK_INTERVAL_MS = 60_000;
+
+// The raw JSON this tab last loaded or saved, so a change by another tab can be told apart.
+let lastStoredRaw: string | null = null;
+
+function readStoredProgress(): StoredProgress | null {
   try {
     const raw = localStorage.getItem(PROGRESS_STORAGE_KEY);
-    if (raw) {
+    if (raw && raw !== lastStoredRaw) {
+      lastStoredRaw = raw;
       const parsed = JSON.parse(raw) as Partial<StoredProgress>;
       return {
         xp: Number(parsed.xp) || 0,
@@ -40,20 +46,33 @@ function loadProgress(): StoredProgress {
       };
     }
   } catch {
-    return { xp: 0, rewardedTaskIds: [], completionDays: [] };
+    return null;
   }
-  return { xp: 0, rewardedTaskIds: [], completionDays: [] };
+  return null;
 }
 
-let progress = loadProgress();
+let progress = readStoredProgress() ?? { xp: 0, rewardedTaskIds: [], completionDays: [] };
 const rewardedTaskIds = new Set(progress.rewardedTaskIds);
 let lastLevelUp: LevelUpEvent | null = null;
 let snapshot = buildSnapshot();
 const listeners = new Set<() => void>();
+let staleCheckTimer: number | undefined;
+
+// Another tab may have saved since we loaded; adopt its copy so we never write over its rewards.
+function syncFromStorage(): boolean {
+  const stored = readStoredProgress();
+  if (!stored) return false;
+  progress = stored;
+  rewardedTaskIds.clear();
+  stored.rewardedTaskIds.forEach((id) => rewardedTaskIds.add(id));
+  return true;
+}
 
 function persistProgress() {
   try {
-    localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progress));
+    const raw = JSON.stringify(progress);
+    localStorage.setItem(PROGRESS_STORAGE_KEY, raw);
+    lastStoredRaw = raw;
   } catch {
     return;
   }
@@ -93,7 +112,25 @@ function publish() {
   listeners.forEach((listener) => listener());
 }
 
+// The streak and today's count depend on the date, so recheck them while the HUD is open (e.g. past midnight).
+function publishIfDayChanged() {
+  const next = buildSnapshot();
+  if (next.streakDays === snapshot.streakDays && next.completedToday === snapshot.completedToday) return;
+  snapshot = next;
+  listeners.forEach((listener) => listener());
+}
+
+function handleStorage(event: StorageEvent) {
+  if (event.key !== PROGRESS_STORAGE_KEY && event.key !== null) return;
+  if (syncFromStorage()) publish();
+}
+
+export function isQuestRewarded(taskId: string): boolean {
+  return rewardedTaskIds.has(taskId);
+}
+
 export function rewardCompletedQuests(tasks: Task[], { announceLevelUps }: { announceLevelUps: boolean }): void {
+  const synced = syncFromStorage();
   const levelBefore = levelForXp(progress.xp);
   let changed = false;
 
@@ -105,7 +142,10 @@ export function rewardCompletedQuests(tasks: Task[], { announceLevelUps }: { ann
     changed = true;
   });
 
-  if (!changed) return;
+  if (!changed) {
+    if (synced) publish();
+    return;
+  }
   progress = { ...progress, rewardedTaskIds: [...rewardedTaskIds] };
   const levelAfter = levelForXp(progress.xp);
   if (announceLevelUps && levelAfter > levelBefore) {
@@ -117,7 +157,18 @@ export function rewardCompletedQuests(tasks: Task[], { announceLevelUps }: { ann
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  if (listeners.size === 1) {
+    staleCheckTimer = window.setInterval(publishIfDayChanged, STALE_CHECK_INTERVAL_MS);
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', publishIfDayChanged);
+  }
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size > 0) return;
+    window.clearInterval(staleCheckTimer);
+    window.removeEventListener('storage', handleStorage);
+    window.removeEventListener('focus', publishIfDayChanged);
+  };
 }
 
 export function useGameProgress(): GameProgressSnapshot {

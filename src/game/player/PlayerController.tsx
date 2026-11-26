@@ -65,7 +65,7 @@ export function PlayerController({ animate }: PlayerControllerProps) {
     }
 
     probeRay.origin = { x: position.x, y: position.y, z: position.z };
-    const groundHit = world.castRay(probeRay, SHADOW_PROBE_LENGTH, true, undefined, undefined, undefined, body);
+    const groundHit = world.castRay(probeRay, SHADOW_PROBE_LENGTH, true, rapier.QueryFilterFlags.EXCLUDE_SENSORS, undefined, undefined, body);
     const isGrounded = groundHit !== null && groundHit.timeOfImpact <= GROUND_PROBE_LENGTH;
     const blobShadow = blobShadowRef.current;
     if (blobShadow) {

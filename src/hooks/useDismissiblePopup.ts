@@ -25,7 +25,10 @@ export function useDismissiblePopup(
       if (popupRef.current && !inPopup && !inTrigger) close();
     };
     const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key !== 'Escape') return;
+      // Claim the key so the global Escape handler doesn't also close the view behind
+      e.preventDefault();
+      close();
     };
     document.addEventListener('click', handleClick);
     document.addEventListener('keydown', handleKeydown);

@@ -13,6 +13,8 @@ export interface Toast {
 }
 
 const TOAST_LIFETIME_MS = 3800;
+// A toast that offers Undo stays long enough to read the detail and reach the button
+const ACTION_TOAST_LIFETIME_MS = 6500;
 const MAX_VISIBLE_TOASTS = 3;
 
 let toasts: Toast[] = [];
@@ -39,7 +41,7 @@ export function pushToast(toast: Omit<Toast, 'id'>): void {
     timers.delete(stale.id);
   });
   publish([...toasts.slice(overflow.length), { ...toast, id }]);
-  timers.set(id, window.setTimeout(() => dismissToast(id), TOAST_LIFETIME_MS));
+  timers.set(id, window.setTimeout(() => dismissToast(id), toast.onAction ? ACTION_TOAST_LIFETIME_MS : TOAST_LIFETIME_MS));
 }
 
 function subscribe(listener: () => void): () => void {

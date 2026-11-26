@@ -54,6 +54,7 @@ export function CameraRig({ pose, animate }: CameraRigProps) {
     positionVelocity: new THREE.Vector3(),
     targetVelocity: new THREE.Vector3(),
     pointer: new THREE.Vector2(),
+    goal: new THREE.Vector3(...pose.position),
     flightDistance: 0
   });
 
@@ -62,10 +63,6 @@ export function CameraRig({ pose, animate }: CameraRigProps) {
     camera.filmOffset = isWide ? WIDE_FRAME_SHIFT * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * aspect * camera.getFilmWidth() : 0;
     camera.updateProjectionMatrix();
   }, [camera, width, aspect]);
-
-  useEffect(() => {
-    rig.current.flightDistance = rig.current.position.distanceTo(goalPosition.set(...pose.position));
-  }, [pose]);
 
   useFrame(({ clock }, delta) => {
     const state = rig.current;
@@ -80,6 +77,11 @@ export function CameraRig({ pose, animate }: CameraRigProps) {
       goalTarget.lerp(focusPoint, portrait * 0.85);
       goalPosition.sub(goalTarget).multiplyScalar(1 + portrait * 0.15).add(goalTarget);
       goalPosition.y += portrait * 3;
+    }
+    // A new flight starts whenever the framed goal moves (new pose, or the layout turning portrait)
+    if (goalPosition.distanceToSquared(state.goal) > 1e-8) {
+      state.goal.copy(goalPosition);
+      state.flightDistance = state.position.distanceTo(goalPosition);
     }
 
     if (animate) {

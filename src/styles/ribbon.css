@@ -134,7 +134,13 @@
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-  padding: 0 13px;
+}
+
+/* Desktop only, so the phone and tablet dock paddings above still apply */
+@media (min-width: 1025px) {
+  .lens-bar .view-nav-item {
+    padding: 0 13px;
+  }
 }
 
 .lens-bar .view-nav-item.is-active {

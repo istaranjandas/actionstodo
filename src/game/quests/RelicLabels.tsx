@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { arenaRuntime } from '../state/arenaRuntime';
+import { isQuestRewarded } from '../state/gameProgress';
 import { relicStatusFor } from './relicLayout';
 import { getLocalISODate } from '../../modules/dateUtils';
 import type { Task } from '../../types';
@@ -16,22 +17,32 @@ const truncateLabel = (text: string) => (text.length > LABEL_MAX_LENGTH ? `${tex
 export function RelicLabelLayer({ tasks }: { tasks: Task[] }) {
   const [xpPopupTaskIds, setXpPopupTaskIds] = useState<Set<string>>(() => new Set());
   const previousCompletion = useRef(new Map<string, boolean>());
+  const popupTimers = useRef(new Set<number>());
   const today = getLocalISODate();
 
+  // Runs before the app rewards this change, so an id already rewarded is a re-completion that earns no XP.
   useEffect(() => {
-    const newlyCompleted = tasks.filter((task) => task.completed && previousCompletion.current.get(task.id) === false).map((task) => task.id);
+    const newlyCompleted = tasks
+      .filter((task) => task.completed && previousCompletion.current.get(task.id) === false && !isQuestRewarded(task.id))
+      .map((task) => task.id);
     previousCompletion.current = new Map(tasks.map((task) => [task.id, task.completed]));
     if (newlyCompleted.length === 0) return;
     setXpPopupTaskIds((current) => new Set([...current, ...newlyCompleted]));
     const clearPopups = window.setTimeout(() => {
+      popupTimers.current.delete(clearPopups);
       setXpPopupTaskIds((current) => {
         const next = new Set(current);
         newlyCompleted.forEach((id) => next.delete(id));
         return next;
       });
     }, XP_POPUP_DURATION_MS);
-    return () => window.clearTimeout(clearPopups);
+    popupTimers.current.add(clearPopups);
   }, [tasks]);
+
+  useEffect(() => {
+    const timers = popupTimers.current;
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, []);
 
   return (
     <div className="relic-label-layer" aria-hidden="true">
@@ -59,15 +70,16 @@ export function RelicLabelProjector() {
   const size = useThree((state) => state.size);
   const worldPoint = useMemo(() => new THREE.Vector3(), []);
   const projected = useMemo(() => new THREE.Vector3(), []);
-  const lastWritten = useRef(new Map<string, string>());
+  // Keyed by element so a re-created anchor (fresh inline styles) is always written again.
+  const lastWritten = useRef(new WeakMap<HTMLElement, string>());
 
   useFrame(() => {
     arenaRuntime.labelAnchors.forEach((anchor, taskId) => {
       const body = arenaRuntime.relics.get(taskId);
       const hide = () => {
-        if (lastWritten.current.get(taskId) === 'hidden') return;
+        if (lastWritten.current.get(anchor) === 'hidden') return;
         anchor.style.opacity = '0';
-        lastWritten.current.set(taskId, 'hidden');
+        lastWritten.current.set(anchor, 'hidden');
       };
       if (!body) {
         hide();
@@ -89,8 +101,8 @@ export function RelicLabelProjector() {
       const transform = `translate3d(${screenX.toFixed(0)}px, ${screenY.toFixed(0)}px, 0) translate(-50%, -100%) scale(${(isFocused ? scale * 1.12 : scale).toFixed(2)})`;
       const nextOpacity = isFocused ? '1' : opacity.toFixed(1);
       const signature = transform + nextOpacity;
-      if (lastWritten.current.get(taskId) === signature) return;
-      lastWritten.current.set(taskId, signature);
+      if (lastWritten.current.get(anchor) === signature) return;
+      lastWritten.current.set(anchor, signature);
       anchor.style.transform = transform;
       anchor.style.opacity = nextOpacity;
     });

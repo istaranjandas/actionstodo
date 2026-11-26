@@ -1,0 +1,723 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-25T19:05:26.728Z",
+  "title": "Design System: Actionstodo",
+  "extensions": {
+    "colorMeta": {
+      "lantern-amber": {
+        "role": "primary",
+        "displayName": "Lantern Amber",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fcd34d",
+          "#fef3c7"
+        ]
+      },
+      "lantern-amber-deep": {
+        "role": "primary",
+        "displayName": "Deep Lantern Amber",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fcd34d",
+          "#fef3c7"
+        ]
+      },
+      "lantern-amber-text": {
+        "role": "primary",
+        "displayName": "Lantern Amber Text",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fcd34d",
+          "#fef3c7"
+        ]
+      },
+      "lantern-amber-wash": {
+        "role": "primary",
+        "displayName": "Lantern Wash",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fcd34d",
+          "#fef3c7"
+        ]
+      },
+      "lantern-amber-tint": {
+        "role": "primary",
+        "displayName": "Lantern Tint",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fcd34d",
+          "#fef3c7"
+        ]
+      },
+      "lantern-amber-dusk": {
+        "role": "primary",
+        "displayName": "Lantern Amber (Dusk)",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fcd34d",
+          "#fef3c7"
+        ]
+      },
+      "lantern-amber-text-dusk": {
+        "role": "primary",
+        "displayName": "Lantern Amber Text (Dusk)",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fcd34d",
+          "#fef3c7"
+        ]
+      },
+      "lantern-core-dusk": {
+        "role": "primary",
+        "displayName": "Lantern Core (Dusk)",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fcd34d",
+          "#fef3c7"
+        ]
+      },
+      "amber-ink": {
+        "role": "primary",
+        "displayName": "Amber Ink",
+        "tonalRamp": [
+          "oklch(15% 0.005 60)",
+          "oklch(25% 0.009 60)",
+          "oklch(35% 0.013 60)",
+          "oklch(45% 0.016 60)",
+          "oklch(58% 0.019 60)",
+          "oklch(70% 0.015 60)",
+          "oklch(82% 0.010 60)",
+          "oklch(95% 0.005 60)"
+        ]
+      },
+      "trail-jade": {
+        "role": "secondary",
+        "displayName": "Trail Jade",
+        "tonalRamp": [
+          "oklch(15% 0.033 166)",
+          "oklch(25% 0.055 166)",
+          "oklch(35% 0.076 166)",
+          "oklch(45% 0.098 166)",
+          "oklch(58% 0.113 166)",
+          "oklch(70% 0.087 166)",
+          "oklch(82% 0.061 166)",
+          "oklch(95% 0.033 166)"
+        ]
+      },
+      "trail-jade-hi": {
+        "role": "secondary",
+        "displayName": "Trail Jade Bright",
+        "tonalRamp": [
+          "oklch(15% 0.033 166)",
+          "oklch(25% 0.055 166)",
+          "oklch(35% 0.076 166)",
+          "oklch(45% 0.098 166)",
+          "oklch(58% 0.113 166)",
+          "oklch(70% 0.087 166)",
+          "oklch(82% 0.061 166)",
+          "oklch(95% 0.033 166)"
+        ]
+      },
+      "trail-jade-wash": {
+        "role": "secondary",
+        "displayName": "Trail Jade Wash",
+        "tonalRamp": [
+          "oklch(15% 0.033 166)",
+          "oklch(25% 0.055 166)",
+          "oklch(35% 0.076 166)",
+          "oklch(45% 0.098 166)",
+          "oklch(58% 0.113 166)",
+          "oklch(70% 0.087 166)",
+          "oklch(82% 0.061 166)",
+          "oklch(95% 0.033 166)"
+        ]
+      },
+      "trail-jade-text": {
+        "role": "secondary",
+        "displayName": "Trail Jade Text",
+        "tonalRamp": [
+          "oklch(15% 0.033 166)",
+          "oklch(25% 0.055 166)",
+          "oklch(35% 0.076 166)",
+          "oklch(45% 0.098 166)",
+          "oklch(58% 0.113 166)",
+          "oklch(70% 0.087 166)",
+          "oklch(82% 0.061 166)",
+          "oklch(95% 0.033 166)"
+        ]
+      },
+      "trail-jade-dusk": {
+        "role": "secondary",
+        "displayName": "Trail Jade (Dusk)",
+        "tonalRamp": [
+          "oklch(15% 0.033 172)",
+          "oklch(25% 0.055 172)",
+          "oklch(35% 0.076 172)",
+          "oklch(45% 0.098 172)",
+          "oklch(58% 0.113 172)",
+          "oklch(70% 0.087 172)",
+          "oklch(82% 0.061 172)",
+          "oklch(95% 0.033 172)"
+        ]
+      },
+      "ember-red": {
+        "role": "tertiary",
+        "displayName": "Ember Red",
+        "tonalRamp": [
+          "oklch(15% 0.052 35)",
+          "oklch(25% 0.086 35)",
+          "oklch(35% 0.121 35)",
+          "oklch(45% 0.155 35)",
+          "oklch(58% 0.180 35)",
+          "oklch(70% 0.138 35)",
+          "oklch(82% 0.097 35)",
+          "oklch(95% 0.052 35)"
+        ]
+      },
+      "ember-red-wash": {
+        "role": "tertiary",
+        "displayName": "Ember Red Wash",
+        "tonalRamp": [
+          "oklch(15% 0.052 35)",
+          "oklch(25% 0.086 35)",
+          "oklch(35% 0.121 35)",
+          "oklch(45% 0.155 35)",
+          "oklch(58% 0.180 35)",
+          "oklch(70% 0.138 35)",
+          "oklch(82% 0.097 35)",
+          "oklch(95% 0.052 35)"
+        ]
+      },
+      "ember-red-dusk": {
+        "role": "tertiary",
+        "displayName": "Ember Red (Dusk)",
+        "tonalRamp": [
+          "oklch(15% 0.041 35)",
+          "oklch(25% 0.068 35)",
+          "oklch(35% 0.095 35)",
+          "oklch(45% 0.123 35)",
+          "oklch(58% 0.142 35)",
+          "oklch(70% 0.109 35)",
+          "oklch(82% 0.076 35)",
+          "oklch(95% 0.041 35)"
+        ]
+      },
+      "slate-ink": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "slate-ink-2": {
+        "role": "neutral",
+        "displayName": "Slate Ink 2",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "slate-ink-3": {
+        "role": "neutral",
+        "displayName": "Slate Ink 3",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "slate-ink-faint": {
+        "role": "neutral",
+        "displayName": "Slate Ink Faint",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "paper-panel": {
+        "role": "neutral",
+        "displayName": "Paper Panel",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "paper-plate": {
+        "role": "neutral",
+        "displayName": "Paper Plate",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "slate-well": {
+        "role": "neutral",
+        "displayName": "Slate Well",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "slate-well-deep": {
+        "role": "neutral",
+        "displayName": "Slate Well Deep",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "dusk-ink": {
+        "role": "neutral",
+        "displayName": "Dusk Ink",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "dusk-ink-2": {
+        "role": "neutral",
+        "displayName": "Dusk Ink 2",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#cbd5e1",
+          "#f1f5f9"
+        ]
+      },
+      "obsidian-panel": {
+        "role": "neutral",
+        "displayName": "Obsidian Panel",
+        "tonalRamp": [
+          "#04070d",
+          "#070b13",
+          "#0c111b",
+          "#0e1420",
+          "#141b29",
+          "#1e293b",
+          "#334155",
+          "#475569"
+        ]
+      },
+      "obsidian-plate": {
+        "role": "neutral",
+        "displayName": "Obsidian Plate",
+        "tonalRamp": [
+          "#04070d",
+          "#070b13",
+          "#0c111b",
+          "#0e1420",
+          "#141b29",
+          "#1e293b",
+          "#334155",
+          "#475569"
+        ]
+      },
+      "obsidian-raised": {
+        "role": "neutral",
+        "displayName": "Obsidian Raised",
+        "tonalRamp": [
+          "#04070d",
+          "#070b13",
+          "#0c111b",
+          "#0e1420",
+          "#141b29",
+          "#1e293b",
+          "#334155",
+          "#475569"
+        ]
+      },
+      "obsidian-well": {
+        "role": "neutral",
+        "displayName": "Obsidian Well",
+        "tonalRamp": [
+          "#04070d",
+          "#070b13",
+          "#0c111b",
+          "#0e1420",
+          "#141b29",
+          "#1e293b",
+          "#334155",
+          "#475569"
+        ]
+      },
+      "daylight-sky": {
+        "role": "neutral",
+        "displayName": "Daylight Sky",
+        "tonalRamp": [
+          "oklch(15% 0.008 220)",
+          "oklch(25% 0.014 220)",
+          "oklch(35% 0.019 220)",
+          "oklch(45% 0.025 220)",
+          "oklch(58% 0.028 220)",
+          "oklch(70% 0.022 220)",
+          "oklch(82% 0.015 220)",
+          "oklch(95% 0.008 220)"
+        ]
+      },
+      "dusk-sky": {
+        "role": "neutral",
+        "displayName": "Dusk Sky",
+        "tonalRamp": [
+          "oklch(15% 0.008 240)",
+          "oklch(25% 0.014 240)",
+          "oklch(35% 0.019 240)",
+          "oklch(45% 0.025 240)",
+          "oklch(58% 0.028 240)",
+          "oklch(70% 0.022 240)",
+          "oklch(82% 0.015 240)",
+          "oklch(95% 0.008 240)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Day group names; uppercase."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "The quick-add input."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default text; task titles at 14.5px."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Lens tabs, toolbar keys, the primary key; uppercase."
+      },
+      "micro-label": {
+        "displayName": "Micro-label",
+        "purpose": "Popover titles, settings legends, grid headers; uppercase."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Counts, tabular numbers, keycaps and the Game mode HUD only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-panel",
+        "value": "inset 0 0 0 1px var(--line), 0 18px 40px -26px var(--cast)",
+        "purpose": "Day groups, the quick-add box, the planner container."
+      },
+      {
+        "name": "shadow-float",
+        "value": "inset 0 0 0 1px var(--line-strong), 0 24px 60px -24px var(--cast)",
+        "purpose": "Popovers and anything above a panel."
+      },
+      {
+        "name": "hud-glass-shadow",
+        "value": "0 10px 30px -5px rgba(15, 23, 42, 0.1), 0 1px 2px rgba(15, 23, 42, 0.04)",
+        "purpose": "The dock and frosted HUD pieces (Daylight)."
+      },
+      {
+        "name": "hud-glass-shadow-dusk",
+        "value": "0 16px 40px -12px rgba(0, 0, 0, 0.6)",
+        "purpose": "The dock and frosted HUD pieces (Dusk)."
+      },
+      {
+        "name": "shadow-key-hover",
+        "value": "inset 0 0 0 1px var(--amber-line)",
+        "purpose": "Amber frame on a hovered key."
+      },
+      {
+        "name": "shadow-key-pressed",
+        "value": "inset 0 0 0 1px var(--amber-line), inset 0 0 12px -4px var(--amber-glow)",
+        "purpose": "Latched and pressed keys."
+      },
+      {
+        "name": "shadow-amber",
+        "value": "0 0 0 1px var(--amber-deep), 0 0 18px -6px var(--amber-glow)",
+        "purpose": "Solid amber surfaces; a faint lantern glow."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Default easing for state transitions and panel entrances."
+      },
+      {
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.34, 1.45, 0.64, 1)",
+        "purpose": "Playful overshoot for small rewards."
+      },
+      {
+        "name": "ease-press",
+        "value": "cubic-bezier(0.3, 0, 0.2, 1)",
+        "purpose": "Key press-down."
+      },
+      {
+        "name": "dur-press",
+        "value": "70ms",
+        "purpose": "Key press."
+      },
+      {
+        "name": "dur-quick",
+        "value": "160ms",
+        "purpose": "Hover, colour and frame changes."
+      },
+      {
+        "name": "dur-panel",
+        "value": "240ms",
+        "purpose": "Panels and popovers opening."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "680px"
+      },
+      {
+        "name": "non-desktop",
+        "value": "1024px"
+      },
+      {
+        "name": "desktop",
+        "value": "1025px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Key",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single solid amber action, such as adding a task.",
+      "html": "<button class=\"ds-btn-primary\">Add <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 16px; border-radius: var(--radius-md); background: var(--amber); border: 1px solid var(--amber-deep); color: var(--amber-ink); font-family: var(--font-display); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; box-shadow: var(--shadow-amber); cursor: pointer; transition: transform var(--dur-press) var(--ease-press), box-shadow var(--dur-quick) var(--ease-out), filter var(--dur-quick) ease; } .ds-btn-primary:hover { filter: brightness(1.1); box-shadow: var(--shadow-amber), 0 0 22px -4px var(--amber-glow); } .ds-btn-primary:active { transform: scale(0.97); filter: brightness(0.94); box-shadow: 0 0 0 1px var(--amber-deep); transition-duration: 40ms; } .ds-btn-primary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }"
+    },
+    {
+      "name": "Key",
+      "kind": "button",
+      "refersTo": "button-key",
+      "description": "Secondary toolbar key; lights amber on hover and presses down.",
+      "html": "<button class=\"ds-key\">Today</button>",
+      "css": ".ds-key { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line-strong); color: var(--ink-2); font-family: var(--font-display); font-size: 13.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: var(--shadow-key); cursor: pointer; transition: transform var(--dur-press) var(--ease-press), box-shadow var(--dur-quick) var(--ease-out), color var(--dur-quick) ease, border-color var(--dur-quick) ease; } .ds-key:hover { color: var(--ink); border-color: var(--amber-line); background: var(--amber-tint); box-shadow: var(--shadow-key-hover); } .ds-key:active { transform: scale(0.97); box-shadow: var(--shadow-key-pressed); transition-duration: 40ms; } .ds-key:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }"
+    },
+    {
+      "name": "Latched Toggle",
+      "kind": "button",
+      "refersTo": "button-key-latched",
+      "description": "A toggle that is on: pressed into the panel with an amber legend.",
+      "html": "<button class=\"ds-key-latched\" aria-pressed=\"true\">Planner</button>",
+      "css": ".ds-key-latched { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: var(--radius-md); background: var(--well); border: 1px solid var(--line-strong); color: var(--amber-text); font-family: var(--font-display); font-size: 13.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: var(--shadow-key-pressed); transform: translateY(1px); cursor: pointer; } .ds-key-latched:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }"
+    },
+    {
+      "name": "Quick Add",
+      "kind": "input",
+      "refersTo": "input-quick-add",
+      "description": "The command line for new tasks: a glass panel holding a borderless input.",
+      "html": "<label class=\"ds-quick-add\"><span class=\"ds-quick-add-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg></span><input class=\"ds-quick-add-input\" placeholder=\"Call Alex at 5pm\" /></label>",
+      "css": ".ds-quick-add { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 16px; border-radius: var(--radius-lg); background: var(--hud-glass); border: 1px solid var(--line); box-shadow: var(--shadow-panel); transition: border-color var(--dur-quick) ease, box-shadow var(--dur-quick) ease; } .ds-quick-add:focus-within { border-color: var(--amber-line); box-shadow: var(--shadow-panel), 0 0 0 3px var(--amber-wash); } .ds-quick-add-icon { display: inline-flex; color: var(--ink-3); } .ds-quick-add:focus-within .ds-quick-add-icon { color: var(--amber-text); } .ds-quick-add-input { flex: 1; min-width: 0; height: 36px; background: transparent; border: none; outline: none; font-family: var(--font-sans); font-size: 15px; font-weight: 450; color: var(--ink); } .ds-quick-add-input::placeholder { color: var(--ink-3); }"
+    },
+    {
+      "name": "Lens Tabs",
+      "kind": "nav",
+      "refersTo": "nav-lens-tab",
+      "description": "The lens switcher in the path ribbon; the active tab gets the amber-underlined key.",
+      "html": "<nav class=\"ds-lens-bar\" aria-label=\"Lenses\"><button class=\"ds-lens is-active\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2\"/><path d=\"M12 20v2\"/><path d=\"m4.93 4.93 1.41 1.41\"/><path d=\"m17.66 17.66 1.41 1.41\"/><path d=\"M2 12h2\"/><path d=\"M20 12h2\"/><path d=\"m6.34 17.66-1.41 1.41\"/><path d=\"m19.07 4.93-1.41 1.41\"/></svg>Today<span class=\"ds-lens-count\">4</span></button><button class=\"ds-lens\">Upcoming</button><button class=\"ds-lens\">Week</button></nav>",
+      "css": ".ds-lens-bar { display: inline-flex; align-items: center; gap: 2px; height: 44px; padding: 0 6px; border-radius: var(--radius-pill); border: 1px solid var(--hud-glass-edge); background: var(--hud-glass); backdrop-filter: blur(8px) saturate(140%); box-shadow: var(--hud-glass-shadow); } .ds-lens { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--ink-3); font-family: var(--font-display); font-size: 13.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; cursor: pointer; transition: color var(--dur-quick) ease, transform var(--dur-press) var(--ease-press); } .ds-lens:hover { color: var(--ink); } .ds-lens:active { transform: translateY(1px); } .ds-lens:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; } .ds-lens.is-active { color: var(--ink); border-color: var(--line-strong); background: linear-gradient(180deg, var(--raised-top), var(--raised-bottom)); box-shadow: inset 0 -2px 0 var(--amber), 0 0 16px -4px var(--amber-glow); } .ds-lens.is-active svg { color: var(--amber-text); } .ds-lens-count { min-width: 18px; padding: 0 5px; border-radius: var(--radius-pill); font-family: var(--font-mono); font-size: 10px; font-weight: 600; line-height: 16px; text-align: center; color: var(--ink-3); background: var(--well); } .ds-lens.is-active .ds-lens-count { color: var(--amber-ink); background: var(--amber); }"
+    },
+    {
+      "name": "Duration Chip",
+      "kind": "chip",
+      "refersTo": "button-key",
+      "description": "Duration and time chips; the selected chip becomes a solid amber key.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\">15m</button><button class=\"ds-chip is-active\">30m</button><button class=\"ds-chip\">1h</button></div>",
+      "css": ".ds-chips { display: flex; gap: 6px; } .ds-chip { height: 28px; padding: 0 10px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line-strong); color: var(--ink-2); font-family: var(--font-sans); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: transform var(--dur-press) var(--ease-press), box-shadow var(--dur-quick) var(--ease-out), border-color var(--dur-quick) ease; } .ds-chip:hover { color: var(--ink); border-color: var(--amber-line); background: var(--amber-tint); box-shadow: var(--shadow-key-hover); } .ds-chip:active { transform: scale(0.97); } .ds-chip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; } .ds-chip.is-active { background: var(--amber); border-color: var(--amber-deep); color: var(--amber-ink); box-shadow: var(--shadow-amber); }"
+    },
+    {
+      "name": "Day Group",
+      "kind": "card",
+      "refersTo": "card-day-group",
+      "description": "A day of tasks: uppercase headline, mono count, jade progress meter, task rows with a selected amber rail.",
+      "html": "<section class=\"ds-day\"><header class=\"ds-day-head\"><h3 class=\"ds-day-name\">Today</h3><span class=\"ds-day-count\">1/3</span></header><div class=\"ds-meter\"><span style=\"width:33%\"></span></div><div class=\"ds-row\"><span class=\"ds-check is-done\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg></span><span class=\"ds-row-text\">Morning run</span></div><div class=\"ds-row is-selected\"><span class=\"ds-check\"></span><span class=\"ds-row-text\">Design sprint</span></div><div class=\"ds-row\"><span class=\"ds-check\"></span><span class=\"ds-row-text\">Call Alex</span></div></section>",
+      "css": ".ds-day { display: flex; flex-direction: column; gap: 4px; width: 320px; padding: 12px 16px 8px; border-radius: var(--radius-lg); border: 1px solid var(--line); background: linear-gradient(180deg, var(--sheen), transparent 40%), linear-gradient(180deg, var(--plate-top), var(--plate-bottom)); box-shadow: var(--shadow-panel); font-family: var(--font-sans); } .ds-day-head { display: flex; align-items: baseline; justify-content: space-between; } .ds-day-name { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink); } .ds-day-count { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: var(--telemetry-ink); } .ds-meter { position: relative; height: 4px; margin: 4px 0 8px; border-radius: var(--radius-pill); background: var(--track); overflow: hidden; } .ds-meter span { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: linear-gradient(90deg, var(--teal), var(--teal-hi)); } .ds-row { display: flex; align-items: center; gap: 10px; padding: 5px 8px; margin: 0 -8px; border-radius: var(--radius-md); cursor: pointer; transition: background var(--dur-quick) ease; } .ds-row:hover { background: var(--hover); } .ds-row.is-selected { background: linear-gradient(90deg, var(--amber-wash), transparent 60%), linear-gradient(180deg, var(--raised-top), var(--raised-bottom)); box-shadow: inset 3px 0 0 var(--amber); } .ds-row-text { flex: 1; font-size: 14.5px; line-height: 1.45; color: var(--ink); } .ds-check { display: grid; place-items: center; width: 18px; height: 18px; border-radius: var(--radius-xs); border: 1px solid var(--line-strong); background: var(--well); box-shadow: inset 0 1px 2px var(--cast-near); color: var(--teal-ink); } .ds-check.is-done { border-color: color-mix(in srgb, var(--teal) 70%, black); background: linear-gradient(180deg, var(--teal-hi), var(--teal)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 0 3px var(--teal-wash); }"
+    },
+    {
+      "name": "Next Up",
+      "kind": "custom",
+      "refersTo": "card-day-group",
+      "description": "The amber-railed card naming the next task and its time; lifts 1px on hover.",
+      "html": "<button class=\"ds-next-up\"><span class=\"ds-next-up-label\">Next up</span><span class=\"ds-next-up-text\">Design sprint</span><span class=\"ds-next-up-meta\">2:00 pm · in 40 min</span></button>",
+      "css": ".ds-next-up { display: grid; gap: 2px; width: 320px; padding: 12px 14px 12px 18px; border-radius: var(--radius-md); border: 1px solid var(--amber-line); background: linear-gradient(90deg, var(--amber-wash), transparent 70%), linear-gradient(180deg, var(--raised-top), var(--raised-bottom)); box-shadow: inset 3px 0 0 var(--amber); text-align: left; color: var(--ink); font-family: var(--font-sans); cursor: pointer; transition: transform var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) ease; } .ds-next-up:hover { transform: translateY(-1px); } .ds-next-up:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; } .ds-next-up-label { font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber-text); } .ds-next-up-text { font-size: 15px; font-weight: 600; } .ds-next-up-meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lantern Console",
+    "overview": "Actionstodo is a calm glass control panel floating over a living valley. The world outside (sky, ridges, wayposts, lanterns) carries the mood; the console carries the work. Panels are frosted glass in one material, shared by the day slate, the path ribbon, the task cards and every popover. Amber is the only voice on screen that means \"active\", \"focused\" or \"yours\": a lit lantern, a selected task, the primary key. Everything else stays in cool slate.\n\nThe same console exists at two hours. **Daylight** is paper-white glass with slate ink under a pale haze sky. **Dusk** is obsidian-indigo glass with cool slate-50 ink under a starry sky. Both hours share geometry, type and behaviour; only the tokens change. Density is compact and keyboard-first: 14px body, tight rows, uppercase legends for navigation and headers.\n\nControls are tactile and confident. Keys respond to touch: the frame lights amber on hover, and the key presses down (scale 0.97) when pressed. Floating panels are layered and lifted above the valley so the world reads as a backdrop, never as a surface you type on. The interface must never look like a generic SaaS dashboard.",
+    "keyCharacteristics": [
+      "One glass material for every panel, in two hours (Daylight / Dusk).",
+      "Amber is reserved for active, focused and primary; slate for everything else.",
+      "Trail Jade means done or success; Ember Red means danger. Nothing else uses them.",
+      "Uppercase, letter-spaced sans for navigation, headers and legends; quiet sentence-case body.",
+      "Tactile keys with amber hover frames and a press-down response.",
+      "Motion is opt-in (off by default) and reduced-motion always wins."
+    ],
+    "rules": [
+      {
+        "name": "The One Lantern Rule",
+        "body": "Amber marks what is active, focused, selected or primary. If an element is none of those, it is not amber.",
+        "section": "colors"
+      },
+      {
+        "name": "The Meaning-Only Rule",
+        "body": "Trail Jade means done or success and Ember Red means danger. Never use either for decoration, branding or emphasis.",
+        "section": "colors"
+      },
+      {
+        "name": "The Readable Ink Rule",
+        "body": "Any text, placeholders included, meets 4.5:1 in both hours. Faint ink is for marks, not words.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Olive Rule",
+        "body": "Never darken amber with black. Dusk shadows go blue-violet, and surfaces stay cool obsidian, so amber always has a cool ground to glow against.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Voice Rule",
+        "body": "The interface speaks in one sans. Mono appears only for numbers, keycaps and the Game mode HUD.",
+        "section": "typography"
+      },
+      {
+        "name": "The Stencilled Legend Rule",
+        "body": "Navigation, headers and section legends are uppercase with tracking; content (task titles, notes, inputs) is never uppercase.",
+        "section": "typography"
+      },
+      {
+        "name": "The Single Skylight Rule",
+        "body": "One light source, soft skylight from above, drives every highlight and shadow. Shadows fall downward, highlights sit on top edges.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Lifted Panel Rule",
+        "body": "Anything that floats over the world gets a frame and a cast shadow. Nothing sits directly on the valley without lift.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Solid Sheet Rule",
+        "body": "A sheet that covers content (the phone details sheet) is solid panel colour, never glass, so the rows behind it never read through its fields.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** take every colour, radius, shadow and duration from `src/styles/tokens.css`; add a token before adding a value.",
+      "**Do** design every change in both Daylight and Dusk.",
+      "**Do** keep amber for active, focused, selected and primary states only (The One Lantern Rule).",
+      "**Do** use the shared motion tokens: `--dur-press` (70ms), `--dur-quick` (160ms), `--dur-panel` (240ms) with `--ease-out`, `--ease-spring` or `--ease-press`.",
+      "**Do** keep motion off by default and respect reduced motion; the app must stay smooth on low-end PCs.",
+      "**Do** use the 680 / 1024 / 1025px breakpoints and gate hover styles behind `(hover: hover)`.",
+      "**Do** give every floating panel a 1px frame and a cast shadow (The Lifted Panel Rule)."
+    ],
+    "donts": [
+      "**Don't** drift into a generic SaaS dashboard: plain white cards on grey, blue primary buttons, purple gradients.",
+      "**Don't** darken amber with black or warm the neutrals towards sepia (The No-Olive Rule).",
+      "**Don't** use Trail Jade or Ember Red outside done/success and danger states.",
+      "**Don't** add a second typeface or use mono outside numbers, keycaps and the Game mode HUD.",
+      "**Don't** uppercase content such as task titles or notes.",
+      "**Don't** add one-off breakpoints or hard-coded colours outside the token file.",
+      "**Don't** make a destructive action one tap without an Undo."
+    ]
+  }
+}

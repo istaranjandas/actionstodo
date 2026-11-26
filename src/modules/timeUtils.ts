@@ -65,7 +65,7 @@ export function normalizeTimeString(str: string | undefined, hint = ''): string 
   let h = parseInt(hStr, 10);
   let m = mStr ? parseInt(mStr, 10) : 0;
 
-  if (isNaN(h) || h < 0 || h > 24) return null;
+  if (isNaN(h) || h < 0 || h > 23) return null;
   if (isNaN(m) || m < 0 || m > 59) return null;
 
   if (isPM && h < 12) h += 12;
@@ -83,11 +83,17 @@ export function parseTimeFromText(text: string): ParsedTime | null {
   if (!text) return null;
 
   // Range regex: "10am-11am", "10:00 - 11:30", "2pm to 3:30pm", "9 to 10am", "2-3pm"
-  const rangeRegex = /(?:at\s+|@\s*)?(\b\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*(?:-|–|to)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/i;
-  const rangeMatch = text.match(rangeRegex);
+  const rangeRegex = /(?:\bat\s+|@\s*)?(\b\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*(?:-|–|to)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/gi;
+  // Bare number ranges ("chapters 3-5") stay text: a time range needs am/pm, a colon, or "at"/"@"
+  const rangeMatch = [...text.matchAll(rangeRegex)].find(m => /am|pm|:/i.test(m[1] + m[2]) || /^(?:at\s|@)/i.test(m[0]));
   if (rangeMatch) {
-    const start = normalizeTimeString(rangeMatch[1], rangeMatch[2]);
     const end = normalizeTimeString(rangeMatch[2]);
+    let start = normalizeTimeString(rangeMatch[1], rangeMatch[2]);
+    // The end's am/pm only carries back when it keeps the start first: "11-1pm" is 11:00-13:00
+    if (start && end && start >= end && !/am|pm/i.test(rangeMatch[1])) {
+      const opposite = /pm/i.test(rangeMatch[2]) ? 'am' : /am/i.test(rangeMatch[2]) ? 'pm' : '';
+      if (opposite) start = normalizeTimeString(rangeMatch[1], opposite);
+    }
     if (start && end) {
       const cleanText = text.replace(rangeMatch[0], '').replace(/\s{2,}/g, ' ').trim();
       return { cleanText: cleanText || text, startTime: start, endTime: end, raw: rangeMatch[0] };
@@ -95,7 +101,7 @@ export function parseTimeFromText(text: string): ParsedTime | null {
   }
 
   // Single time regex: "at 2pm", "@ 3:30", "11:00am", "4pm", "at 14:00", "9am"
-  const singleRegex = /(?:at\s+|@\s*)(\b\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b)|(\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b)|(\b(?:[01]?\d|2[0-3]):[0-5]\d\b)/i;
+  const singleRegex = /(?:\bat\s+|@\s*)(\b\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b)|(\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b)|(\b(?:[01]?\d|2[0-3]):[0-5]\d\b)/i;
   const match = text.match(singleRegex);
   if (match) {
     const matchedPart = match[1] || match[2] || match[3];
@@ -117,9 +123,11 @@ export function getNextSmartSlot(dateStr: string, tasksList: Task[] = []): { sta
   if (dayTasks.length > 0) {
     const latestTask = dayTasks[dayTasks.length - 1];
     const latestEnd = latestTask.endTime || addMinutesToTime(latestTask.startTime, 30);
+    const slotEnd = addMinutesToTime(latestEnd, 30);
     return {
       startTime: latestEnd,
-      endTime: addMinutesToTime(latestEnd, 30)
+      // Never wrap past midnight into an end before the start
+      endTime: slotEnd < latestEnd ? '23:59' : slotEnd
     };
   }
 
@@ -129,7 +137,9 @@ export function getNextSmartSlot(dateStr: string, tasksList: Task[] = []): { sta
     const curMin = now.getMinutes();
     let nextH = now.getHours();
     const nextM = curMin < 30 ? 30 : 0;
-    if (curMin >= 30) nextH = (nextH + 1) % 24;
+    if (curMin >= 30) nextH += 1;
+    // After 23:30 there is no later half-hour today; keep the slot on this day instead of 00:00
+    if (nextH > 23) return { startTime: '23:30', endTime: '23:59' };
     const start = `${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`;
     return {
       startTime: start,

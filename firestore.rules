@@ -4,11 +4,33 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
+    // Basic shape of a task as toFirestoreTask writes it; optional fields are checked only when present
+    function optString(data, key) {
+      return !(key in data) || data[key] is string;
+    }
+    function validTask(data) {
+      return data.uid is string
+        && data.text is string && data.text.size() <= 10000
+        && data.date is string && data.date.size() <= 10
+        && optString(data, 'startTime') && optString(data, 'endTime')
+        && (!('completed' in data) || data.completed is bool)
+        && (!('createdAt' in data) || data.createdAt is number)
+        && optString(data, 'repeat') && optString(data, 'repeatUntil')
+        && optString(data, 'repeatGeneratedThrough') && optString(data, 'seriesId')
+        && (!('isOccurrence' in data) || data.isOccurrence is bool);
+    }
     // Tasks collection: user can only access and modify their own tasks
     match /tasks/{taskId} {
       allow read: if isAdmin();
-      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      // uid is locked: an owner cannot push a task into another account
+      allow update: if request.auth != null && request.auth.uid == resource.data.uid
+        && request.resource.data.uid == resource.data.uid
+        && validTask(request.resource.data);
+      // Deleting a doc that is already gone succeeds, so one missing id cannot fail a whole batch
+      allow delete: if request.auth != null && (resource == null || request.auth.uid == resource.data.uid);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid
+        && validTask(request.resource.data);
     }
     // User profiles: each user writes their own; admins read all
     match /users/{userId} {

@@ -30,8 +30,8 @@
 /* The world behind a multi-day board is dimmed with paper, not smoke */
 :where([data-theme='light']) .hud-scrim {
   background:
-    radial-gradient(120% 90% at 50% 45%, rgba(248, 250, 252, 0.5), rgba(248, 250, 252, 0.78)),
-    linear-gradient(180deg, rgba(248, 250, 252, 0.36), rgba(248, 250, 252, 0.58));
+    linear-gradient(180deg, rgba(248, 250, 252, 0.72) 0, rgba(248, 250, 252, 0.34) 200px, rgba(248, 250, 252, 0.24) 60%, rgba(248, 250, 252, 0.48) 100%),
+    radial-gradient(120% 90% at 50% 45%, transparent 45%, rgba(248, 250, 252, 0.38));
 }
 
 /* ---------- Board bits that sit on the glass ---------- */

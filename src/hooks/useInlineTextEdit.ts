@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { ClipboardEvent, KeyboardEvent } from 'react';
 
 interface InlineTextEditOptions {
   text: string;
@@ -54,6 +54,8 @@ export function useInlineTextEdit({ text, onCommit }: InlineTextEditOptions) {
     const el = textRef.current;
     if (!el) return;
     if (e.key === 'Enter') {
+      // Enter that confirms an IME candidate is not a commit
+      if (e.nativeEvent.isComposing || e.keyCode === 229) return;
       e.preventDefault();
       el.blur();
     } else if (e.key === 'Escape') {
@@ -63,5 +65,21 @@ export function useInlineTextEdit({ text, onCommit }: InlineTextEditOptions) {
     }
   };
 
-  return { textRef, isEditing, startEditing, handleBlur, handleKeyDown };
+  // Paste as plain text on one line: no pasted markup, and line breaks become spaces
+  const handlePaste = (e: ClipboardEvent<HTMLSpanElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text/plain').replace(/\s*[\r\n]+\s*/g, ' ');
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    const node = document.createTextNode(pasted);
+    range.insertNode(node);
+    range.setStartAfter(node);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  };
+
+  return { textRef, isEditing, startEditing, handleBlur, handleKeyDown, handlePaste };
 }

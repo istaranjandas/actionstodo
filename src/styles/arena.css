@@ -555,6 +555,20 @@
   to { opacity: 0; transform: translate(-50%, -46px); }
 }
 
+/* Reduced motion: both fade to opacity 0, so a near-instant run would hide them. Show them
+   static instead; the HUD removes them on its own timers. */
+body.is-reduced-motion .hud-level-up,
+body.is-reduced-motion .relic-xp-popup {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-level-up,
+  .relic-xp-popup {
+    animation: none !important;
+  }
+}
+
 /* ---------- Touch controls ---------- */
 .touch-controls {
   position: absolute;

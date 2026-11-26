@@ -37,6 +37,17 @@ export interface WorldCanvasProps {
 const IDLE_FRAME_INTERVAL_MS = 1000 / 30;
 const RESOLUTION_STEPS = [0.6, 0.8, 1, 1.25, 1.5];
 const SAMPLE_SECONDS = 2;
+// A frame longer than this is a hidden tab or a stall, not a measure of GPU speed
+const MAX_SAMPLE_DELTA = 0.25;
+
+function baseDpr(isCompact: boolean): number {
+  return Math.min(window.devicePixelRatio || 1, isCompact ? 1 : 1.25);
+}
+
+// The highest resolution step that does not exceed the Canvas's starting DPR
+function stepForDpr(dpr: number): number {
+  return Math.max(0, RESOLUTION_STEPS.filter((value) => value <= dpr + 1e-6).length - 1);
+}
 
 // Drives the demand loop: full rate while in use, 30 fps when idle, nothing in a hidden tab.
 // With reduced motion nothing animates, so frames are drawn only briefly after input (hover, selection).
@@ -72,9 +83,19 @@ function AdaptiveResolution({ enabled, startStep }: { enabled: boolean; startSte
   const setDpr = useThree((state) => state.setDpr);
   const sample = useRef({ seconds: 0, frames: 0, step: startStep, goodWindows: 0 });
 
+  // The Canvas resets its DPR when the layout switches, so start measuring again from there
+  useEffect(() => {
+    sample.current = { seconds: 0, frames: 0, step: startStep, goodWindows: 0 };
+  }, [startStep]);
+
   useFrame((_, delta) => {
     if (!enabled || isWorldIdle()) return;
     const current = sample.current;
+    if (delta > MAX_SAMPLE_DELTA) {
+      current.seconds = 0;
+      current.frames = 0;
+      return;
+    }
     current.seconds += delta;
     current.frames += 1;
     if (current.seconds < SAMPLE_SECONDS) return;
@@ -225,7 +246,7 @@ function WorldScene({ lens, focusOffset, weekStartOffset, days, theme, reducedMo
       <CameraRig pose={pose} animate={animate} />
       <Projector />
       <FrameDriver animate={animate} signature={`${lens}|${focusOffset}|${theme}|${days.length}`} />
-      <AdaptiveResolution enabled={animate} startStep={isCompact ? 2 : 3} />
+      <AdaptiveResolution enabled={animate} startStep={stepForDpr(baseDpr(isCompact))} />
     </LivePaletteContext.Provider>
   );
 }
@@ -239,7 +260,7 @@ export default function WorldCanvas(props: WorldCanvasProps) {
       className="world-canvas"
       frameloop="demand"
       shadows="percentage"
-      dpr={Math.min(window.devicePixelRatio || 1, isCompact ? 1 : 1.25)}
+      dpr={baseDpr(isCompact)}
       camera={{ fov: 48, near: 0.5, far: 1400, position: initialPose.position }}
       gl={{ antialias: true, alpha: false, stencil: false, powerPreference: 'high-performance' }}
       onCreated={({ gl }) => {

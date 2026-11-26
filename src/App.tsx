@@ -83,7 +83,9 @@ export function App() {
   const scrollMemory = useRef(new Map<string, number>());
 
   const { tasks, currentView, specificDateFilter } = appState;
-  const today = getLocalISODate();
+  // Held in state so the shell re-renders when the local date changes, even with no store update
+  const [today, setToday] = useState(getLocalISODate);
+  const todayRef = useRef(today);
   const isTableView = appState.isTableView && !isNonDesktop;
   // A picked date, or the Today lens, focuses one waypost; the other lenses frame a stretch of path
   const focusDate = isTableView ? null : specificDateFilter ?? (currentView === 'today' ? today : null);
@@ -133,6 +135,26 @@ export function App() {
     const timer = window.setInterval(ensureRecurringOccurrences, 60_000);
     return () => window.clearInterval(timer);
   }, [tasks]);
+
+  // --- Midnight rollover ---
+  // Checked on a timer and whenever the tab returns, since timers are throttled in the background.
+  // Quick-add follows the new day only if it was still pointing at the old today.
+  useEffect(() => {
+    const checkDay = () => {
+      const now = getLocalISODate();
+      const previous = todayRef.current;
+      if (now === previous) return;
+      todayRef.current = now;
+      if (state.selectedAddDate === previous) setUiState({ selectedAddDate: now });
+      setToday(now);
+    };
+    const timer = window.setInterval(checkDay, 30_000);
+    document.addEventListener('visibilitychange', checkDay);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', checkDay);
+    };
+  }, []);
 
   // --- Theme ("time of day") ---
   useEffect(() => {
@@ -427,9 +449,9 @@ export function App() {
                 </div>
               ) : (
                 <DaySlate
-                  label="Task log"
+                  label="Tasks"
                   layout={isGridView ? 'grid' : 'column'}
-                  title={isGridView ? 'All objectives' : null}
+                  title={isGridView ? 'All tasks' : null}
                   summary={viewSummary}
                   isScrolled={isScrolled}
                   isDoneLens={!focusDate && currentView === 'completed'}

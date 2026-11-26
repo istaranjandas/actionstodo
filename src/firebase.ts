@@ -7,7 +7,10 @@ import {
   onAuthStateChanged 
 } from "firebase/auth";
 import { 
-  getFirestore, 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager, 
+  memoryLocalCache, 
   collection, 
   addDoc, 
   updateDoc, 
@@ -33,7 +36,19 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-export const db = getFirestore(app);
+// Persist the cache in IndexedDB so offline edits survive a reload; fall back to memory where it is unavailable
+function pickLocalCache() {
+  try {
+    if (typeof indexedDB !== 'undefined') {
+      return persistentLocalCache({ tabManager: persistentMultipleTabManager() });
+    }
+  } catch {
+    // Some private modes throw on any IndexedDB access
+  }
+  return memoryLocalCache();
+}
+
+export const db = initializeFirestore(app, { localCache: pickLocalCache() });
 
 export { 
   signInWithPopup, 

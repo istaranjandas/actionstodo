@@ -94,7 +94,7 @@ export function GameMenu({ onEnterGameMode }: GameMenuProps) {
             ))}
           </ul>
 
-          <p className="arcade-foot">Clearing a task lights a relic. The arena reads today’s log.</p>
+          <p className="arcade-foot">Clearing a task lights a relic. The arena reads today’s tasks.</p>
         </div>
       )}
     </div>

@@ -32,16 +32,19 @@ function seededRandom(seed: number): () => number {
   };
 }
 
-export function selectArenaTasks(tasks: Task[]): Task[] {
+// keepIds come first so a just-completed relic stays mounted long enough to celebrate.
+export function selectArenaTasks(tasks: Task[], keepIds: ReadonlySet<string> = new Set()): Task[] {
   const today = getLocalISODate();
+  const kept = tasks.filter((task) => keepIds.has(task.id));
   const open = tasks
-    .filter((task) => !task.completed)
+    .filter((task) => !task.completed && !keepIds.has(task.id))
     .sort((a, b) => Math.abs(Date.parse(a.date || today) - Date.parse(today)) - Math.abs(Date.parse(b.date || today) - Date.parse(today)));
-  const completed = tasks.filter((task) => task.completed).sort((a, b) => b.createdAt - a.createdAt);
-  return [...open, ...completed].slice(0, MAX_ARENA_RELICS);
+  const completed = tasks.filter((task) => task.completed && !keepIds.has(task.id)).sort((a, b) => b.createdAt - a.createdAt);
+  return [...kept, ...open, ...completed].slice(0, MAX_ARENA_RELICS);
 }
 
-export function layoutRelics(tasks: Task[]): Map<string, [number, number]> {
+// Tasks found in `previous` keep their spot, so removing a task never moves the others.
+export function layoutRelics(tasks: Task[], previous?: ReadonlyMap<string, [number, number]>): Map<string, [number, number]> {
   const placements = new Map<string, [number, number]>();
   const occupied: [number, number][] = [
     [PLAYER_SPAWN[0], PLAYER_SPAWN[2]],
@@ -49,7 +52,15 @@ export function layoutRelics(tasks: Task[]): Map<string, [number, number]> {
   ];
   const usableRadius = ISLAND_RADIUS - OUTER_MARGIN;
 
+  tasks.forEach((task) => {
+    const kept = previous?.get(task.id);
+    if (!kept) return;
+    occupied.push(kept);
+    placements.set(task.id, kept);
+  });
+
   [...tasks]
+    .filter((task) => !placements.has(task.id))
     .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id))
     .forEach((task) => {
       const random = seededRandom(hashString(task.id));

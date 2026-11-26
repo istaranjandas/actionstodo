@@ -2,7 +2,7 @@ import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { ChevronRight, Plus, Repeat2 } from 'lucide-react';
 import { formatFriendlyDate, formatShortDate, getLocalISODate } from '../modules/dateUtils';
-import { addMinutesToTime, formatTimeRangeDisplay } from '../modules/timeUtils';
+import { addMinutesToTime, formatTimeRangeDisplay, getDurationMinutes } from '../modules/timeUtils';
 import { parseTaskInput, repeatBadgeLabel, repeatShortLabel } from '../modules/recurrence';
 import { sortTaskList, tallyTasks, updateTaskItem } from '../modules/store';
 import { getDropSlots, taskDuration } from '../modules/listDrag';
@@ -30,7 +30,7 @@ const EMPTY_MESSAGES: Record<string, string> = {
   upcoming: 'Nothing scheduled ahead. Add a task and pick a future date.',
   'this-week': 'Nothing planned for this week yet.',
   completed: 'No completed tasks yet. Finish one and it lands here.',
-  all: 'No tasks yet. Log one above, or press N.'
+  all: 'No tasks yet. Add one above, or press N.'
 };
 
 export function getSortedDateGroups(appState: AppState, filtered: Task[]): { dateKey: string; tasks: Task[] }[] {
@@ -182,7 +182,7 @@ const DateGroup = memo(function DateGroup({ dateKey, groupTasks, staggerIndex, i
         {groupTasks.map(task => (
           <TaskRow key={task.id} task={task} />
         ))}
-        {groupTasks.length === 0 && <div className="date-group-empty">{canAddHere ? 'Nothing planned yet.' : 'Nothing planned yet — log one above.'}</div>}
+        {groupTasks.length === 0 && <div className="date-group-empty">{canAddHere ? 'Nothing planned yet.' : 'Nothing planned yet — add one above.'}</div>}
       </div>
       <DropSlots dateKey={dateKey} tasks={groupTasks} />
       {canAddHere && <DayCardAdd date={dateKey} dayLabel={title} />}
@@ -371,9 +371,10 @@ function TodayBoard({ tasks, allDone }: { tasks: Task[]; allDone: boolean }) {
 
 function nudgeTaskTime(task: Task, minutes: number) {
   const baseStart = task.startTime || '09:00';
-  const duration = (task.startTime && task.endTime) ? (parseInt(task.endTime.split(':')[0]) * 60 + parseInt(task.endTime.split(':')[1]) - (parseInt(baseStart.split(':')[0]) * 60 + parseInt(baseStart.split(':')[1]))) : 30;
+  // getDurationMinutes wraps past midnight, so an overnight task keeps its length
+  const duration = task.startTime ? getDurationMinutes(baseStart, task.endTime) : 30;
   const newStart = addMinutesToTime(baseStart, minutes);
-  const newEnd = addMinutesToTime(newStart, duration > 0 ? duration : 30);
+  const newEnd = addMinutesToTime(newStart, duration);
   updateTaskItem(task.id, { startTime: newStart, endTime: newEnd });
 }
 
@@ -397,7 +398,7 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
   const repeatLabel = repeatBadgeLabel(task);
 
   // Inline edit text: double-click (or F2) to edit; single click opens the details panel; drag moves the task
-  const { textRef, isEditing, startEditing, handleBlur, handleKeyDown } = useInlineTextEdit({
+  const { textRef, isEditing, startEditing, handleBlur, handleKeyDown, handlePaste } = useInlineTextEdit({
     text: task.text,
     onCommit: (newText) => renameTask(task, newText)
   });
@@ -506,6 +507,7 @@ const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
           spellCheck={false}
           ref={textRef}
           onBlur={handleBlur}
+          onPaste={handlePaste}
           onKeyDown={(e) => {
             e.stopPropagation();
             handleKeyDown(e);

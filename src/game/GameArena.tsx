@@ -37,8 +37,11 @@ export interface GameArenaProps {
 
 const DRAG_YAW_SENSITIVITY = 0.006;
 const WHEEL_ZOOM_SENSITIVITY = 0.012;
+// Capture only once a press becomes a drag, so taps still reach R3F's click handling on relics.
+const DRAG_CAPTURE_THRESHOLD_PX = 4;
 const RENDER_SCALE_STEPS = [0.5, 0.65, 0.8, 1];
 const PERFORMANCE_WARMUP_MS = 2500;
+const CELEBRATION_HOLD_MS = 2500;
 const performanceBounds = (refreshRate: number): [number, number] => (refreshRate > 90 ? [55, 85] : [40, 54]);
 
 function SceneReadySignal({ onReady }: { onReady: () => void }) {
@@ -64,13 +67,36 @@ export default function GameArena({ tasks, theme, prefersReducedMotion, isTouchD
   const [isPerformanceWarm, setIsPerformanceWarm] = useState(false);
   const [isSceneReady, setIsSceneReady] = useState(false);
   const markSceneReady = useRef(() => setIsSceneReady(true)).current;
-  const dragState = useRef<{ pointerId: number; lastX: number } | null>(null);
+  const dragState = useRef<{ pointerId: number; startX: number; lastX: number; captured: boolean } | null>(null);
   const isVisible = useDocumentVisible();
-  const arenaTasks = useMemo(() => selectArenaTasks(tasks), [tasks]);
+  // Open relics shown at the last commit; one that turns completed is held in the arena so it can celebrate.
+  const shownOpenIds = useRef<ReadonlySet<string>>(new Set());
+  const [heldIds, setHeldIds] = useState<ReadonlySet<string>>(() => new Set());
+  const arenaTasks = useMemo(() => {
+    const keepIds = new Set(heldIds);
+    tasks.forEach((task) => {
+      if (task.completed && shownOpenIds.current.has(task.id)) keepIds.add(task.id);
+    });
+    return selectArenaTasks(tasks, keepIds);
+  }, [tasks, heldIds]);
   const animate = !prefersReducedMotion;
   const renderScale = Math.min(RENDER_SCALE_STEPS[renderScaleStep], window.devicePixelRatio);
 
   useGameKeyboard(isVisible);
+
+  useEffect(() => {
+    const justCompleted = arenaTasks.filter((task) => task.completed && shownOpenIds.current.has(task.id)).map((task) => task.id);
+    shownOpenIds.current = new Set(arenaTasks.filter((task) => !task.completed).map((task) => task.id));
+    if (justCompleted.length === 0) return;
+    setHeldIds((current) => new Set([...current, ...justCompleted]));
+    window.setTimeout(() => {
+      setHeldIds((current) => {
+        const next = new Set(current);
+        justCompleted.forEach((id) => next.delete(id));
+        return next;
+      });
+    }, CELEBRATION_HOLD_MS);
+  }, [arenaTasks]);
 
   useEffect(() => {
     if (!isSceneReady) return;
@@ -119,12 +145,19 @@ export default function GameArena({ tasks, theme, prefersReducedMotion, isTouchD
       onPointerDown={(event) => {
         if (!(event.target instanceof HTMLCanvasElement)) return;
         container?.focus({ preventScroll: true });
-        dragState.current = { pointerId: event.pointerId, lastX: event.clientX };
-        event.currentTarget.setPointerCapture(event.pointerId);
+        dragState.current = { pointerId: event.pointerId, startX: event.clientX, lastX: event.clientX, captured: false };
       }}
       onPointerMove={(event) => {
         const drag = dragState.current;
         if (!drag || drag.pointerId !== event.pointerId) return;
+        if (event.buttons === 0) {
+          dragState.current = null;
+          return;
+        }
+        if (!drag.captured && Math.abs(event.clientX - drag.startX) > DRAG_CAPTURE_THRESHOLD_PX) {
+          event.currentTarget.setPointerCapture(event.pointerId);
+          drag.captured = true;
+        }
         gameInput.cameraYawDelta -= (event.clientX - drag.lastX) * DRAG_YAW_SENSITIVITY;
         drag.lastX = event.clientX;
       }}

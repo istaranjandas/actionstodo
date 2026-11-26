@@ -367,7 +367,10 @@ body.is-table-view .week-table-container {
   margin-top: 0;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-key);
+  /* The board is the one frosted pane over the valley, lifted off it like every floating panel */
+  -webkit-backdrop-filter: var(--hud-glass-blur);
+  backdrop-filter: var(--hud-glass-blur);
+  box-shadow: var(--shadow-float);
 }
 
 body.is-table-view .week-table-scroll {
@@ -416,10 +419,22 @@ body.is-table-view .matrix-allday-row .matrix-cell.is-today-col {
 .week-range-label,
 .week-table-hint,
 .week-today-btn,
-.week-table-title-group {
+.week-table-title-group,
+.week-table-header .toolbar-btn,
+.matrix-task-time {
   font-family: var(--font-sans);
   letter-spacing: 0;
   text-transform: none;
+}
+
+.week-table-header .toolbar-btn {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.matrix-task-time {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 
 .matrix-day-name {

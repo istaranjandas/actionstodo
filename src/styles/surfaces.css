@@ -140,6 +140,13 @@
   box-shadow: var(--shadow-well);
 }
 
+/* These wells have no themed override, so they take the theme's well token (no grey slab in Daylight) */
+.popover-time-control,
+.matrix-add-input,
+.week-date-nav {
+  background: var(--well);
+}
+
 /* Shared micro-label: condensed caps, like stencilled panel legends */
 .popover-title,
 .grid-group-label,

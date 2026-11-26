@@ -5,7 +5,8 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { DragEvent } from 'react';
 import { formatWeekRangeLabel, getLocalISODate, getWeekDates } from '../modules/dateUtils';
-import { addMinutesToTime, formatTimeRangeDisplay, getDurationMinutes, parseTimeFromText } from '../modules/timeUtils';
+import { addMinutesToTime, formatTimeRangeDisplay, getDurationMinutes } from '../modules/timeUtils';
+import { parseTaskInput } from '../modules/recurrence';
 import { logTask, moveTask, removeTask, renameTask, setTaskCompleted } from '../modules/taskActions';
 import { useInlineTextEdit } from '../hooks/useInlineTextEdit';
 import { useOpenTimePopover } from './TimePopover';
@@ -30,11 +31,12 @@ function formatHourLabel(h: number) {
 }
 
 async function handleAddTask(text: string, dateStr: string, start: string, end: string) {
-  const parsed = parseTimeFromText(text);
-  if (parsed) {
-    await logTask(parsed.cleanText, dateStr, parsed.startTime, parsed.endTime);
+  // Same grammar as the other add boxes: "Gym daily at 6pm" keeps its repeat and time
+  const parsed = parseTaskInput(text);
+  if (parsed.startTime) {
+    await logTask(parsed.cleanText, dateStr, parsed.startTime, parsed.endTime, parsed.repeat);
   } else {
-    await logTask(text, dateStr, start, end);
+    await logTask(parsed.cleanText, dateStr, start, end, parsed.repeat);
   }
 }
 
@@ -121,13 +123,13 @@ export function WeekTable({ tasks, weekOffset, onPrevWeek, onNextWeek, onThisWee
             <button type="button" className="week-nav-btn" title="Previous Week" aria-label="Previous week" onClick={onPrevWeek}>‹</button>
             <span className="week-range-label">{formatWeekRangeLabel(weekDates)}</span>
             <button type="button" className="week-nav-btn" title="Next Week" aria-label="Next week" onClick={onNextWeek}>›</button>
-            <button type="button" className="week-today-btn" onClick={onThisWeek}>This Week</button>
+            <button type="button" className="week-today-btn" onClick={onThisWeek}>This week</button>
           </div>
           <span className="week-table-hint">Click a cell to add · Double-click a task to edit · Drag to move</span>
         </div>
         <button type="button" className="toolbar-btn" title="Back to list view" data-sfx="select" onClick={onExitTable}>
           <ListLinesIcon />
-          <span>List View</span>
+          <span>List view</span>
         </button>
       </div>
 
@@ -144,7 +146,7 @@ export function WeekTable({ tasks, weekOffset, onPrevWeek, onNextWeek, onThisWee
                   <th className={`matrix-date-header ${isToday ? 'is-today' : ''}`} key={dateStr}>
                     <span className="matrix-day-name">{dateObj.toLocaleDateString(undefined, { weekday: 'short' })}</span>
                     <span className="matrix-day-date">{dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                    {isToday && <span className="today-tag">TODAY</span>}
+                    {isToday && <span className="today-tag">Today</span>}
                   </th>
                 );
               })}
@@ -234,6 +236,8 @@ function InlineAddInput({ onFinish }: { onFinish: (text: string) => void }) {
       autoComplete="off"
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
+          // Enter that confirms an IME candidate is not a submit
+          if (e.nativeEvent.isComposing || e.keyCode === 229) return;
           e.preventDefault();
           finish(true);
         } else if (e.key === 'Escape') {
@@ -251,7 +255,7 @@ function MatrixTaskChip({ task, onDragFinished }: { task: Task; onDragFinished: 
   const timeLabel = task.startTime ? formatTimeRangeDisplay(task.startTime, task.endTime) : '';
 
   // Inline text editing
-  const { textRef, isEditing, startEditing, handleBlur, handleKeyDown } = useInlineTextEdit({
+  const { textRef, isEditing, startEditing, handleBlur, handleKeyDown, handlePaste } = useInlineTextEdit({
     text: task.text,
     onCommit: (newText) => {
       if (newText !== task.text) renameTask(task, newText);
@@ -297,7 +301,12 @@ function MatrixTaskChip({ task, onDragFinished }: { task: Task; onDragFinished: 
             startEditing();
           }}
           onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          onKeyDown={(e) => {
+            // Keep rename keys (Esc especially) from reaching the planner's global shortcuts
+            e.stopPropagation();
+            handleKeyDown(e);
+          }}
         />
         {timeLabel && (
           <button

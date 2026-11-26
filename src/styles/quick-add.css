@@ -426,9 +426,15 @@
 }
 
 .command-bar .quick-add-input::placeholder {
-  color: var(--ink-faint);
+  color: var(--ink-3);
   font-weight: 400;
   text-transform: none;
+}
+
+@media (max-width: 680px) {
+  .command-bar .quick-add-input {
+    font-size: 16px; /* Prevents auto-zoom on iOS Safari */
+  }
 }
 
 /* The chips are quiet readouts inside the field */

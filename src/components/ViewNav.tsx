@@ -52,7 +52,7 @@ export function ViewNav({ activeKey, counts, showPlanner, onSelect }: ViewNavPro
   };
 
   return (
-    <div className="view-nav" role="group" aria-label="Lenses">
+    <div className="view-nav" role="group" aria-label="Views">
       <div className="view-nav-list" ref={listRef} onKeyDown={handleKeyDown}>
         <span className="view-nav-indicator" aria-hidden="true" />
         {items.map(({ key, label, shortcut }) => {

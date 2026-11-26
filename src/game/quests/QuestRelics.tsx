@@ -13,7 +13,12 @@ interface QuestRelicsProps {
 
 export function QuestRelics({ tasks, animate, celebrate, onCompleteQuest }: QuestRelicsProps) {
   const arenaOpenedAt = useRef(Date.now());
-  const placements = useMemo(() => layoutRelics(tasks), [tasks]);
+  const previousPlacements = useRef<ReadonlyMap<string, [number, number]>>(new Map());
+  const placements = useMemo(() => {
+    const next = layoutRelics(tasks, previousPlacements.current);
+    previousPlacements.current = next;
+    return next;
+  }, [tasks]);
   const today = getLocalISODate();
 
   return (

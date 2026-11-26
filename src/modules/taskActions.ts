@@ -1,6 +1,6 @@
 // Task operations with their feedback: sound, a light in the world and a confirmation toast.
 // Persistence stays in store.ts; these wrappers only add acknowledgement around it.
-import { addTask, deleteTaskItem, setTaskRepeat, updateTaskItem } from './store';
+import { addTask, deleteTaskItem, restoreTasks, setTaskRepeat, snapshotTaskDeletion, updateTaskItem } from './store';
 import { formatShortDate } from './dateUtils';
 import { formatTimeRangeDisplay, parseTimeFromText } from './timeUtils';
 import { repeatRuleLabel } from './recurrence';
@@ -35,7 +35,8 @@ export async function logTask(
 ): Promise<void> {
   playUiSound('add');
   emitWorldEvent({ type: 'add' });
-  await addTask(text, date, startTime, endTime, repeat);
+  // addTask updates local state before it waits on the cloud, so confirm now rather than on server ack
+  const saving = addTask(text, date, startTime, endTime, repeat);
   const when = startTime ? `${formatShortDate(date)} · ${formatTimeRangeDisplay(startTime, endTime)}` : formatShortDate(date);
   const repeatNote = repeat ? ` · ${repeatRuleLabel(repeat)}` : '';
   pushToast({
@@ -43,17 +44,26 @@ export async function logTask(
     detail: `${text} — ${when}${repeatNote}`,
     tone: repeat ? 'success' : 'neutral'
   });
+  await saving;
 }
 
 export function removeTask(task: Task): void {
   playUiSound('remove');
+  const snapshot = snapshotTaskDeletion(task.id);
   void deleteTaskItem(task.id);
+  const undo = {
+    actionLabel: 'Undo',
+    onAction: () => {
+      playUiSound('add');
+      void restoreTasks(snapshot);
+    }
+  };
   if (task.repeat) {
-    pushToast({ message: 'Series deleted', detail: `${task.text} · future days removed`, tone: 'danger' });
+    pushToast({ message: 'Series deleted', detail: `${task.text} · future days removed`, tone: 'danger', ...undo });
   } else if (task.isOccurrence) {
-    pushToast({ message: 'Day deleted', detail: `${task.text} · this day only`, tone: 'danger' });
+    pushToast({ message: 'Day deleted', detail: `${task.text} · this day only`, tone: 'danger', ...undo });
   } else {
-    pushToast({ message: 'Task deleted', detail: task.text, tone: 'danger' });
+    pushToast({ message: 'Task deleted', detail: task.text, tone: 'danger', ...undo });
   }
 }
 

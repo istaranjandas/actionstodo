@@ -77,7 +77,7 @@ export function AdminPage() {
     const q = userSearch.trim().toLowerCase();
     return [...map.values()]
       .filter(u => !q || `${u.name ?? ''} ${u.email ?? ''} ${u.uid}`.toLowerCase().includes(q))
-      .sort((a, b) => (a.name ?? a.email ?? a.uid).localeCompare(b.name ?? b.email ?? b.uid));
+      .sort((a, b) => (a.name || a.email || a.uid).localeCompare(b.name || b.email || b.uid));
   }, [profiles, tasks, userSearch]);
 
   const selected = users.find(u => u.uid === selectedUid) ?? null;
@@ -97,7 +97,8 @@ export function AdminPage() {
     return (
       <div className="admin-msg">
         <p>Admin sign-in required.</p>
-        <button onClick={() => signInWithPopup(auth, googleProvider)}>Sign in with Google</button>
+        {error && <div className="admin-error">{error}</div>}
+        <button onClick={() => signInWithPopup(auth, googleProvider).catch(e => setError(e.message))}>Sign in with Google</button>
       </div>
     );
   }
@@ -129,7 +130,7 @@ export function AdminPage() {
             {users.map(u => (
               <li key={u.uid}>
                 <button className={u.uid === selectedUid ? 'is-active' : ''} onClick={() => setSelectedUid(u.uid)}>
-                  <span>{u.name ?? u.email ?? u.uid.slice(0, 10)}</span>
+                  <span>{u.name || u.email || u.uid.slice(0, 10)}</span>
                   <span className="admin-count">{u.total}</span>
                 </button>
               </li>
@@ -140,7 +141,7 @@ export function AdminPage() {
           {!selected ? <p className="admin-empty">Select a user.</p> : (
             <>
               <div className="admin-user-head">
-                <h2>{selected.name ?? 'Unnamed'} · {selected.email ?? selected.uid}</h2>
+                <h2>{selected.name || 'Unnamed'} · {selected.email || selected.uid}</h2>
                 <p>{selected.total} tasks · {selected.done} done · Last seen {timeAgo(selected.lastSeen)}</p>
               </div>
               <div className="admin-filters">

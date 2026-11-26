@@ -88,6 +88,12 @@ body:not(.has-world) .world-labels {
   display: none;
 }
 
+/* The boards show the valley as a backdrop only: signs drifting between day cards read as stray UI */
+.game-shell.is-grid-view .world-labels,
+.game-shell.is-planner .world-labels {
+  display: none;
+}
+
 .post-label {
   position: absolute;
   left: 0;
@@ -177,8 +183,8 @@ body:not(.has-world) .world-labels {
 }
 
 .tally-done {
-  color: var(--amber-ink);
-  background: var(--amber);
+  color: var(--teal-ink);
+  background: var(--teal);
 }
 
 .post-label.is-today .post-label-day {
@@ -300,6 +306,14 @@ body:not(.has-world) .world-labels {
 
 .devil-popup.open {
   display: flex;
+}
+
+/* Phones & tablets: the dock sits at the bottom, so the popup opens upward */
+@media (max-width: 1024px) {
+  .devil-popup {
+    top: auto;
+    bottom: calc(100% + 12px);
+  }
 }
 
 .devil-popup-close {
@@ -714,7 +728,7 @@ body:not(.has-world) .world-labels {
 }
 
 .slate-stat.is-done strong {
-  color: var(--amber-text);
+  color: var(--teal-text);
 }
 
 /* A zero is telemetry, not an achievement: it does not glow */
@@ -810,7 +824,7 @@ body:not(.has-world) .world-labels {
 }
 
 .slate-stat.is-toggle.is-on:not(.is-zero) strong {
-  color: var(--amber-text);
+  color: var(--teal-text);
 }
 
 .slate-gauge {
@@ -827,8 +841,8 @@ body:not(.has-world) .world-labels {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--amber-deep), var(--amber-hi));
-  box-shadow: 0 0 10px var(--amber-glow);
+  background: linear-gradient(90deg, var(--teal), var(--teal-hi));
+  box-shadow: 0 0 10px var(--teal-wash);
   transition: width 700ms var(--ease-out);
 }
 
@@ -957,7 +971,7 @@ body:not(.has-world) .world-labels {
   padding: 0 5px;
   border-radius: var(--radius-pill);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0;
   line-height: 16px;
@@ -1122,6 +1136,7 @@ body:not(.has-world) .world-labels {
     left: auto;
     width: min(360px, calc(100vw - 20px));
     max-height: calc(100vh - 80px - var(--ribbon-h));
+    max-height: calc(100dvh - 80px - var(--ribbon-h) - env(safe-area-inset-top, 0px));
   }
 
   .slate {
@@ -1132,6 +1147,7 @@ body:not(.has-world) .world-labels {
     width: auto;
     height: auto;
     max-height: min(56vh, calc(100vh - var(--ribbon-h) - 150px));
+    max-height: min(56dvh, calc(100dvh - var(--ribbon-h) - 150px - env(safe-area-inset-top, 0px)));
     border-radius: var(--radius-lg);
     background: rgba(10, 16, 21, 0.9);
     transform: none;
@@ -1211,9 +1227,9 @@ body:not(.has-world) .world-labels {
   }
 
   .view-nav-count {
-    min-width: 15px;
+    min-width: 16px;
     padding: 0 4px;
-    font-size: 9.5px;
+    font-size: 10.5px;
   }
 
   
@@ -1360,8 +1376,8 @@ body:not(.has-world) .world-labels {
 
 .slate-gauge-fill {
   border-radius: 0;
-  background: var(--amber);
-  box-shadow: 0 0 8px var(--amber-glow);
+  background: var(--teal);
+  box-shadow: 0 0 8px var(--teal-wash);
 }
 
 /* The command line is the panel's primary action, so it is the one element with a lit left edge */
@@ -1669,11 +1685,11 @@ body:not(.has-world) .world-labels {
 }
 
 .slate-stat.is-done strong {
-  color: var(--amber-text);
+  color: var(--teal-text);
 }
 
 .slate-stat.is-toggle.is-on:not(.is-zero) strong {
-  color: var(--amber-text);
+  color: var(--teal-text);
 }
 
 .slate-title {
@@ -1706,7 +1722,7 @@ body:not(.has-world) .world-labels {
 
 .slate-gauge-fill {
   border-radius: inherit;
-  background: var(--amber);
+  background: var(--teal);
   box-shadow: none;
 }
 
@@ -1800,6 +1816,7 @@ body:not(.has-world) .world-labels {
     left: auto;
     width: min(360px, calc(100vw - 24px));
     max-height: calc(100vh - 90px - var(--ribbon-h));
+    max-height: calc(100dvh - 90px - var(--ribbon-h) - env(safe-area-inset-top, 0px));
   }
 
   .slate {
@@ -1917,12 +1934,19 @@ body:not(.has-world) .world-labels {
 }
 
 .arcade-game-go {
-  color: var(--ink-faint);
+  color: var(--ink-3);
 }
 
 .arcade-foot {
   margin: 8px 6px 2px;
   font-size: 11.5px;
   line-height: 1.4;
-  color: var(--ink-faint);
+  color: var(--ink-3);
+}
+
+/* Phone dock: two views fit with their names, so the dock never asks you to guess from an icon */
+@media (max-width: 680px) {
+  .view-nav-label {
+    display: inline;
+  }
 }

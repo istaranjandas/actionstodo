@@ -30,7 +30,8 @@ export function Projector() {
   const size = useThree((state) => state.size);
   const projected = useMemo(() => new THREE.Vector3(), []);
   const worldPoint = useMemo(() => new THREE.Vector3(), []);
-  const written = useRef(new Map<object, string>());
+  // Weak keys, so labels React has removed are not kept alive by this cache
+  const written = useRef(new WeakMap<object, string>());
 
   useEffect(() => {
     worldBridge.isActive = true;

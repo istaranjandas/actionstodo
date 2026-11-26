@@ -17,7 +17,8 @@
     "build": "tsc && vite build",
     "typecheck": "tsc",
     "preview": "vite preview",
-    "capture": "node scripts/capture.mjs"
+    "capture": "node scripts/capture.mjs",
+    "build:game": "npm --prefix games/alpineoverride ci && npm --prefix games/alpineoverride run build"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

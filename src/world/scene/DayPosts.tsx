@@ -388,11 +388,12 @@ export function DayPosts({ days, animate }: DayPostsProps) {
     animateScale(appearing.current, (t) => 1 - Math.pow(1 - t, 3));
     animateScale(igniting.current, (t) => 1 + Math.sin(t * Math.PI) * 0.7);
 
-    flash.current.intensity = Math.max(0, flash.current.intensity - step * 1.4);
+    // Reduced motion: no flash or sparks (frames stop soon after input, so they would freeze mid-air)
+    flash.current.intensity = animate ? Math.max(0, flash.current.intensity - step * 1.4) : 0;
     if (flashLight.current) flashLight.current.intensity = flash.current.intensity * 160;
 
     bursts.current.forEach((burst, index) => {
-      burst.age += step;
+      burst.age = animate ? burst.age + step : Math.max(burst.age, BURST_SECONDS);
       const points = burstGroups.current[index];
       const material = burstMaterials[index];
       material.uniforms.uAge.value = burst.age;

@@ -23,6 +23,8 @@ interface QuestRelicProps {
 
 const RELIC_HALF_HEIGHT = 0.85;
 const LAUNCH_SPEED = 15;
+const FALL_RESPAWN_HEIGHT = -6;
+const RESPAWN_DROP_HEIGHT = 12;
 
 export const QuestRelic = memo(function QuestRelic({ task, status, spawn, dropFromSky, animate, celebrate, onCompleteQuest }: QuestRelicProps) {
   const bodyRef = useRef<RapierRigidBody>(null);
@@ -73,6 +75,14 @@ export const QuestRelic = memo(function QuestRelic({ task, status, spawn, dropFr
   useFrame((state, delta) => {
     const crystal = crystalRef.current;
     if (!crystal) return;
+    // A relic shoved off the island drops back onto its spawn so it stays completable. Reads the
+    // rendered matrix rather than body.translation() to avoid a per-frame allocation.
+    const body = bodyRef.current;
+    if (body && crystal.matrixWorld.elements[13] < FALL_RESPAWN_HEIGHT) {
+      body.setTranslation({ x: spawn[0], y: RESPAWN_DROP_HEIGHT, z: spawn[1] }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      awaitingLanding.current = true;
+    }
     const isFocused = arenaRuntime.focusedTaskId === task.id;
     focusMix.current = THREE.MathUtils.damp(focusMix.current, isFocused ? 1 : 0, 8, delta);
     spinBoost.current = spinBoost.current > 0.01 ? THREE.MathUtils.damp(spinBoost.current, 0, 1.2, delta) : 0;
