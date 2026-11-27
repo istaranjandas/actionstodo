@@ -30,6 +30,7 @@ Tasks live in a 3D valley called the Lantern Path: each day is a waypost on a tr
 - One tab: today's log opens first; its "Show all days" row opens every day as a grid, and "Back to today" folds it back. Done is a toggle in the slate header.
 - Day slate beside the focused waypost; details slate for editing title, date, time and repeat rule.
 - Profile key: the mascot in the top-right corner opens games, sound, time of day, motion and account.
+- Phone app: phones skip the 3D valley. Today's screen lists open tasks from past days ("From earlier", with Move to today), the day's schedule and the add-task bar at the bottom; All days slides in with Open / Done / Everything filters and folds past weeks.
 - Recurring tasks create a rolling series of real daily tasks; each day completes independently.
 - Game mode: a separate quest arena (lazy-loaded).
 - Synthesised UI sounds and an optional ambient soundtrack, each with its own switch and volume.

@@ -265,7 +265,7 @@ const scenarios = [
       await audit('all-dusk');
       await evaluate(pressKey('1'));
       await sleep(600);
-      await evaluate(`document.querySelectorAll('.task-row')[1].click(); true`);
+      await evaluate(`document.querySelectorAll('.phone-task-body')[1].click(); true`);
       await sleep(1000);
       await shoot('03-task-details-dusk');
       await evaluate(pressKey('Escape'));

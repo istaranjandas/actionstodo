@@ -1,0 +1,689 @@
+/* ==========================================================================
+   Phone app
+   Phones get a plain app instead of the 3D valley (PhoneShell.tsx): a day
+   screen with the add-task bar at the thumb, an All days screen that slides
+   in over it, the profile panel as a bottom sheet and Undo as a snackbar.
+   Loaded last, so it wins over the world HUD's rules for the shared parts.
+   ========================================================================== */
+html:has(body.is-phone-app),
+body.is-phone-app {
+  background: var(--phone-bg);
+}
+
+.phone-app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--phone-bg);
+  color: var(--ink);
+}
+
+.phone-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--phone-bg);
+  animation: phoneSettle 260ms var(--ease-out);
+}
+
+/* All days pushes in from the right, the Android way; the day screen settles back */
+.phone-screen.is-pushed {
+  animation: phonePush 320ms var(--ease-out);
+}
+
+@keyframes phonePush {
+  from {
+    opacity: 0;
+    transform: translateX(24%);
+  }
+}
+
+@keyframes phoneSettle {
+  from {
+    opacity: 0;
+    transform: translateX(-6%);
+  }
+}
+
+/* ---------- Top app bar ---------- */
+.phone-appbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  min-height: 76px;
+  padding: 8px 12px 6px 20px;
+  transition: box-shadow var(--dur-quick) ease;
+}
+
+.phone-appbar:has(.phone-icon-btn) {
+  padding-left: 4px;
+}
+
+.phone-appbar.is-scrolled {
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.phone-appbar-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.phone-date-label {
+  display: block;
+  padding: 2px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.phone-title {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.phone-app.is-all .phone-title {
+  font-size: 22px;
+}
+
+.phone-icon-btn {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.phone-icon-btn:active {
+  background: var(--hover);
+}
+
+/* ---------- Scrolling body ---------- */
+.phone-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 12px 24px;
+  scrollbar-width: none;
+}
+
+.phone-body::-webkit-scrollbar {
+  display: none;
+}
+
+.phone-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 4px;
+}
+
+.phone-progress-label {
+  font-size: 13px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-progress-label strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.phone-progress-track {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--phone-surface-2);
+}
+
+.phone-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--teal);
+  transition: width 400ms var(--ease-out);
+}
+
+.phone-section {
+  padding-top: 12px;
+}
+
+.phone-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 8px 2px;
+}
+
+.phone-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.phone-section-count {
+  margin-left: 4px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-text-btn {
+  min-height: 44px;
+  margin-right: -8px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--amber-text);
+}
+
+.phone-text-btn:active {
+  background: var(--amber-wash);
+}
+
+.phone-empty {
+  padding: 32px 20px 12px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* ---------- Lists and task rows ---------- */
+.phone-list {
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--phone-surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Left over from earlier: the one warm list on the screen */
+.phone-list.is-carried {
+  background: var(--amber-wash);
+  box-shadow: none;
+}
+
+.phone-task {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-height: 60px;
+}
+
+.phone-task + .phone-task::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 56px;
+  right: 0;
+  height: 1px;
+  background: var(--line);
+}
+
+.phone-check {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 56px;
+  border: none;
+  background: transparent;
+}
+
+.phone-check-box {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--ink-3);
+  border-radius: var(--radius-round);
+  color: transparent;
+  transition: background var(--dur-quick) ease, border-color var(--dur-quick) ease, transform var(--dur-quick) var(--ease-spring);
+}
+
+.phone-check:active .phone-check-box {
+  transform: scale(0.86);
+}
+
+.phone-task.is-done .phone-check-box {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: var(--teal-ink);
+}
+
+.phone-task-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 16px 10px 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: var(--ink);
+}
+
+.phone-task-body:active,
+.phone-task.is-selected .phone-task-body {
+  background: var(--hover);
+}
+
+.phone-task-title {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.phone-task.is-done .phone-task-title {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.phone-task-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-task.is-now .phone-task-meta {
+  font-weight: 500;
+  color: var(--amber-text);
+}
+
+.phone-now-dot {
+  width: 7px;
+  height: 7px;
+  margin-right: 2px;
+  border-radius: var(--radius-round);
+  background: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-glow);
+}
+
+/* ---------- All days row ---------- */
+.phone-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--phone-surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  text-align: left;
+  color: var(--ink);
+}
+
+.phone-nav-row:active {
+  background: var(--phone-surface-2);
+}
+
+.phone-nav-row > svg {
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+
+.phone-nav-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--phone-surface-2);
+  color: var(--ink-2);
+}
+
+.phone-nav-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.phone-nav-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.phone-nav-detail {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ---------- All days: filters, days and folded weeks ---------- */
+.phone-chips {
+  display: flex;
+  gap: 8px;
+  padding: 8px 8px 0;
+}
+
+.phone-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+/* A 36px chip with a 48px reach, like Material's touch target */
+.phone-chip::after {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+}
+
+.phone-chip[aria-pressed="true"] {
+  border-color: var(--amber);
+  background: var(--amber-wash);
+  color: var(--amber-text);
+}
+
+.phone-chip-count {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-day + .phone-day {
+  border-top: 1px solid var(--line);
+}
+
+.phone-day .phone-list {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.phone-day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px 16px 4px;
+  border: none;
+  background: transparent;
+  text-align: left;
+}
+
+.phone-day-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.phone-day.is-today .phone-day-name {
+  color: var(--amber-text);
+}
+
+.phone-day-date,
+.phone-day-count {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.phone-day-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-week + .phone-week {
+  border-top: 1px solid var(--line);
+}
+
+.phone-week-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: var(--ink);
+}
+
+.phone-week-head:active {
+  background: var(--hover);
+}
+
+.phone-week-head > svg {
+  flex-shrink: 0;
+  color: var(--ink-3);
+  transition: transform 220ms var(--ease-out);
+}
+
+.phone-week-head[aria-expanded="true"] > svg {
+  transform: rotate(90deg);
+}
+
+.phone-week-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.phone-week-range {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.phone-week-detail {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-week-detail .is-done {
+  color: var(--teal-text);
+}
+
+.phone-week-detail .is-open {
+  color: var(--amber-text);
+}
+
+.phone-week-body {
+  border-top: 1px solid var(--line);
+  background: var(--phone-bg);
+}
+
+/* ---------- Add-task bar, at the thumb ---------- */
+.phone-composer {
+  flex-shrink: 0;
+  padding: 8px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--phone-bg);
+}
+
+.phone-composer .command-bar {
+  margin: 0;
+  padding: 6px 6px 6px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 28px;
+  background: var(--phone-surface);
+  box-shadow: 0 10px 24px -14px var(--cast);
+}
+
+.phone-composer .command-bar:focus-within {
+  border-color: var(--amber);
+  background: var(--phone-surface);
+  box-shadow: 0 0 0 3px var(--amber-wash);
+}
+
+.phone-composer .command-bar .quick-add-input {
+  height: 44px;
+}
+
+.phone-composer .command-bar .command-submit {
+  height: 44px;
+  min-width: 64px;
+  justify-content: center;
+  border-radius: 22px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.phone-composer .command-key {
+  display: none;
+}
+
+.phone-composer .quick-add-chips-row {
+  padding: 8px 0 2px;
+  border-top: 1px solid var(--line);
+  box-shadow: none;
+}
+
+/* ---------- Profile key and its bottom sheet ---------- */
+.phone-app .system-menu {
+  position: relative;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  height: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.phone-app .system-menu .system-trigger.is-profile {
+  width: 44px;
+  height: 44px;
+  box-shadow: var(--shadow-amber), 0 4px 10px -4px var(--amber-glow);
+}
+
+.phone-app .system-panel {
+  position: fixed;
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-height: 88vh;
+  max-height: calc(88dvh - env(safe-area-inset-top, 0px));
+  padding: 30px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  border: none;
+  border-radius: 28px 28px 0 0;
+  background: var(--phone-bg);
+  box-shadow: 0 -20px 40px -20px var(--cast);
+  transform-origin: bottom center;
+  animation: sheetUp 320ms var(--ease-out);
+}
+
+/* The drag handle every Android sheet carries */
+.phone-app .system-panel::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  margin-left: -18px;
+  border-radius: var(--radius-pill);
+  background: var(--ink-faint);
+}
+
+/* ---------- Task details sheet ---------- */
+body.is-phone-app .sheet-panel {
+  padding-top: 26px;
+  border: none;
+  border-radius: 28px 28px 0 0;
+  background: var(--phone-bg);
+}
+
+/* ---------- Undo snackbar, above the add-task bar ---------- */
+body.is-phone-app .toast-region {
+  top: auto;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+
+body.is-phone-app .toast {
+  padding: 8px 8px 8px 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--phone-snackbar);
+  box-shadow: 0 12px 24px -12px var(--cast);
+  color: var(--phone-snackbar-ink);
+  animation: phoneSnackIn 240ms var(--ease-out);
+}
+
+@keyframes phoneSnackIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+body.is-phone-app .toast-icon {
+  display: none;
+}
+
+body.is-phone-app .toast-message {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--phone-snackbar-ink);
+}
+
+body.is-phone-app .toast-detail {
+  color: var(--phone-snackbar-ink);
+  opacity: 0.72;
+}
+
+body.is-phone-app .toast-action {
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--phone-snackbar-action);
+}

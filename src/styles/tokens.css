@@ -121,6 +121,15 @@
   --coral-wash: #feebe7;
   --focus-ring: #b45309;
 
+  /* Phone app (no world behind it): a cool ground, white lists, a slate well for icons and chips,
+     and an inverted snackbar */
+  --phone-bg: #f5f6f8;
+  --phone-surface: #ffffff;
+  --phone-surface-2: #eef1f5;
+  --phone-snackbar: #1e2633;
+  --phone-snackbar-ink: #f1f5f9;
+  --phone-snackbar-action: #fbbf24;
+
   /* Legacy names still read by inline SVG icons */
   --bg: var(--panel-solid);
   --bg-subtle: var(--well);
@@ -208,6 +217,13 @@
   --coral-hi: #f4957f;
   --coral-wash: rgba(236, 123, 99, 0.14);
   --focus-ring: #ffc677;
+
+  --phone-bg: #0b1018;
+  --phone-surface: #121925;
+  --phone-surface-2: #1a2331;
+  --phone-snackbar: #e2e8f0;
+  --phone-snackbar-ink: #0f172a;
+  --phone-snackbar-action: #a84c07;
 }
 
 /* Composite depth, recomputed wherever the base values change.
