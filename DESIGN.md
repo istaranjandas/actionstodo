@@ -218,7 +218,7 @@ Nothing is set below 10.5px; anything a person must read is 11px or larger.
 
 ## Layout
 
-The 3D valley fills the viewport. The console floats over it as fixed HUD pieces, inset from the edges by `--hud-inset` (36px on desktop, 24px on narrower screens, 14px on phones): there is no dock: the day slate opens at the top-left at 456px wide (420px narrower), and the mascot profile key sits alone in the top-right corner. On phones the slate goes full-width with square corners. Phone task rows let a long title wrap to two lines; delete lives in the details sheet, not on the row.
+The 3D valley fills the viewport. The console floats over it as fixed HUD pieces, inset from the edges by `--hud-inset` (36px on desktop, 24px on narrower screens, 14px on phones): there is no dock: the day slate opens at the top-left at 456px wide (420px narrower), and the mascot profile key sits alone in the top-right corner. Phones (≤680px) drop the valley and the slate for the phone app (`src/styles/phone.css`): a plain `--phone-bg` ground, a large top app bar (date line, day title, profile key), white rounded lists of round-check rows that wrap long titles, the add-task bar pinned above the gesture area, All days as a pushed screen with filter chips and folded weeks, the profile panel and task details as rounded bottom sheets, and Undo as an inverted snackbar above the add bar. Delete lives in the details sheet, not on the row.
 
 In the All board the valley stays visible as the backdrop: a light scrim holds only the header band darker, the cards carry their own glass blur, and waypost signs are hidden so nothing drifts between cards.
 

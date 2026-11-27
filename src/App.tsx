@@ -1,6 +1,7 @@
 // Main Application Shell & UI Coordinator
 // Manual mode: the lantern path — a 3D valley where each day is a waypost and each task a lantern —
-// with a day slate, a details slate and the path ribbon floating in it. Game mode: the quest arena.
+// with a day slate, a details slate and the path ribbon floating in it. Phones get a plain app screen
+// instead (PhoneShell). Game mode: the quest arena.
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { auth, onAuthStateChanged } from './firebase';
@@ -14,7 +15,7 @@ import { useDisplaySettings } from './modules/displaySettings';
 import { THEME_KEY, applyThemeAttribute, readRenderedTheme } from './modules/theme';
 import { useStore } from './hooks/useStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
-import { DESKTOP_SCROLL_PANE_QUERY, useMotionProfile } from './hooks/useMotionProfile';
+import { COMPACT_QUERY, DESKTOP_SCROLL_PANE_QUERY, useMotionProfile } from './hooks/useMotionProfile';
 import { readScrollTop, restoreScrollPosition, useSmoothScroll } from './hooks/useSmoothScroll';
 import { useUiSounds } from './hooks/useUiSounds';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
@@ -29,6 +30,7 @@ import { clampDayOffset, FUTURE_DAY_LIMIT, PAST_DAY_LIMIT } from './world/trail'
 import type { WorldLens } from './world/worldViews';
 import { SystemMenu } from './components/SystemMenu';
 import { DaySlate } from './components/DaySlate';
+import { PhoneShell } from './components/PhoneShell';
 import { WorldLabels } from './components/WorldLabels';
 import { TaskFeed } from './components/TaskFeed';
 import { TaskInspector } from './components/TaskInspector';
@@ -65,6 +67,8 @@ export function App() {
   const reducedMotion = prefersReducedMotion || !animationsEnabled;
   const isWide = useMediaQuery(DESKTOP_SCROLL_PANE_QUERY);
   const isCompact = !isWide;
+  // Phones skip the 3D valley for a plain app screen (PhoneShell)
+  const isPhone = useMediaQuery(COMPACT_QUERY);
   const [theme, setTheme] = useState<Theme>(readRenderedTheme);
   // "DONE" in the slate header is a toggle: finished work stays out of the log unless asked for
   const [showDone, setShowDone] = useState(true);
@@ -363,6 +367,11 @@ export function App() {
     document.body.classList.toggle('is-game-mode', viewportMode === 'game');
   }, [viewportMode]);
 
+  const isPhoneApp = isPhone && viewportMode === 'manual';
+  useEffect(() => {
+    document.body.classList.toggle('is-phone-app', isPhoneApp);
+  }, [isPhoneApp]);
+
   useEffect(() => {
     const completedCount = appState.tasks.filter(task => task.completed).length;
     const newlyCompleted = completedCount - rewardedCompletionCount.current;
@@ -383,6 +392,17 @@ export function App() {
   const headerDate = focusDate ?? today;
 
   const lastSheetTask = usePreservedValue(selectedTask);
+
+  // The mascot key in the top-right corner: profile, games and settings
+  const systemMenu = (
+    <SystemMenu
+      appState={appState}
+      theme={theme}
+      onSetTheme={applyTheme}
+      onEnterGameMode={() => changeViewportMode('game')}
+      onOpenControls={() => setIsShortcutsOpen(true)}
+    />
+  );
 
   return (
     <TaskSelectionContext.Provider value={taskSelection}>
@@ -406,7 +426,25 @@ export function App() {
           </div>
         )}
 
-        {viewportMode === 'manual' && (
+        {isPhoneApp && (
+          <PhoneShell
+            tasks={tasks}
+            today={today}
+            focusDate={focusDate}
+            isPickedDate={Boolean(specificDateFilter)}
+            dayTasks={viewTasks}
+            isScrolled={isScrolled}
+            scrollRef={setScrollPane}
+            onOpenAll={() => selectLens('all')}
+            onCloseAll={() => selectLens('today')}
+            onBack={returnToLens}
+            onPickDate={focusDay}
+            profile={systemMenu}
+            composer={<QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} />}
+          />
+        )}
+
+        {viewportMode === 'manual' && !isPhone && (
           <>
             <WorldStage
               lens={worldLens}
@@ -461,14 +499,7 @@ export function App() {
 
               {!isCompact && <InspectorSlate task={selectedTask} onClose={closeTask} />}
 
-              {/* The mascot key in the top-right corner: profile, games and settings */}
-              <SystemMenu
-                appState={appState}
-                theme={theme}
-                onSetTheme={applyTheme}
-                onEnterGameMode={() => changeViewportMode('game')}
-                onOpenControls={() => setIsShortcutsOpen(true)}
-              />
+              {systemMenu}
             </div>
           </>
         )}

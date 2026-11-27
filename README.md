@@ -10,6 +10,7 @@ A minimalist, high-productivity daily task manager with real-time Firebase Cloud
 - 🏮 **The Lantern Path**: Your days are wayposts along a trail through a living 3D valley; every task is a lantern on its day's post, and completing one lights it. Walk the path with `Q` / `E`. Today's log opens first; **Show all days** (or `A`) opens every day as a grid.
 - 🗒️ **Day slate & details**: The focused day's tasks float beside its waypost; click a task or its lantern to edit title, date and time on the details slate.
 - 😈 **Profile key**: The mascot in the top-right corner opens the profile panel: the games first, then sound, time of day, motion and account.
+- 📱 **Phone app**: On phones the 3D valley steps aside for a plain Android-style app: today's screen with tasks left over from earlier, the add-task bar at the thumb, and All days with Open / Done filters and folded past weeks.
 - 🔊 **Sound & music**: Synthesised interface sounds and an optional ambient soundtrack, each with its own switch and volume in the System menu.
 - ☁️ **Real-Time Firebase Cloud Sync**: Google Sign-In with instant Firestore multi-device synchronization.
 - 💾 **Offline First & Disk Sync**: Seamless offline mode with `localStorage`, direct `.json` disk sync via File System Access API, and 1-click JSON backup import/export.
