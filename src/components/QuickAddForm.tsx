@@ -15,9 +15,10 @@ import { DatePicker } from './DatePicker';
 interface QuickAddFormProps {
   appState: AppState;
   quickAddInputRef: RefObject<HTMLInputElement | null>;
+  placeholder?: string;
 }
 
-export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) {
+export function QuickAddForm({ appState, quickAddInputRef, placeholder = 'Add a task, like “Gym at 6pm”' }: QuickAddFormProps) {
   const { selectedAddDate, selectedAddStart, selectedAddEnd, tasks } = appState;
   const openTimePopover = useOpenTimePopover();
   const [quickAddText, setQuickAddText] = useState('');
@@ -81,7 +82,7 @@ export function QuickAddForm({ appState, quickAddInputRef }: QuickAddFormProps) 
           type="text"
           ref={quickAddInputRef}
           className="quick-add-input"
-          placeholder="Add a task, like “Gym at 6pm”"
+          placeholder={placeholder}
           aria-label="Add a task"
           aria-keyshortcuts="T"
           autoComplete="off"

@@ -1,0 +1,1586 @@
+/* ==========================================================================
+   The Lantern Path, phone edition (LanternPath.tsx, PhoneShell.tsx)
+   The day is a trail through a valley; every task is a lantern on it.
+   Day is a daylit valley with iron lanterns against the sun; Night is the
+   same trail where the lanterns you lit actually light the path.
+   Loaded after phone.css, so its world wins over the plain phone styles.
+   ========================================================================== */
+
+/* ---------- World tokens: Night (the app's default hour) ---------- */
+.lp-app,
+body.is-phone-app {
+  --lp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --lp-world: 0.9s;
+  --lp-serif: "Alegreya", Georgia, serif;
+  --lp-sans: "Jost", var(--font-sans);
+
+  --lp-r1: #2a3354;
+  --lp-r2: #1f2744;
+  --lp-r3: #171e37;
+  --lp-hill: #0e1324;
+  --lp-ground: #0e1324;
+  --lp-ground-2: #182037;
+  --lp-ground-3: #222b47;
+  --lp-trail: #1b2340;
+  --lp-stone: #4c5680;
+  --lp-ink: #ede6d6;
+  --lp-ink-2: #aeb6cb;
+  --lp-paper: #ede6d6;
+  --lp-paper-2: #a9b1c7;
+  --lp-paper-3: #8a93ae;
+  --lp-amber: #f4b85a;
+  --lp-amber-txt: #f4b85a;
+  --lp-amber-g: #f4b85a;
+  --lp-jade: #7bddb2;
+  --lp-iron: #070a14;
+  --lp-glass: #232b48;
+  --lp-glass-edge: #5b6491;
+  --lp-wax: #e6dcc4;
+  --lp-wax-shade: #c9bc9f;
+  --lp-chip: #1b2340;
+  --lp-chip-edge: rgba(237, 230, 214, 0.16);
+  --lp-ring: #f4b85a;
+  --lp-cairn: #3b4569;
+  --lp-ghost: rgba(237, 230, 214, 0.09);
+  --lp-glow: 1;
+  --lp-night: 1;
+  --lp-day: 0;
+  --lp-sun: 0;
+  --lp-moon: 1;
+}
+
+/* ---------- Day ---------- */
+:root[data-theme="light"] .lp-app,
+:root[data-theme="light"] body.is-phone-app {
+  --lp-r1: #c2cec4;
+  --lp-r2: #98afa4;
+  --lp-r3: #6b8c83;
+  --lp-hill: #21302b;
+  --lp-ground: #21302b;
+  --lp-ground-2: #2a3c36;
+  --lp-ground-3: #344a42;
+  --lp-trail: #33483f;
+  --lp-stone: #8ea39a;
+  --lp-ink: #18211f;
+  --lp-ink-2: #435250;
+  --lp-paper: #f1eadb;
+  --lp-paper-2: #b4c3bb;
+  --lp-paper-3: #8fa49b;
+  --lp-amber: #e8a03a;
+  --lp-amber-txt: #864e06;
+  --lp-amber-g: #f2b451;
+  --lp-jade: #74d3a8;
+  --lp-iron: #1a2321;
+  --lp-glass: #efe7d4;
+  --lp-glass-edge: #1a2321;
+  --lp-wax: #f7efdd;
+  --lp-wax-shade: #e0d2b4;
+  --lp-chip: #f5eddd;
+  --lp-chip-edge: rgba(24, 33, 31, 0.16);
+  --lp-ring: #18211f;
+  --lp-cairn: #5f766d;
+  --lp-ghost: rgba(241, 234, 219, 0.1);
+  --lp-glow: 0;
+  --lp-night: 0;
+  --lp-day: 1;
+  --lp-sun: 1;
+  --lp-moon: 0;
+}
+
+/* The shared phone parts (All days, lists, the profile sheet) stand on the trail's ground */
+.lp-app {
+  --phone-bg: var(--lp-ground);
+  --phone-surface: var(--lp-ground-2);
+  --phone-surface-2: var(--lp-ground-3);
+  --ink: var(--lp-paper);
+  --ink-2: var(--lp-paper-2);
+  --ink-3: var(--lp-paper-3);
+  --ink-faint: var(--lp-paper-3);
+  --line: rgba(241, 234, 219, 0.1);
+  --line-strong: rgba(241, 234, 219, 0.18);
+  --hover: rgba(241, 234, 219, 0.07);
+  --track: rgba(241, 234, 219, 0.16);
+  --field-fill: var(--lp-ground);
+  --field-border: rgba(241, 234, 219, 0.2);
+  --panel-top: var(--lp-ground-2);
+  --panel-bottom: var(--lp-ground-2);
+  --panel-solid: var(--lp-ground-3);
+  --raised-top: var(--lp-ground-3);
+  --raised-bottom: var(--lp-ground-3);
+  --well: var(--lp-ground);
+  --well-deep: var(--lp-ground);
+  --muted-ink: var(--lp-paper-2);
+  --teal-hi: var(--lp-jade);
+  --amber: var(--lp-amber);
+  --amber-text: var(--lp-amber-g);
+  --amber-wash: rgba(242, 180, 81, 0.14);
+  --teal: var(--lp-jade);
+  --teal-text: var(--lp-jade);
+  --teal-ink: #10201a;
+  font-family: var(--lp-sans);
+  caret-color: var(--lp-amber-g);
+}
+
+/* Undo stays a light paper slip in both hours, readable over the dark ground */
+body.is-phone-app {
+  --phone-snackbar: #f3ecdd;
+  --phone-snackbar-ink: #18211f;
+  --phone-snackbar-action: #7a4505;
+  background: var(--lp-ground);
+}
+
+.lp-app ::selection {
+  background: var(--lp-amber);
+  color: #18211f;
+}
+
+.lp-app :focus-visible {
+  outline: 2px solid var(--lp-amber-g);
+  outline-offset: 3px;
+}
+
+.lp-scene :focus-visible {
+  outline-color: var(--lp-ring);
+}
+
+.lp-app .phone-screen {
+  background: var(--lp-ground);
+  transition: background var(--lp-world);
+}
+
+.lp-app .phone-body.lp-body {
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.lp-scene {
+  position: relative;
+}
+
+/* ---------- Sky ---------- */
+.lp-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lp-sky-l {
+  position: absolute;
+  inset: 0;
+  transition: opacity var(--lp-world) ease;
+}
+
+.lp-sky-day {
+  background: linear-gradient(180deg, #d2ddd5 0%, #e6e1ce 38%, #f2e2c5 70%, #f3ddba 100%);
+  opacity: var(--lp-day);
+}
+
+.lp-sky-night {
+  background: linear-gradient(180deg, #080d1f 0%, #111833 40%, #1e2543 72%, #293052 100%);
+  opacity: var(--lp-night);
+}
+
+.lp-stars {
+  position: absolute;
+  inset: 0;
+  opacity: var(--lp-night);
+  transition: opacity var(--lp-world);
+}
+
+.lp-stars circle {
+  fill: #ede6d6;
+}
+
+.lp-twinkle {
+  animation: lpTwinkle 4s ease-in-out infinite;
+}
+
+@keyframes lpTwinkle {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* ---------- Header ---------- */
+.lp-top {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 16px 0;
+}
+
+.lp-back {
+  margin: -2px -8px 0 -10px;
+  color: var(--lp-ink);
+}
+
+.lp-date {
+  flex: 1;
+  min-width: 0;
+}
+
+.lp-weekday {
+  overflow: hidden;
+  font-family: var(--lp-serif);
+  font-size: 36px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--lp-ink);
+  transition: color var(--lp-world);
+}
+
+.lp-top .phone-date-label {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--lp-ink-2);
+}
+
+.lp-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.lp-dial {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0 14px 0 8px;
+  border: 1px solid var(--lp-chip-edge);
+  border-radius: 22px;
+  background: var(--lp-chip);
+  box-shadow: 0 4px 10px rgba(10, 16, 14, 0.12);
+  font-family: var(--lp-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--lp-ink);
+  transition: background var(--lp-world), color var(--lp-world);
+}
+
+.lp-dial svg {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.lp-dial-wheel {
+  transform-box: view-box;
+  transform-origin: 14px 20px;
+  transition: transform 1.1s var(--lp-ease);
+}
+
+:root[data-theme="dark"] .lp-dial-wheel {
+  transform: rotate(180deg);
+}
+
+.lp-dial-sky {
+  fill: #151c36;
+  transition: fill var(--lp-world);
+}
+
+:root[data-theme="light"] .lp-dial-sky {
+  fill: #e9e0c7;
+}
+
+.lp-dial-ground {
+  fill: var(--lp-r3);
+  transition: fill var(--lp-world);
+}
+
+/* The mascot key: a white disc with the black devil */
+.lp-app .system-menu .system-trigger.is-profile {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: #fbf8f1;
+  color: #121212;
+  box-shadow: 0 5px 12px rgba(8, 12, 11, 0.24), inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.lp-app .system-menu .system-trigger.is-profile svg {
+  width: 26px;
+  height: 26px;
+}
+
+.lp-app .system-menu .system-trigger.is-profile:active,
+.lp-app .system-menu .system-trigger.is-profile.is-active {
+  background: #efe9dc;
+  color: #121212;
+  box-shadow: 0 2px 6px rgba(8, 12, 11, 0.24);
+}
+
+/* ---------- Focus: the lantern you stand under ---------- */
+.lp-focus {
+  position: relative;
+  z-index: 1;
+  min-height: 246px;
+  padding: 20px 16px 0;
+}
+
+.lp-waypost {
+  position: absolute;
+  top: -12px;
+  right: 0;
+  z-index: 1;
+  width: 150px;
+  height: 330px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.lp-focus-copy {
+  position: relative;
+  z-index: 3;
+  padding-right: 112px;
+  animation: lpFocusIn 0.55s var(--lp-ease) both;
+}
+
+@keyframes lpFocusIn {
+  from {
+    opacity: 0;
+    transform: translateX(22px);
+    filter: blur(3px);
+  }
+}
+
+.lp-focus-title {
+  font-family: var(--lp-serif);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.14;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  color: var(--lp-ink);
+  transition: color var(--lp-world);
+}
+
+.lp-window {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-ink-2);
+  transition: color var(--lp-world);
+}
+
+.lp-clock {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  color: var(--lp-ink);
+}
+
+.lp-mmss {
+  font-size: 58px;
+  font-weight: 300;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.lp-unit {
+  padding-bottom: 3px;
+  font-size: 14px;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--lp-ink-2);
+}
+
+.lp-unit b {
+  font-weight: 500;
+  color: var(--lp-amber-txt);
+}
+
+.lp-clock.is-waiting .lp-unit {
+  font-size: 15px;
+}
+
+.lp-focus-actions {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 18px 0 14px;
+  border-radius: 23px;
+  font-family: var(--lp-sans);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: transform 0.2s var(--lp-ease), background var(--lp-world), color var(--lp-world);
+}
+
+.lp-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.lp-btn-amber {
+  border: none;
+  background: var(--lp-amber);
+  color: #1a140a;
+  box-shadow: 0 7px 16px -4px rgba(140, 82, 10, 0.45);
+}
+
+:root[data-theme="dark"] .lp-btn-amber {
+  box-shadow: 0 8px 18px -6px rgba(0, 0, 0, 0.6);
+}
+
+.lp-btn-chip {
+  padding: 0 18px;
+  border: 1px solid var(--lp-chip-edge);
+  background: var(--lp-chip);
+  color: var(--lp-ink);
+  box-shadow: 0 4px 10px rgba(10, 16, 14, 0.12);
+}
+
+/* The big lantern */
+.lp-iron {
+  fill: var(--lp-iron);
+  transition: fill var(--lp-world);
+}
+
+.lp-iron-s {
+  fill: none;
+  stroke: var(--lp-iron);
+  transition: stroke var(--lp-world);
+}
+
+.lp-glass {
+  fill: var(--lp-glass);
+  stroke: var(--lp-glass-edge);
+  stroke-width: 2;
+  transition: fill var(--lp-world), stroke var(--lp-world);
+}
+
+.lp-wax {
+  fill: var(--lp-wax);
+  transition: y 1s linear, height 1s linear, fill var(--lp-world);
+}
+
+.lp-wax-s {
+  fill: var(--lp-wax-shade);
+  transition: y 1s linear, height 1s linear;
+}
+
+.lp-flame-wrap {
+  transition: transform 1s linear;
+}
+
+.lp-tick {
+  stroke: var(--lp-iron);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transition: stroke var(--lp-world);
+}
+
+.lp-orb-sun {
+  fill: #f4cf86;
+  opacity: var(--lp-sun);
+  transform-box: view-box;
+  transition: opacity 1s ease, transform 1.2s var(--lp-ease);
+}
+
+:root[data-theme="dark"] .lp-orb-sun {
+  transform: translateY(40px);
+}
+
+.lp-orb-moon {
+  opacity: var(--lp-moon);
+  transform-box: view-box;
+  transition: opacity 1s ease 0.15s, transform 1.2s var(--lp-ease) 0.1s;
+}
+
+.lp-orb-moon circle:first-child {
+  fill: #ece4cb;
+}
+
+.lp-crater {
+  fill: #dcd2b4;
+}
+
+:root[data-theme="light"] .lp-orb-moon {
+  transform: translateY(40px);
+}
+
+.lp-bf {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: opacity 0.4s, transform 0.5s var(--lp-ease);
+}
+
+.lp-bf-o {
+  fill: #f7b24a;
+  transition: fill 0.6s;
+}
+
+.lp-bf-c {
+  fill: #fff0c4;
+  transition: fill 0.6s;
+}
+
+.lp-bigglow,
+.lp-bighalo {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.lp-bigglow-j,
+.lp-bighalo-j {
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+
+.lp-waypost[data-state="running"] .lp-bf {
+  animation: lpFlicker 2.3s ease-in-out infinite;
+}
+
+.lp-waypost[data-state="running"] .lp-bigglow {
+  opacity: 0.95;
+}
+
+.lp-waypost[data-state="running"] .lp-bighalo {
+  opacity: calc(var(--lp-glow) * 0.85);
+}
+
+.lp-waypost[data-state="ready"] .lp-bf {
+  opacity: 0;
+  transform: scale(0.2);
+}
+
+.lp-waypost[data-state="lit"] .lp-bf-o,
+.lp-waypost[data-state="rest"] .lp-bf-o {
+  fill: #8fe6bf;
+}
+
+.lp-waypost[data-state="lit"] .lp-bf-c,
+.lp-waypost[data-state="rest"] .lp-bf-c {
+  fill: #f1fff8;
+}
+
+.lp-waypost[data-state="lit"] .lp-bigglow-j,
+.lp-waypost[data-state="rest"] .lp-bigglow-j {
+  opacity: 0.95;
+}
+
+.lp-waypost[data-state="lit"] .lp-bighalo-j,
+.lp-waypost[data-state="rest"] .lp-bighalo-j {
+  opacity: calc(0.25 + var(--lp-glow) * 0.7);
+}
+
+.lp-waypost[data-state="rest"] .lp-bf {
+  animation: lpFlicker 3.2s ease-in-out infinite;
+}
+
+.lp-waypost[data-state="rest"] .lp-candle {
+  opacity: 0;
+}
+
+.lp-big-ring {
+  fill: none;
+  stroke: #9bebc7;
+  stroke-width: 2.5;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.lp-waypost.is-bloom .lp-big-ring {
+  animation: lpRing 1.25s var(--lp-ease) both;
+}
+
+.lp-waypost.is-bloom .lp-bf {
+  animation: lpIgnite 0.9s var(--lp-ease) both;
+}
+
+.lp-smoke {
+  fill: none;
+  stroke: var(--lp-ink-2);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  opacity: 0;
+}
+
+.lp-waypost[data-state="ready"] .lp-smoke {
+  animation: lpSmoke 3.4s ease-out infinite;
+}
+
+.lp-swing {
+  transform-box: view-box;
+  transform-origin: 62px 26px;
+  animation: lpSwing 6s ease-in-out infinite alternate;
+}
+
+@keyframes lpSwing {
+  from {
+    transform: rotate(-1.4deg);
+  }
+  to {
+    transform: rotate(1.4deg);
+  }
+}
+
+@keyframes lpFlicker {
+  0%,
+  100% {
+    transform: scale(1, 1) skewX(0);
+  }
+  22% {
+    transform: scale(0.97, 1.06) skewX(1.6deg);
+  }
+  48% {
+    transform: scale(1.03, 0.95) skewX(-1.2deg);
+  }
+  74% {
+    transform: scale(0.98, 1.04) skewX(0.8deg);
+  }
+}
+
+@keyframes lpIgnite {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes lpRing {
+  0% {
+    transform: scale(0.45);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+@keyframes lpSmoke {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  25% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+/* ---------- The path ---------- */
+.lp-panorama {
+  position: relative;
+  z-index: 2;
+  height: 262px;
+  margin-top: -4px;
+  background: linear-gradient(to bottom, transparent 168px, var(--lp-hill) 168px);
+  transition: background var(--lp-world);
+}
+
+.lp-ridges {
+  position: absolute;
+  top: -58px;
+  right: 0;
+  left: 0;
+  height: 320px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lp-ridges svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 362px;
+  will-change: transform;
+}
+
+.lp-r1 {
+  fill: var(--lp-r1);
+}
+
+.lp-r2 {
+  fill: var(--lp-r2);
+}
+
+.lp-r3 {
+  fill: var(--lp-r3);
+}
+
+.lp-ridges path {
+  transition: fill var(--lp-world) ease;
+}
+
+.lp-scroller {
+  position: absolute;
+  inset: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.lp-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.lp-scroller:focus-visible {
+  outline-offset: -4px;
+  border-radius: 18px;
+}
+
+.lp-track {
+  position: relative;
+  height: 262px;
+}
+
+.lp-track > svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.lp-hill {
+  fill: var(--lp-hill);
+  transition: fill var(--lp-world);
+}
+
+.lp-trail-band {
+  fill: none;
+  stroke: var(--lp-trail);
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke var(--lp-world);
+}
+
+.lp-trail-stones {
+  fill: none;
+  stroke: var(--lp-stone);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 11;
+  transition: stroke var(--lp-world);
+}
+
+.lp-trail-walked {
+  fill: none;
+  stroke: var(--lp-jade);
+  stroke-width: 3.4;
+  stroke-linecap: round;
+}
+
+.lp-seg-done {
+  fill: none;
+  stroke: var(--lp-jade);
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.lp-seg-now {
+  fill: none;
+  stroke: var(--lp-amber);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.lp-seg-next {
+  fill: none;
+  stroke: var(--lp-amber);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 3 5;
+  opacity: 0.9;
+}
+
+/* Lit lanterns light the path at night: the halo and pool are the light source */
+.lp-pool,
+.lp-halo {
+  opacity: var(--lp-glow);
+  transition: opacity var(--lp-world) ease;
+  pointer-events: none;
+}
+
+.lp-ruler {
+  font: 500 11px var(--lp-sans);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  fill: var(--lp-paper-3);
+  transition: fill var(--lp-world);
+}
+
+.lp-ruler-tick {
+  stroke: var(--lp-paper-3);
+  stroke-width: 1.3;
+  opacity: 0.7;
+}
+
+.lp-now-txt {
+  font: 600 11px var(--lp-sans);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  fill: var(--lp-amber-g);
+}
+
+.lp-now-notch {
+  fill: var(--lp-amber-g);
+}
+
+.lp-stop {
+  position: absolute;
+  width: 124px;
+  height: 162px;
+  text-align: center;
+}
+
+.lp-stop.row2 {
+  height: 216px;
+}
+
+.lp-stop-lamp {
+  position: absolute;
+  top: 0;
+  left: 36px;
+  width: 44px;
+  height: 92px;
+  padding: 0;
+  border: none;
+  border-radius: 14px;
+  background: none;
+}
+
+.lp-stop-lamp:active .lp-ml {
+  transform: scale(0.95);
+}
+
+.lp-ml {
+  display: block;
+  transition: transform 0.2s var(--lp-ease);
+}
+
+.lp-plabel {
+  position: absolute;
+  top: 100px;
+  right: 0;
+  left: 0;
+  min-height: 44px;
+  padding: 4px 2px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  text-align: center;
+}
+
+.lp-stop.row2 .lp-plabel {
+  top: 154px;
+}
+
+.lp-plabel-t {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-paper-2);
+  transition: color 0.4s;
+}
+
+.lp-plabel-n {
+  display: -webkit-box;
+  margin-top: 4px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-family: var(--lp-serif);
+  font-size: 16px;
+  line-height: 1.18;
+  color: var(--lp-paper);
+  transition: color var(--lp-world);
+}
+
+.lp-stop.is-lit .lp-plabel-t {
+  color: var(--lp-jade);
+}
+
+.lp-stop.is-lit .lp-plabel-n {
+  color: var(--lp-paper-2);
+}
+
+.lp-stop.is-now .lp-plabel-t,
+.lp-stop.is-next .lp-plabel-t,
+.lp-stop.is-missed .lp-plabel-t {
+  color: var(--lp-amber-g);
+}
+
+/* Mini lantern */
+.lp-ml-post {
+  fill: none;
+  stroke: var(--lp-iron);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  transition: stroke var(--lp-world);
+}
+
+.lp-ml-ring {
+  fill: none;
+  stroke: var(--lp-iron);
+  stroke-width: 1.6;
+  transition: stroke var(--lp-world);
+}
+
+.lp-ml-iron {
+  fill: var(--lp-iron);
+  transition: fill var(--lp-world);
+}
+
+.lp-ml-glass {
+  fill: var(--lp-glass);
+  stroke: var(--lp-iron);
+  stroke-width: 1.6;
+  transition: fill var(--lp-world);
+}
+
+:root[data-theme="dark"] .lp-ml-glass {
+  stroke: var(--lp-glass-edge);
+}
+
+:root[data-theme="dark"] .lp-ml-post,
+:root[data-theme="dark"] .lp-ml-ring {
+  stroke: #3a4368;
+}
+
+:root[data-theme="dark"] .lp-ml-iron {
+  fill: #3a4368;
+}
+
+.lp-ml-tint {
+  opacity: 0;
+  transition: opacity 0.6s, fill 0.6s;
+}
+
+.lp-ml-flame {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.lp-ml-flame .fo {
+  fill: #f7b24a;
+}
+
+.lp-ml-flame .fc {
+  fill: #fff1c8;
+}
+
+.lp-ml-burst {
+  fill: none;
+  stroke: #9bebc7;
+  stroke-width: 1.6;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.is-lit .lp-ml-flame,
+.is-now .lp-ml-flame {
+  opacity: 1;
+}
+
+.is-now .lp-ml-flame {
+  animation: lpFlicker 2.1s ease-in-out infinite;
+}
+
+.is-lit .lp-ml-flame .fo {
+  fill: #8fe6bf;
+}
+
+.is-lit .lp-ml-flame .fc {
+  fill: #f1fff8;
+}
+
+.is-lit .lp-ml-tint {
+  opacity: 0.55;
+  fill: #bdefd7;
+}
+
+.is-now .lp-ml-tint {
+  opacity: 0.6;
+  fill: #ffd99a;
+}
+
+:root[data-theme="dark"] .is-lit .lp-ml-tint {
+  opacity: 0.85;
+  fill: #5bbe95;
+}
+
+:root[data-theme="dark"] .is-now .lp-ml-tint {
+  opacity: 0.85;
+  fill: #e0a043;
+}
+
+.is-next .lp-ml-glass,
+.is-missed .lp-ml-glass {
+  stroke: var(--lp-amber-g);
+  stroke-width: 2;
+}
+
+.lp-stop.igniting .lp-ml-flame {
+  animation: lpIgnite 0.9s var(--lp-ease) both;
+}
+
+.lp-stop.igniting .lp-ml-burst {
+  animation: lpRing 1.2s var(--lp-ease) both;
+}
+
+/* The traveller: where you stand right now */
+.lp-traveller {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 30px;
+  height: 36px;
+  pointer-events: none;
+  transition: transform 1s linear;
+}
+
+.lp-cloak {
+  fill: var(--lp-iron);
+  transition: fill var(--lp-world);
+}
+
+:root[data-theme="dark"] .lp-cloak {
+  fill: #05070f;
+}
+
+.lp-rim {
+  fill: none;
+  stroke: #59628f;
+  stroke-width: 1;
+  opacity: var(--lp-night);
+}
+
+.lp-scarf {
+  fill: none;
+  stroke: var(--lp-amber);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  animation: lpScarf 2.6s ease-in-out infinite;
+}
+
+@keyframes lpScarf {
+  50% {
+    transform: rotate(-8deg);
+  }
+}
+
+.lp-fly {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #f6e7a8;
+  opacity: calc(var(--lp-night) * 0.8);
+  pointer-events: none;
+  animation: lpFly var(--d) ease-in-out infinite alternate;
+  transition: opacity var(--lp-world);
+}
+
+@keyframes lpFly {
+  to {
+    transform: translate(var(--fx), var(--fy));
+  }
+}
+
+.lp-backto {
+  position: absolute;
+  top: -2px;
+  right: 16px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 14px 0 12px;
+  border: none;
+  border-radius: 22px;
+  background: var(--lp-ground-2);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  font-family: var(--lp-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--lp-paper);
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.4s var(--lp-ease);
+}
+
+.lp-backto.is-shown {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.lp-path-empty {
+  position: absolute;
+  right: 16px;
+  bottom: 40px;
+  left: 16px;
+  z-index: 3;
+  text-align: center;
+  font-size: 14px;
+  color: var(--lp-paper-2);
+  pointer-events: none;
+}
+
+/* ---------- The ground ---------- */
+.lp-ground {
+  position: relative;
+  z-index: 2;
+  margin-top: -1px;
+  padding: 0 16px 28px;
+  background: var(--lp-ground);
+  color: var(--lp-paper);
+  transition: background var(--lp-world);
+}
+
+.lp-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+  font-size: 13.5px;
+  color: var(--lp-paper-3);
+}
+
+.lp-sec {
+  padding-top: 30px;
+}
+
+.lp-h {
+  font-family: var(--lp-serif);
+  font-size: 23px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--lp-paper);
+}
+
+.lp-sub {
+  margin-top: 5px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--lp-paper-2);
+}
+
+.lp-walk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lp-alldays {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 44px;
+  margin-right: -6px;
+  padding: 0 8px 0 12px;
+  border: none;
+  border-radius: 22px;
+  background: none;
+  font-family: var(--lp-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--lp-paper);
+}
+
+.lp-alldays:active {
+  background: var(--lp-ground-2);
+}
+
+/* The week as cairns: one stone per task, lit stones for the done ones */
+.lp-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: end;
+  margin-top: 12px;
+}
+
+.lp-day-cell {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.lp-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 0;
+  border: none;
+  border-radius: 14px;
+  background: none;
+}
+
+.lp-day:active {
+  background: var(--lp-ground-2);
+}
+
+.lp-day svg {
+  width: 40px;
+  height: 62px;
+}
+
+.lp-dl {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--lp-paper-2);
+}
+
+.lp-dn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid transparent;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-paper);
+}
+
+.lp-day.is-today .lp-dl,
+.lp-day.is-today .lp-dn {
+  color: var(--lp-amber-g);
+}
+
+.lp-day.is-focus .lp-dn {
+  border-color: var(--lp-amber-g);
+}
+
+.lp-st {
+  fill: var(--lp-cairn);
+  transition: fill 0.5s;
+}
+
+.lp-st.is-lit {
+  fill: var(--lp-jade);
+}
+
+.lp-st.is-ghost {
+  fill: var(--lp-ghost);
+}
+
+/* Lists on the ground: a dotted trail of small lanterns */
+.lp-trail-list {
+  position: relative;
+  margin-top: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-trail-list::before {
+  content: "";
+  position: absolute;
+  top: 26px;
+  bottom: 26px;
+  left: 21px;
+  border-left: 2px dotted var(--lp-stone);
+}
+
+.lp-trail-list li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  animation: lpArrive 0.6s var(--lp-ease) both;
+}
+
+@keyframes lpArrive {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.lp-lampbtn {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--lp-ground);
+  transition: background 0.3s;
+}
+
+.lp-lampbtn:active {
+  background: var(--lp-ground-2);
+}
+
+.lp-lampbtn svg {
+  width: 22px;
+  height: 34px;
+}
+
+.lp-gl-iron {
+  fill: var(--lp-paper-2);
+}
+
+.lp-gl-glass {
+  fill: var(--lp-ground-3);
+  stroke: var(--lp-paper-2);
+  stroke-width: 1.3;
+}
+
+.lp-gl-fl {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.lp-lampbtn[aria-checked="true"] .lp-gl-glass {
+  fill: #3f7e66;
+  stroke: var(--lp-jade);
+}
+
+.lp-lampbtn[aria-checked="true"] .lp-gl-iron {
+  fill: var(--lp-jade);
+}
+
+.lp-lampbtn[aria-checked="true"] .lp-gl-fl {
+  opacity: 1;
+  fill: #c9f7e2;
+}
+
+.lp-lampbtn.igniting .lp-gl-fl {
+  animation: lpIgnite 0.8s var(--lp-ease) both;
+}
+
+.lp-li-txt {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  text-align: left;
+}
+
+.lp-li-txt:active,
+.lp-trail-list li.is-selected .lp-li-txt {
+  background: var(--lp-ground-2);
+}
+
+.lp-li-title {
+  font-family: var(--lp-serif);
+  font-size: 18px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  color: var(--lp-paper);
+  transition: color 0.4s;
+}
+
+.lp-li-meta {
+  margin-top: 1px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-paper-3);
+}
+
+.lp-trail-list li.is-done .lp-li-title {
+  color: var(--lp-paper-2);
+  text-decoration: line-through;
+  text-decoration-color: var(--lp-paper-3);
+}
+
+.lp-trail-list li.is-done .lp-li-meta {
+  color: var(--lp-jade);
+}
+
+.lp-btn-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  margin-top: 12px;
+  padding: 0 20px 0 16px;
+  border: 1.5px solid var(--lp-amber-g);
+  border-radius: 24px;
+  background: none;
+  font-family: var(--lp-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--lp-amber-g);
+  transition: background 0.25s;
+}
+
+.lp-btn-move:active {
+  background: rgba(242, 180, 81, 0.12);
+}
+
+.lp-empty {
+  padding-top: 24px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--lp-paper-3);
+}
+
+/* ---------- Place a lantern: the add-task bar at the thumb ---------- */
+.lp-app .phone-composer.lp-placebar {
+  position: relative;
+  z-index: 1;
+  background: var(--lp-ground);
+  transition: background var(--lp-world);
+}
+
+.lp-app .phone-composer .command-bar {
+  border: 1px solid rgba(241, 234, 219, 0.12);
+  border-radius: 20px;
+  background: var(--lp-ground-3);
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.45);
+  color: var(--lp-paper);
+}
+
+.lp-app .phone-composer .command-bar:focus-within {
+  border-color: var(--lp-amber-g);
+  background: var(--lp-ground-3);
+  box-shadow: 0 0 0 3px rgba(242, 180, 81, 0.18), 0 10px 24px -6px rgba(0, 0, 0, 0.45);
+}
+
+.lp-app .phone-composer .quick-add-input {
+  font-family: var(--lp-sans);
+  font-size: 16px;
+  color: var(--lp-paper);
+}
+
+.lp-app .phone-composer .quick-add-input::placeholder {
+  font-family: var(--lp-serif);
+  font-size: 16px;
+  color: var(--lp-paper-2);
+}
+
+.lp-app .phone-composer .command-bar .command-submit {
+  border: none;
+  background: var(--lp-amber);
+  color: #1a140a;
+  font-family: var(--lp-sans);
+}
+
+/* ---------- All days and the profile sheet, on the ground ---------- */
+.lp-app.is-all .phone-title {
+  font-family: var(--lp-serif);
+  font-size: 26px;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.lp-app .phone-day-name,
+.lp-app .phone-week-range,
+.lp-app .phone-task-title {
+  font-family: var(--lp-serif);
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.lp-app .system-panel {
+  background: var(--lp-ground-2);
+  color: var(--lp-paper);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-app *,
+  .lp-app *::before,
+  .lp-app *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.15s !important;
+  }
+
+  .lp-swing,
+  .lp-bf,
+  .lp-ml-flame,
+  .lp-twinkle,
+  .lp-fly,
+  .lp-scarf {
+    animation: none !important;
+  }
+}
+
+/* The add bar's date, time and repeat chips keep a full thumb-sized target */
+.lp-app .phone-composer .chip-btn,
+.lp-app .phone-composer .clear-chip-btn {
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+}
+
+/* While the add bar is open with its chips, Undo rises above it */
+body.is-phone-app:has(.lp-placebar .command-bar:focus-within) .toast-region,
+body.is-phone-app:has(.lp-placebar .command-bar.has-text) .toast-region {
+  bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+}

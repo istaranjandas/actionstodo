@@ -440,7 +440,9 @@ export function App() {
             onBack={returnToLens}
             onPickDate={focusDay}
             profile={systemMenu}
-            composer={<QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} />}
+            composer={<QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} placeholder="Place a lantern, like “Call Alex at 5pm”" />}
+            theme={theme}
+            onSetTheme={applyTheme}
           />
         )}
 

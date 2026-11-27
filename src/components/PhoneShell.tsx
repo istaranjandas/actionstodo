@@ -1,21 +1,21 @@
-// Phones get a plain app instead of the 3D valley: a day screen (today by default) with what is left over
-// from earlier, the day's schedule and the add-task bar at the thumb, and an All days screen that slides
-// in over it. Rows tap open the existing details sheet; the mascot key opens the profile sheet.
+// Phones get the Lantern Path instead of the 3D valley: the day is a trail through a valley, the task you
+// are on burns in the focus lantern, and lighting a lantern marks its task done (LanternPath.tsx). The
+// add-task bar sits at the thumb, and an All days screen slides in over the day. Rows tap open the
+// existing details sheet; the mascot key opens the profile sheet.
 import { useMemo, useState } from 'react';
 import type { ReactNode, RefCallback } from 'react';
-import { ArrowLeft, CalendarDays, Check, ChevronRight, Clock3, Repeat2 } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Check, ChevronRight, Clock3, CornerDownRight, Map as MapIcon, MoveHorizontal, Repeat2 } from 'lucide-react';
 import { addDays, formatFriendlyDate, formatShortDate, parseISODate } from '../modules/dateUtils';
 import { formatTimeRangeDisplay } from '../modules/timeUtils';
 import { repeatShortLabel } from '../modules/recurrence';
 import { sortTaskList, tallyTasks, updateTaskItem } from '../modules/store';
-import { taskDuration } from '../modules/listDrag';
 import { setTaskCompleted } from '../modules/taskActions';
 import { pushToast } from '../modules/toasts';
 import { playUiSound } from '../audio/uiSounds';
-import { useMinuteClock } from '../hooks/useMinuteClock';
 import { useTaskSelection } from './TaskSelection';
 import { DatePicker } from './DatePicker';
-import type { Task } from '../types';
+import type { Task, Theme } from '../types';
+import { HorizonDial, LanternFocus, LanternPanorama, LanternSky, TrailList, WeekCairns } from './LanternPath';
 
 type DaysFilter = 'open' | 'done' | 'all';
 
@@ -35,12 +35,9 @@ interface PhoneShellProps {
   onPickDate: (date: string) => void;
   profile: ReactNode;
   composer: ReactNode;
+  theme: Theme;
+  onSetTheme: (theme: Theme) => void;
 }
-
-const toMinutes = (time: string) => {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
-};
 
 // Monday-first, like the date picker
 const weekStart = (date: string) => addDays(date, -((parseISODate(date).getDay() + 6) % 7));
@@ -114,25 +111,27 @@ function TaskList({ tasks, nowId, showDate, className = '' }: { tasks: Task[]; n
   );
 }
 
-// ---------- Day screen ----------
+// ---------- Day screen: the Lantern Path ----------
 
-function DayScreen({ tasks, today, focusDate, isPickedDate, dayTasks, onOpenAll }: Pick<PhoneShellProps, 'tasks' | 'today' | 'isPickedDate' | 'dayTasks' | 'onOpenAll'> & { focusDate: string }) {
-  const nowMinutes = useMinuteClock();
+const ageLabel = (date: string, today: string) => {
+  const days = Math.round((parseISODate(today).getTime() - parseISODate(date).getTime()) / 86400000);
+  if (days < 7) return days === 1 ? 'yesterday' : `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  return weeks === 1 ? 'a week ago' : `${weeks} weeks ago`;
+};
+
+function DayScreen({ tasks, today, focusDate, isPickedDate, dayTasks, onOpenAll, onPickDate }: Pick<PhoneShellProps, 'tasks' | 'today' | 'isPickedDate' | 'dayTasks' | 'onOpenAll' | 'onPickDate'> & { focusDate: string }) {
   const isToday = focusDate === today;
   const sorted = useMemo(() => sortTaskList(dayTasks, true), [dayTasks]);
-  const timed = sorted.filter(t => t.startTime);
+  const timed = useMemo(() => sorted.filter(t => t.startTime), [sorted]);
   const anytime = sorted.filter(t => !t.startTime);
   const { done, total } = tallyTasks(dayTasks);
-  const nowTask = isToday
-    ? timed.find(t => !t.completed && toMinutes(t.startTime) <= nowMinutes && toMinutes(t.startTime) + taskDuration(t) > nowMinutes)
-    : undefined;
 
   // One-off tasks left open on past days. Repeating tasks stay out: the series comes round again on its own.
   const carried = useMemo(
     () => (isToday ? sortTaskList(tasks.filter(t => t.date && t.date < today && !t.completed && !t.repeat && !t.isOccurrence)) : []),
     [tasks, today, isToday]
   );
-  const otherDaysOpen = useMemo(() => tasks.filter(t => !t.completed && t.date !== focusDate).length, [tasks, focusDate]);
 
   const moveCarriedToToday = () => {
     const moved = carried.map(t => ({ id: t.id, date: t.date }));
@@ -146,71 +145,62 @@ function DayScreen({ tasks, today, focusDate, isPickedDate, dayTasks, onOpenAll 
     });
   };
 
+  const anytimeMeta = (task: Task) => (task.repeat ? repeatShortLabel(task.repeat) : task.isOccurrence ? 'Repeats' : '');
+
   return (
     <>
-      {total > 0 && (
-        <div className="phone-progress">
-          <span className="phone-progress-label">
-            <strong>{done}</strong> of <strong>{total}</strong> done
-          </span>
-          <span className="phone-progress-track" role="progressbar" aria-label="Done today" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done}>
-            <span className="phone-progress-fill" style={{ width: `${(done / total) * 100}%` }} />
-          </span>
-        </div>
-      )}
+      {isToday && <LanternFocus timed={timed} today={today} />}
+      <LanternPanorama timed={timed} isToday={isToday} tasks={dayTasks} />
 
-      {carried.length > 0 && (
-        <section className="phone-section" aria-labelledby="phone-carried-title">
-          <div className="phone-section-head">
-            <h2 className="phone-section-title" id="phone-carried-title">
-              From earlier <span className="phone-section-count">{carried.length}</span>
+      <div className="lp-ground">
+        {timed.length > 0 && (
+          <p className="lp-hint">
+            <MoveHorizontal size={16} strokeWidth={1.8} aria-hidden="true" />
+            Swipe the path to walk the day. Tap a lantern to light it.
+          </p>
+        )}
+
+        <section className="lp-sec" aria-labelledby="lp-walk-title">
+          <div className="lp-walk-head">
+            <h2 className="lp-h" id="lp-walk-title">
+              {total === 0 ? 'Nothing planned yet' : `${done} of ${total} ${total === 1 ? 'lantern' : 'lanterns'} lit`}
             </h2>
-            <button type="button" className="phone-text-btn" onClick={moveCarriedToToday}>
-              Move to today
+            {!isPickedDate && (
+              <button type="button" className="lp-alldays" data-sfx="open" aria-keyshortcuts="a" onClick={onOpenAll}>
+                All days
+                <MapIcon size={18} strokeWidth={1.7} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+          <WeekCairns tasks={tasks} today={today} focusDate={focusDate} onPickDate={onPickDate} />
+        </section>
+
+        {carried.length > 0 && (
+          <section className="lp-sec" aria-labelledby="lp-carried-title">
+            <h2 className="lp-h" id="lp-carried-title">Left on the trail</h2>
+            <p className="lp-sub">
+              {carried.length === 1 ? 'One lantern' : `${carried.length} lanterns`} from earlier days, still unlit.
+            </p>
+            <TrailList tasks={carried} meta={task => `${formatShortDate(task.date)} · ${ageLabel(task.date, today)}`} />
+            <button type="button" className="lp-btn-move" data-sfx="none" onClick={moveCarriedToToday}>
+              <CornerDownRight size={19} strokeWidth={1.8} aria-hidden="true" />
+              Move all to today
             </button>
-          </div>
-          <TaskList tasks={carried} showDate className="is-carried" />
-        </section>
-      )}
+          </section>
+        )}
 
-      {total === 0 && <p className="phone-empty">{isToday ? 'Nothing planned for today. Add a task below.' : 'Nothing planned for this day. Add a task below.'}</p>}
+        {anytime.length > 0 && (
+          <section className="lp-sec" aria-labelledby="lp-pack-title">
+            <h2 className="lp-h" id="lp-pack-title">Anytime</h2>
+            <p className="lp-sub">In your pack. No set time {isToday ? 'today' : 'on this day'}.</p>
+            <TrailList tasks={anytime} meta={anytimeMeta} />
+          </section>
+        )}
 
-      {timed.length > 0 && (
-        <section className="phone-section" aria-labelledby="phone-schedule-title">
-          <div className="phone-section-head">
-            <h2 className="phone-section-title" id="phone-schedule-title">
-              Schedule <span className="phone-section-count">{timed.length}</span>
-            </h2>
-          </div>
-          <TaskList tasks={timed} nowId={nowTask?.id} />
-        </section>
-      )}
-
-      {anytime.length > 0 && (
-        <section className="phone-section" aria-labelledby="phone-anytime-title">
-          <div className="phone-section-head">
-            <h2 className="phone-section-title" id="phone-anytime-title">
-              Anytime <span className="phone-section-count">{anytime.length}</span>
-            </h2>
-          </div>
-          <TaskList tasks={anytime} />
-        </section>
-      )}
-
-      {!isPickedDate && (
-        <section className="phone-section">
-          <button type="button" className="phone-nav-row" data-sfx="open" aria-keyshortcuts="a" onClick={onOpenAll}>
-            <span className="phone-nav-icon" aria-hidden="true">
-              <CalendarDays size={18} strokeWidth={2} />
-            </span>
-            <span className="phone-nav-copy">
-              <span className="phone-nav-title">All days</span>
-              <span className="phone-nav-detail">{otherDaysOpen > 0 ? `${otherDaysOpen} open on other days` : 'Every past and upcoming day'}</span>
-            </span>
-            <ChevronRight size={20} aria-hidden="true" />
-          </button>
-        </section>
-      )}
+        {total === 0 && carried.length === 0 && (
+          <p className="lp-empty">{isToday ? 'Place a lantern below to start today’s path.' : 'Place a lantern below to plan this day.'}</p>
+        )}
+      </div>
     </>
   );
 }
@@ -353,40 +343,61 @@ function AllDaysScreen({ tasks, today, onPickDate }: Pick<PhoneShellProps, 'task
 // ---------- Shell ----------
 
 export function PhoneShell(props: PhoneShellProps) {
-  const { today, focusDate, isPickedDate, isScrolled, scrollRef, onCloseAll, onBack, onPickDate, profile, composer } = props;
-  const isAll = focusDate === null;
-  const title = isAll ? 'All days' : formatFriendlyDate(focusDate).title;
+  const { today, focusDate, isPickedDate, isScrolled, scrollRef, onCloseAll, onBack, onPickDate, profile, composer, theme, onSetTheme } = props;
 
-  return (
-    <div className={`phone-app ${isAll ? 'is-all' : 'is-day'}`}>
-      <div className={`phone-screen ${isAll ? 'is-pushed' : ''}`} key={isAll ? 'all' : 'day'}>
-        <header className={`phone-appbar ${isScrolled ? 'is-scrolled' : ''}`}>
-          {(isAll || isPickedDate) && (
-            <button type="button" className="phone-icon-btn" aria-label={isAll ? 'Back to today' : 'Back'} title="Back (Esc)" data-sfx="close" onClick={isAll ? onCloseAll : onBack}>
+  if (focusDate === null) {
+    return (
+      <div className="phone-app lp-app is-all">
+        <div className="phone-screen is-pushed" key="all">
+          <header className={`phone-appbar ${isScrolled ? 'is-scrolled' : ''}`}>
+            <button type="button" className="phone-icon-btn" aria-label="Back to today" title="Back (Esc)" data-sfx="close" onClick={onCloseAll}>
               <ArrowLeft size={22} strokeWidth={2} aria-hidden="true" />
             </button>
-          )}
-          <div className="phone-appbar-copy">
-            {!isAll && (
-              <div className="picker-chip-wrap phone-date">
-                <span className="phone-date-label">{headerDateLine(focusDate, today)}</span>
-                <DatePicker ariaLabel="Jump to a date" value={focusDate} onChange={onPickDate} />
-              </div>
-            )}
-            <h1 className="phone-title">{title}</h1>
-          </div>
-          {profile}
-        </header>
-
-        <div className="phone-body" ref={scrollRef}>
-          {isAll ? (
+            <div className="phone-appbar-copy">
+              <h1 className="phone-title">All days</h1>
+            </div>
+            {profile}
+          </header>
+          <div className="phone-body" ref={scrollRef}>
             <AllDaysScreen tasks={props.tasks} today={today} onPickDate={onPickDate} />
-          ) : (
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isToday = focusDate === today;
+  return (
+    <div className="phone-app lp-app is-day">
+      <div className="phone-screen" key="day">
+        <div className="phone-body lp-body" ref={scrollRef}>
+          <div className="lp-scene">
+            <LanternSky />
+            <header className="lp-top">
+              {isPickedDate && (
+                <button type="button" className="phone-icon-btn lp-back" aria-label="Back" title="Back (Esc)" data-sfx="close" onClick={onBack}>
+                  <ArrowLeft size={22} strokeWidth={2} aria-hidden="true" />
+                </button>
+              )}
+              <div className="lp-date">
+                <h1 className="lp-weekday">
+                  {isToday ? parseISODate(focusDate).toLocaleDateString(undefined, { weekday: 'long' }) : formatFriendlyDate(focusDate).title}
+                </h1>
+                <div className="picker-chip-wrap phone-date">
+                  <span className="phone-date-label">{headerDateLine(focusDate, today)}</span>
+                  <DatePicker ariaLabel="Jump to a date" value={focusDate} onChange={onPickDate} />
+                </div>
+              </div>
+              <div className="lp-top-actions">
+                <HorizonDial theme={theme} onSetTheme={onSetTheme} />
+                {profile}
+              </div>
+            </header>
             <DayScreen {...props} focusDate={focusDate} />
-          )}
+          </div>
         </div>
 
-        {!isAll && <div className="phone-composer">{composer}</div>}
+        <div className="phone-composer lp-placebar">{composer}</div>
       </div>
     </div>
   );
