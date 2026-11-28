@@ -1,12 +1,11 @@
 // Main Application Shell & UI Coordinator
-// Manual mode: the lantern path — a 3D valley where each day is a waypost and each task a lantern —
-// with a day slate, a details slate and the path ribbon floating in it. Phones get a plain app screen
-// instead (PhoneShell). Game mode: the quest arena.
+// Manual mode: the Lantern Path — a drawn valley where each task is a lantern on the day's trail. Desktop
+// floats the day slate (and All days) over it (DesktopShell); phones get the same world as an app screen
+// (PhoneShell). Game mode: the quest arena.
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { auth, onAuthStateChanged } from './firebase';
-import { addDays, getLocalISODate, getWeekDates } from './modules/dateUtils';
-import { ensureRecurringOccurrences, initFirestoreSync, setUiState, sortTaskList, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
+import { addDays, getLocalISODate } from './modules/dateUtils';
+import { ensureRecurringOccurrences, initFirestoreSync, setUiState, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
 import { setupTaskDragAndDrop } from './modules/listDrag';
 import { moveTask } from './modules/taskActions';
 import { countForView, daysFromToday, NAV_ITEMS } from './modules/navigation';
@@ -23,16 +22,11 @@ import { usePreservedValue } from './hooks/usePreservedValue';
 import { playUiSound } from './audio/uiSounds';
 import { swellAmbientMusic } from './audio/ambientMusic';
 import { rewardCompletedQuests } from './game/state/gameProgress';
-import { WorldStage } from './world/WorldStage';
-import { worldBridge } from './world/worldBridge';
-import type { WorldDay } from './world/worldBridge';
 import { clampDayOffset, FUTURE_DAY_LIMIT, PAST_DAY_LIMIT } from './world/trail';
 import type { WorldLens } from './world/worldViews';
 import { SystemMenu } from './components/SystemMenu';
-import { DaySlate } from './components/DaySlate';
 import { PhoneShell } from './components/PhoneShell';
-import { WorldLabels } from './components/WorldLabels';
-import { TaskFeed } from './components/TaskFeed';
+import { DesktopShell } from './components/DesktopShell';
 import { TaskInspector } from './components/TaskInspector';
 import { TaskSelectionContext } from './components/TaskSelection';
 import { QuickAddForm } from './components/QuickAddForm';
@@ -43,7 +37,7 @@ import { InspectorSlate } from './components/InspectorSlate';
 import type { ViewportMode } from './components/ViewportModeToggle';
 import { TimePopover, TimePopoverContext } from './components/TimePopover';
 import type { OpenTimePopover, TimePopoverHandle } from './components/TimePopover';
-import type { Task, Theme, TimePopoverContext as PopoverTarget, ViewName } from './types';
+import type { Theme, TimePopoverContext as PopoverTarget, ViewName } from './types';
 
 const HEADER_CONDENSE_OFFSET = 12;
 const VIEWPORT_MODE_KEY = 'actionstodo_viewport_mode';
@@ -61,17 +55,15 @@ function readInitialViewportMode(): ViewportMode {
 
 export function App() {
   const appState = useStore();
-  const { prefersReducedMotion, isTouchDevice, hasFinePointer } = useMotionProfile();
+  const { prefersReducedMotion, isTouchDevice } = useMotionProfile();
   // Animations are off unless the System panel turns them on, so low-end machines stay responsive
   const { animationsEnabled } = useDisplaySettings();
   const reducedMotion = prefersReducedMotion || !animationsEnabled;
   const isWide = useMediaQuery(DESKTOP_SCROLL_PANE_QUERY);
   const isCompact = !isWide;
-  // Phones skip the 3D valley for a plain app screen (PhoneShell)
+  // Phones get the Lantern Path as an app screen (PhoneShell); wider screens float the slate over it
   const isPhone = useMediaQuery(COMPACT_QUERY);
   const [theme, setTheme] = useState<Theme>(readRenderedTheme);
-  // "DONE" in the slate header is a toggle: finished work stays out of the log unless asked for
-  const [showDone, setShowDone] = useState(true);
   const [scrollPane, setScrollPane] = useState<HTMLElement | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [viewportMode, setViewportMode] = useState<ViewportMode>(readInitialViewportMode);
@@ -87,13 +79,10 @@ export function App() {
   // Held in state so the shell re-renders when the local date changes, even with no store update
   const [today, setToday] = useState(getLocalISODate);
   const todayRef = useRef(today);
-  // A picked date, or the Today lens, focuses one waypost; the other lenses frame a stretch of path
+  // A picked date, or the Today lens, opens one day on the slate; All days spreads into a board of day cards
   const focusDate = specificDateFilter ?? (currentView === 'today' ? today : null);
-  // One day reads as a single column beside its waypost; the multi-day lenses spread into a grid of day cards
-  const isGridView = !focusDate;
   const worldLens: WorldLens = focusDate ? 'day' : (currentView as WorldLens);
   const focusOffset = focusDate ? clampDayOffset(daysFromToday(focusDate)) : 0;
-  const weekStartOffset = daysFromToday(getWeekDates(0)[0]);
   const viewKey = specificDateFilter ? `date:${specificDateFilter}` : currentView;
   const selectedTask = selectedTaskId ? tasks.find(t => t.id === selectedTaskId) ?? null : null;
   // Lens badges, the slate header and the day cards all count through summarizeView (store.ts).
@@ -102,30 +91,6 @@ export function App() {
   const otherDaysOpen = useMemo(() => countForView('all', tasks)! - countForView('today', tasks)!, [tasks, today]);
   const viewSummary = useMemo(() => summarizeView(tasks, currentView, specificDateFilter), [tasks, currentView, specificDateFilter, today]);
   const viewTasks = viewSummary.tasks;
-
-  // Wayposts for every day on the path that has tasks, plus today and the focused day
-  const worldDays = useMemo<WorldDay[]>(() => {
-    const byDate = new Map<string, Task[]>();
-    const isOnPath = (date: string) => {
-      const offset = daysFromToday(date);
-      return offset >= -PAST_DAY_LIMIT && offset <= FUTURE_DAY_LIMIT;
-    };
-    tasks.forEach(task => {
-      if (!task.date || !isOnPath(task.date)) return;
-      if (!byDate.has(task.date)) byDate.set(task.date, []);
-      byDate.get(task.date)!.push(task);
-    });
-    [today, focusDate].forEach(date => {
-      if (date && isOnPath(date) && !byDate.has(date)) byDate.set(date, []);
-    });
-    return Array.from(byDate.entries())
-      .map(([date, dayTasks]) => ({
-        date,
-        offset: daysFromToday(date),
-        tasks: sortTaskList(dayTasks, true).map(task => ({ id: task.id, text: task.text, completed: task.completed, startTime: task.startTime }))
-      }))
-      .sort((a, b) => a.offset - b.offset);
-  }, [tasks, today, focusDate]);
 
   // --- Recurring series ---
   // Materialise the rolling horizon whenever tasks arrive (login, a new series, a snapshot) and
@@ -293,24 +258,13 @@ export function App() {
     const taskId = selectedTaskId;
     setSelectedTaskId(null);
     if (taskId && document.activeElement?.closest('.inspector, .sheet-panel')) {
-      requestAnimationFrame(() => document.querySelector<HTMLElement>(`.task-row[data-id="${taskId}"]`)?.focus());
+      requestAnimationFrame(() => document.querySelector<HTMLElement>(`.task-row[data-id="${taskId}"], .dk-row[data-id="${taskId}"]`)?.focus());
     }
   }, [selectedTaskId]);
 
   useEffect(() => {
     if (selectedTaskId && !tasks.some(t => t.id === selectedTaskId)) setSelectedTaskId(null);
   }, [tasks, selectedTaskId]);
-
-  // The world reads focus and selection directly, and calls back into the interface on clicks
-  useEffect(() => {
-    worldBridge.focusDate = focusDate;
-    worldBridge.selectedTaskId = selectedTaskId;
-    worldBridge.onOpenTask = (taskId) => {
-      playUiSound('open');
-      openTask(taskId);
-    };
-    worldBridge.onFocusDay = focusDay;
-  }, [focusDate, selectedTaskId, openTask, focusDay]);
 
   const taskSelection = useMemo(() => ({ selectedTaskId, openTask }), [selectedTaskId, openTask]);
 
@@ -372,6 +326,12 @@ export function App() {
     document.body.classList.toggle('is-phone-app', isPhoneApp);
   }, [isPhoneApp]);
 
+  // Wider screens float the slate over the same Lantern Path (DesktopShell)
+  const isLanternDesk = !isPhone && viewportMode === 'manual';
+  useEffect(() => {
+    document.body.classList.toggle('is-lantern-desk', isLanternDesk);
+  }, [isLanternDesk]);
+
   useEffect(() => {
     const completedCount = appState.tasks.filter(task => task.completed).length;
     const newlyCompleted = completedCount - rewardedCompletionCount.current;
@@ -388,8 +348,6 @@ export function App() {
   // --- Where we are: the slate header names the day; the buttons only need the way back ---
   const backTargetLabel = NAV_ITEMS.find(item => item.key === currentView)?.label ?? 'path';
   const backLabel = specificDateFilter && currentView !== 'today' ? `Back to ${backTargetLabel}` : specificDateFilter ? 'Back to today' : null;
-  // The date the header shows: the focused day, or today's log
-  const headerDate = focusDate ?? today;
 
   const lastSheetTask = usePreservedValue(selectedTask);
 
@@ -446,67 +404,31 @@ export function App() {
           />
         )}
 
-        {viewportMode === 'manual' && !isPhone && (
-          <>
-            <WorldStage
-              lens={worldLens}
-              focusOffset={focusOffset}
-              weekStartOffset={weekStartOffset}
-              days={worldDays}
-              theme={theme}
-              reducedMotion={reducedMotion}
-              hasFinePointer={hasFinePointer}
-              isCompact={isCompact}
-              scroller={scroller}
-            />
-
-            <div className={`game-shell hud-dark ${isGridView ? 'is-grid-view' : ''} ${selectedTask && !isCompact ? 'has-inspector' : ''}`}>
-              <WorldLabels days={worldDays} focusDate={focusDate} today={today} onFocusDay={focusDay} />
-              {/* Multi-day boards dim and soften the world behind them so every row stays legible */}
-              {isGridView && <div className="hud-scrim" aria-hidden="true" />}
-
-              <DaySlate
-                  label="Tasks"
-                  layout={isGridView ? 'grid' : 'column'}
-                  title={isGridView ? 'All tasks' : null}
-                  summary={viewSummary}
-                  isScrolled={isScrolled}
-                  isDoneLens={!focusDate && currentView === 'completed'}
-                  backLabel={backLabel}
-                  onBack={returnToLens}
-                  date={isGridView ? null : headerDate}
-                  onPickDate={focusDay}
-                  showDone={showDone}
-                  onToggleDone={() => setShowDone(shown => !shown)}
-                  scrollRef={setScrollPane}
-                  command={<QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} />}
-                  footer={
-                    isGridView ? (
-                      <button type="button" className="slate-expander is-back" data-sfx="close" aria-keyshortcuts="a" title="Back to today (A)" onClick={toggleAllDays}>
-                        <span>Back to today</span>
-                        <ChevronLeft size={15} strokeWidth={2.2} aria-hidden="true" />
-                      </button>
-                    ) : !specificDateFilter ? (
-                      <button type="button" className="slate-expander" data-sfx="open" aria-keyshortcuts="a" title="Show all days (A)" onClick={toggleAllDays}>
-                        <span>Show all days</span>
-                        {otherDaysOpen > 0 && <span className="slate-expander-count">{otherDaysOpen} more</span>}
-                        <ChevronRight size={15} strokeWidth={2.2} aria-hidden="true" />
-                      </button>
-                    ) : null
-                  }
-                >
-                  {/* Keyed by view so the log re-deploys whenever you move along the path */}
-                  <TaskFeed key={viewKey} appState={appState} viewTasks={viewTasks} layout={isGridView ? 'grid' : 'column'} hideCompleted={!showDone} />
-                </DaySlate>
-
-              {!isCompact && <InspectorSlate task={selectedTask} onClose={closeTask} />}
-
-              {systemMenu}
-            </div>
-          </>
+        {isLanternDesk && (
+          <DesktopShell
+            tasks={tasks}
+            today={today}
+            focusDate={focusDate}
+            isPickedDate={Boolean(specificDateFilter)}
+            dayTasks={viewTasks}
+            otherDaysOpen={otherDaysOpen}
+            scrollRef={setScrollPane}
+            backLabel={backLabel}
+            onToggleAllDays={toggleAllDays}
+            onBack={returnToLens}
+            onPickDate={focusDay}
+            profile={systemMenu}
+            composer={<QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} placeholder="Place a lantern, like “Gym at 6pm”" />}
+            inspector={!isCompact && <InspectorSlate task={selectedTask} onClose={closeTask} />}
+            isInspectorOpen={!isCompact && Boolean(selectedTask)}
+            onCloseInspector={closeTask}
+            theme={theme}
+            onSetTheme={applyTheme}
+          />
         )}
 
-        <div className="hud-dark hud-portal">
+        {/* On desktop the portal takes the Lantern tokens too, so toasts, popovers and sheets match the slate */}
+        <div className={`hud-dark hud-portal ${isLanternDesk ? 'lp-app' : ''}`}>
           {viewportMode === 'manual' && isCompact && (
             <Sheet isOpen={Boolean(selectedTask)} label="Task details" onClose={closeTask}>
               {lastSheetTask && <TaskInspector key={lastSheetTask.id} task={lastSheetTask} isClosing={false} onClose={closeTask} />}

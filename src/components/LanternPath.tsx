@@ -22,15 +22,15 @@ const clock12 = (m: number) => {
   return `${h % 12 || 12}:${String(total % 60).padStart(2, '0')}`;
 };
 const period = (m: number) => (Math.floor(Math.round(m) / 60) % 24 >= 12 ? 'PM' : 'AM');
-const time12 = (m: number) => `${clock12(m)} ${period(m)}`;
+export const time12 = (m: number) => `${clock12(m)} ${period(m)}`;
 
-const minutesLabel = (m: number) => {
+export const minutesLabel = (m: number) => {
   const mins = Math.max(1, Math.round(m));
   return mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`;
 };
 
 // Milliseconds since local midnight, ticking every second while a lantern is burning
-function useSecondClock(active: boolean): number {
+export function useSecondClock(active: boolean): number {
   const read = () => {
     const d = new Date();
     return ((d.getHours() * 60 + d.getMinutes()) * 60 + d.getSeconds()) * 1000 + d.getMilliseconds();
@@ -74,7 +74,7 @@ function useJustLit(tasks: Task[]): Set<string> {
 
 // ---------- Seeded valley shapes ----------
 
-function seeded(seed: number) {
+export function seeded(seed: number) {
   let s = seed >>> 0;
   return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
 }
@@ -165,7 +165,7 @@ export function HorizonDial({ theme, onSetTheme }: { theme: Theme; onSetTheme: (
 
 // ---------- Focus: the lantern you stand under ----------
 
-type FocusState = 'running' | 'ready' | 'missed' | 'rest' | 'empty';
+export type FocusState = 'running' | 'ready' | 'missed' | 'rest' | 'empty';
 
 interface FocusModel {
   state: FocusState;
@@ -189,7 +189,7 @@ export function readFocus(timed: Task[], nowMinutes: number): FocusModel {
 const CANDLE_TOP = 98;
 const CANDLE_BOTTOM = 156;
 
-function Waypost({ state, left, bloom }: { state: FocusState; left: number; bloom: boolean }) {
+export function Waypost({ state, left, bloom }: { state: FocusState; left: number; bloom: boolean }) {
   // The candle burns from full to a stub; a lantern waiting to start shows a fresh one
   const height = state === 'running' ? 8 + (CANDLE_BOTTOM - CANDLE_TOP - 8) * left : CANDLE_BOTTOM - CANDLE_TOP;
   const y = CANDLE_BOTTOM - height;
@@ -410,9 +410,16 @@ interface PanoramaProps {
   timed: Task[];
   isToday: boolean;
   tasks: Task[];
+  // Desktop: how far the day slate reaches over the path from its left edge (px). The traveller stands in
+  // the open part, and lanterns and hour labels that slide under the slate fade out.
+  cover?: number;
+  // Desktop: extra trail before the first hour, so early lanterns can still be walked clear of the slate
+  leadIn?: number;
+  // Desktop: the mouse wheel and a drag walk the path sideways
+  pointerWalk?: boolean;
 }
 
-export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
+export function LanternPanorama({ timed, isToday, tasks, cover = 0, leadIn = 0, pointerWalk = false }: PanoramaProps) {
   const { openTask } = useTaskSelection();
   const nowMs = useSecondClock(isToday);
   const nowMinutes = nowMs / 60000;
@@ -429,9 +436,11 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
     const ends = timed.map(t => toMinutes(t.startTime) + taskDuration(t));
     const from = Math.min(6, Math.floor(Math.min(6 * 60, ...starts) / 60));
     const to = Math.max(23, Math.ceil(Math.max(23 * 60, ...ends) / 60));
-    return { h0: from, h1: to, width: LP + (to - from) * PX + RP };
-  }, [timed]);
-  const xOf = (m: number) => LP + (m / 60 - h0) * PX;
+    return { h0: from, h1: to, width: LP + leadIn + (to - from) * PX + RP };
+  }, [timed, leadIn]);
+  const xOf = (m: number) => LP + leadIn + (m / 60 - h0) * PX;
+  // Where you stand on screen: a little left of the middle of the part of the path you can see
+  const standAt = (el: HTMLElement) => cover + (el.clientWidth - cover) * 0.42;
 
   const travellerX = useMemo(() => {
     if (!isToday) return null;
@@ -441,7 +450,7 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
     }
     if (focus?.state === 'ready') return Math.max(xOf(nowMinutes), xOf(focus.start) - 120);
     return xOf(Math.min(Math.max(nowMinutes, h0 * 60), h1 * 60));
-  }, [isToday, focus?.state, focus?.start, focus?.duration, Math.floor(nowMinutes / 0.25), h0, h1]);
+  }, [isToday, focus?.state, focus?.start, focus?.duration, Math.floor(nowMinutes / 0.25), h0, h1, leadIn]);
 
   const layers = useMemo(() => {
     const spec = [
@@ -484,7 +493,17 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
       const node = layerRefs.current[i];
       if (node) node.style.transform = `translate3d(${(-sl * layer.f).toFixed(1)}px,0,0)`;
     });
-    if (travellerX !== null) setShowBack(travellerX < sl + 20 || travellerX > sl + el.clientWidth - 20);
+    if (travellerX !== null) setShowBack(travellerX < sl + cover + 20 || travellerX > sl + el.clientWidth - 20);
+    // Under the desktop slate: a lantern, label or hour hides as soon as its left side reaches the slate,
+    // so nothing peeks out of the slate's edge or shows half its name
+    if (cover > 0 || el.querySelector('.is-covered')) {
+      const edge = cover > 0 ? sl + cover : -Infinity;
+      el.querySelectorAll<HTMLElement | SVGElement>('[data-x]').forEach(node => {
+        // A lantern's glow and pool of light go with it
+        const halfWidth = node.matches('.lp-stop, .lp-halo, .lp-pool') ? 68 : node.classList.contains('lp-traveller') ? 15 : 16;
+        node.classList.toggle('is-covered', Number(node.dataset.x) - halfWidth < edge);
+      });
+    }
   };
 
   useLayoutEffect(() => {
@@ -502,11 +521,51 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
   useLayoutEffect(() => {
     const el = scroller.current;
     if (!el) return;
-    el.scrollLeft = Math.max(0, anchor - el.clientWidth * 0.42);
+    el.scrollLeft = Math.max(0, anchor - standAt(el));
     parallax();
-  }, [anchorKey, viewWidth]);
+  }, [anchorKey, viewWidth, cover, leadIn]);
 
-  useEffect(parallax);
+  // Layout effect, so lanterns under the desktop slate are hidden before the frame paints
+  useLayoutEffect(parallax);
+
+  // Desktop: the wheel walks the path sideways and a mouse drag pulls it along
+  useEffect(() => {
+    const el = scroller.current;
+    if (!pointerWalk || !el) return;
+    let drag: { x: number; left: number; moved: boolean } | null = null;
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' && e.button === 0) drag = { x: e.clientX, left: el.scrollLeft, moved: false };
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) > 5) {
+        drag.moved = true;
+        el.classList.add('is-dragging');
+      }
+      if (drag.moved) el.scrollLeft = drag.left - dx;
+    };
+    // The click that ends a drag lands on the scroller, not on a lantern; the class lifts right after
+    const onUp = () => {
+      if (drag?.moved) window.setTimeout(() => el.classList.remove('is-dragging'), 0);
+      drag = null;
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [pointerWalk]);
 
   // When the focus moves on (Mark done), the path follows the traveller to the next lantern
   const focusId = focus?.task?.id ?? focus?.state ?? '';
@@ -517,13 +576,13 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
     const el = scroller.current;
     if (!el || travellerX === null) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    el.scrollTo({ left: Math.max(0, travellerX - el.clientWidth * 0.42), behavior: reduce ? 'auto' : 'smooth' });
+    el.scrollTo({ left: Math.max(0, travellerX - standAt(el)), behavior: reduce ? 'auto' : 'smooth' });
   }, [focusId, travellerX]);
 
   const backToYou = () => {
     const el = scroller.current;
     if (!el || travellerX === null) return;
-    el.scrollTo({ left: Math.max(0, travellerX - el.clientWidth * 0.42), behavior: 'smooth' });
+    el.scrollTo({ left: Math.max(0, travellerX - standAt(el)), behavior: 'smooth' });
   };
 
   const full = trailD(0, width);
@@ -585,7 +644,7 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
             </defs>
             {stops.map(({ t, x, st }) =>
               st === 'is-lit' || st === 'is-now' ? (
-                <circle key={`h-${t.id}`} className="lp-halo" cx={x} cy={pathY(x) - 54} r="58" fill={`url(#${st === 'is-lit' ? 'lp-pJ' : 'lp-pA'})`} />
+                <circle key={`h-${t.id}`} className="lp-halo" cx={x} cy={pathY(x) - 54} r="58" fill={`url(#${st === 'is-lit' ? 'lp-pJ' : 'lp-pA'})`} data-x={x} />
               ) : null
             )}
             <path className="lp-hill" d={hill} />
@@ -603,7 +662,7 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
                 <g key={`s-${t.id}`}>
                   {cls && <path className={cls} d={trailD(x, x1, 4)} />}
                   {(st === 'is-lit' || st === 'is-now') && (
-                    <ellipse className="lp-pool" cx={x + 6} cy={pathY(x) + 4} rx="74" ry="20" fill={`url(#${st === 'is-lit' ? 'lp-pJ' : 'lp-pA'})`} />
+                    <ellipse className="lp-pool" cx={x + 6} cy={pathY(x) + 4} rx="74" ry="20" fill={`url(#${st === 'is-lit' ? 'lp-pJ' : 'lp-pA'})`} data-x={x} />
                   )}
                 </g>
               );
@@ -616,7 +675,7 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
                 <g key={h}>
                   <line className="lp-ruler-tick" x1={x} y1={pathY(x) + 9} x2={x} y2={pathY(x) + 13} />
                   {(nowX === null || Math.abs(x - nowX) > 26) && (
-                    <text className="lp-ruler" x={x} y={RY} textAnchor="middle">
+                    <text className="lp-ruler" x={x} y={RY} textAnchor="middle" data-x={x}>
                       {label}
                     </text>
                   )}
@@ -625,8 +684,8 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
             })}
             {nowX !== null && (
               <g>
-                <path className="lp-now-notch" d={`M${nowX - 4},${RY - 14} L${nowX + 4},${RY - 14} L${nowX},${RY - 19} Z`} />
-                <text className="lp-now-txt" x={nowX} y={RY} textAnchor="middle">
+                <path className="lp-now-notch" d={`M${nowX - 4},${RY - 14} L${nowX + 4},${RY - 14} L${nowX},${RY - 19} Z`} data-x={nowX} />
+                <text className="lp-now-txt" x={nowX} y={RY} textAnchor="middle" data-x={nowX}>
                   {clock12(nowMinutes)}
                 </text>
               </g>
@@ -643,6 +702,7 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
                 className={`lp-stop ${st} ${row ? 'row2' : ''} ${justLit.has(t.id) ? 'igniting' : ''}`}
                 style={{ left: x - 62, top: pathY(x) - 90 }}
                 data-id={t.id}
+                data-x={x}
               >
                 <button
                   type="button"
@@ -670,7 +730,7 @@ export function LanternPanorama({ timed, isToday, tasks }: PanoramaProps) {
           })}
 
           {travellerX !== null && (
-            <svg className="lp-traveller" viewBox="0 0 30 36" aria-hidden="true" style={{ transform: `translate(${(travellerX - 15).toFixed(1)}px,${(pathY(travellerX) - 33).toFixed(1)}px)` }}>
+            <svg className="lp-traveller" viewBox="0 0 30 36" aria-hidden="true" data-x={travellerX} style={{ transform: `translate(${(travellerX - 15).toFixed(1)}px,${(pathY(travellerX) - 33).toFixed(1)}px)` }}>
               <g className="lp-body">
                 <path className="lp-scarf" d="M14,11.5 C19,10.5 22,13 27,11" />
                 <path className="lp-cloak" d="M12,9.5 C16,9.5 18,12.5 18.2,16.5 L21.5,33.5 C15.5,35.2 8.5,35.2 2.5,33.5 L5.8,16.5 C6,12.5 8,9.5 12,9.5 Z" />
@@ -746,7 +806,7 @@ export function WeekCairns({ tasks, today, focusDate, onPickDate }: { tasks: Tas
 
 // ---------- Lists on the ground: the pack and what was left on the trail ----------
 
-function LampGlyph() {
+export function LampGlyph() {
   return (
     <svg viewBox="0 0 22 34" aria-hidden="true">
       <path className="lp-gl-iron" d="M11 2.2a2 2 0 110 4 2 2 0 010-4zM5.5 10.5L11 6.8l5.5 3.7z" />

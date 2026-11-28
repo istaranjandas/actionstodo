@@ -1,0 +1,1491 @@
+/* ==========================================================================
+   The Lantern Path, desktop edition (DesktopShell.tsx)
+   The day slate floats over the drawn valley instead of the 3D world: the big
+   waypost burns for the task you are on, the trail runs along the bottom, and
+   the slate's foot slides out into All days. Colours, lanterns and type come
+   from lantern.css; this file only lays them out for a wide screen.
+   ========================================================================== */
+
+/* ---------- Frame ---------- */
+body.is-lantern-desk {
+  --hud: 36px;
+  --sl-w: 456px;
+  overflow: hidden;
+  background: #0e1324;
+}
+
+:root[data-theme="light"] body.is-lantern-desk {
+  background: #21302b;
+}
+
+.dk-root {
+  --dk-far: #1b2241;
+  --dk-far-2: #1f2747;
+  --dk-cloud: 0;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  color: var(--lp-paper);
+}
+
+:root[data-theme="light"] .dk-root {
+  --dk-far: #d3d8c8;
+  --dk-far-2: #dedfcc;
+  --dk-cloud: 1;
+}
+
+.dk-root .kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  opacity: 0.6;
+  font: 500 12px/1 var(--lp-sans);
+  letter-spacing: 0;
+}
+
+/* ---------- The world: sky, far mountains, the big waypost, the trail along the bottom ---------- */
+.dk-world {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.dk-far {
+  position: absolute;
+  left: 0;
+  bottom: 196px;
+  z-index: 0;
+  width: 100%;
+  height: min(440px, 52vh);
+  pointer-events: none;
+}
+
+.dk-far .f1 {
+  fill: var(--dk-far-2);
+  transition: fill var(--lp-world);
+}
+
+.dk-far .f2 {
+  fill: var(--dk-far);
+  transition: fill var(--lp-world);
+}
+
+.dk-clouds {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 0;
+  height: 58%;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: var(--dk-cloud);
+  transition: opacity var(--lp-world);
+}
+
+.dk-cloud {
+  position: absolute;
+  fill: #fffaf0;
+  opacity: 0.55;
+  animation: dkDrift var(--t) ease-in-out var(--dl) infinite alternate;
+}
+
+@keyframes dkDrift {
+  to {
+    transform: translateX(34vw);
+  }
+}
+
+/* Planted, not hung: the foot of the pole stands on the trail's hill, so it never floats on a tall screen */
+.dk-post {
+  --post-h: min(528px, calc(100vh - 190px));
+  position: absolute;
+  bottom: 168px;
+  left: calc(var(--hud) + var(--sl-w) + (100vw - var(--hud) - var(--sl-w)) * 0.34);
+  z-index: 1;
+  height: var(--post-h);
+  aspect-ratio: 240 / 528;
+}
+
+.dk-root .dk-post .lp-waypost {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The post's plaque: bolted to the pole under the lantern */
+.dk-plaque {
+  position: absolute;
+  top: 57%;
+  left: 84.67%;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 136px;
+  padding: 9px 18px 10px;
+  border: 1.5px solid var(--lp-iron);
+  border-radius: 10px;
+  background: var(--lp-chip);
+  box-shadow: 0 12px 24px -8px rgba(10, 16, 14, 0.38);
+  color: var(--lp-ink);
+  text-align: center;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  transition: background var(--lp-world), color var(--lp-world), border-color var(--lp-world), opacity 0.3s;
+}
+
+.dk-plaque::before,
+.dk-plaque::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: var(--lp-iron);
+}
+
+.dk-plaque::before {
+  left: 6px;
+}
+
+.dk-plaque::after {
+  right: 6px;
+}
+
+:root[data-theme="dark"] .dk-plaque {
+  border-color: #3a4368;
+}
+
+:root[data-theme="dark"] .dk-plaque::before,
+:root[data-theme="dark"] .dk-plaque::after {
+  background: #3a4368;
+}
+
+.dk-plaque-k {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-amber-txt);
+}
+
+.dk-plaque-v {
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.dk-plaque-v small {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--lp-ink-2);
+}
+
+.dk-plaque-s {
+  font-size: 13px;
+  color: var(--lp-ink-2);
+}
+
+.dk-plaque.is-calm .dk-plaque-k {
+  color: var(--lp-ink-2);
+}
+
+.is-all .dk-plaque {
+  opacity: 0;
+}
+
+/* The trail runs the full width along the bottom */
+.dk-world .lp-panorama {
+  position: absolute;
+  right: 0;
+  bottom: 46px;
+  left: 0;
+  z-index: 2;
+  margin: 0;
+}
+
+.dk-world .lp-scroller {
+  cursor: grab;
+}
+
+.dk-world .lp-scroller.is-dragging {
+  cursor: grabbing;
+}
+
+.dk-world .lp-scroller.is-dragging .lp-track {
+  pointer-events: none;
+}
+
+.dk-world .lp-backto {
+  top: 8px;
+  right: var(--hud);
+}
+
+/* Desktop labels get a little more room, so long names keep their whole ellipsis */
+.dk-world .lp-plabel {
+  right: -6px;
+  left: -6px;
+}
+
+.dk-world .lp-path-empty {
+  right: 24px;
+  bottom: 58px;
+  left: calc(var(--hud) + var(--sl-w) + 24px);
+}
+
+/* Nothing peeks out from under the slate (LanternPanorama marks what slides beneath it) */
+.dk-world .lp-stop {
+  transition: opacity 0.2s;
+}
+
+.dk-world .lp-ruler {
+  transition: fill var(--lp-world), opacity 0.2s;
+}
+
+.dk-world .lp-traveller {
+  transition: transform 1s linear, opacity 0.2s;
+}
+
+.dk-world .is-covered {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.dk-strip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 22px;
+  height: 46px;
+  padding: 0 var(--hud) 6px calc(var(--hud) + var(--sl-w) + 28px);
+  background: var(--lp-ground);
+  font-size: 13.5px;
+  color: var(--lp-paper-3);
+  transition: background var(--lp-world);
+}
+
+.dk-strip-hint,
+.dk-strip-keys,
+.dk-strip-keys > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dk-strip-hint {
+  margin-right: auto;
+}
+
+.dk-strip-keys {
+  gap: 18px;
+}
+
+/* All days dims and softens the world behind the board */
+.dk-world-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: var(--lp-ground);
+  opacity: 0;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: opacity 0.45s, background var(--lp-world);
+}
+
+.is-all .dk-world-scrim {
+  opacity: 0.94;
+}
+
+/* ---------- Top-right keys: the horizon dial and the mascot ---------- */
+.dk-keys-tr {
+  position: absolute;
+  top: var(--hud);
+  right: var(--hud);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: dkRise 0.6s var(--lp-ease) 0.1s backwards;
+}
+
+.dk-root .system-menu {
+  position: relative;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  height: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.dk-root .system-menu .system-trigger.is-profile {
+  width: 46px;
+  height: 46px;
+}
+
+.dk-root .system-panel {
+  top: calc(100% + 12px);
+  right: 0;
+  max-height: calc(100vh - 120px);
+  border: none;
+  border-radius: 20px;
+  background: var(--lp-ground-2);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(241, 234, 219, 0.08);
+  color: var(--lp-paper);
+}
+
+/* ---------- Today's slate: the main panel, on the trail's ground ---------- */
+.sl {
+  position: absolute;
+  top: var(--hud);
+  left: var(--hud);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  width: var(--sl-w);
+  max-height: calc(100vh - 2 * var(--hud));
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--lp-ground-2);
+  box-shadow: inset 0 0 0 1px rgba(241, 234, 219, 0.09), 0 34px 70px -30px rgba(0, 0, 0, 0.7);
+  color: var(--lp-paper);
+  transform-origin: top left;
+  animation: dkRise 0.6s var(--lp-ease) backwards;
+  transition: opacity 0.3s, transform 0.5s var(--lp-ease), background var(--lp-world);
+}
+
+.is-all .sl {
+  opacity: 0;
+  transform: scale(0.97) translateX(-10px);
+  pointer-events: none;
+}
+
+@keyframes dkRise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.sl-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px 0;
+}
+
+.sl-back {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin: 2px -2px 0 -6px;
+  border: none;
+  border-radius: 50%;
+  background: var(--lp-ground-3);
+  color: var(--lp-paper);
+}
+
+.sl-date {
+  flex: 1;
+  min-width: 0;
+}
+
+.sl-weekday {
+  overflow: hidden;
+  font-family: var(--lp-serif);
+  font-size: 34px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--lp-paper);
+}
+
+.sl-datewrap {
+  margin: 4px 0 0 -8px;
+  border-radius: 9px;
+}
+
+.sl-datebtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: var(--lp-paper-2);
+}
+
+.sl-tally {
+  flex-shrink: 0;
+  padding-top: 8px;
+  font-size: 13.5px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-paper-2);
+}
+
+.sl-tally b,
+.bd-tally b {
+  font-weight: 600;
+  color: var(--lp-paper);
+}
+
+.sl-tally b.is-lit,
+.bd-tally b.is-lit {
+  color: var(--lp-jade);
+}
+
+.dk-meter {
+  display: block;
+  width: 92px;
+  height: 4px;
+  margin: 8px 0 0 auto;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(241, 234, 219, 0.14);
+}
+
+.dk-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--lp-jade);
+  transition: width 0.6s var(--lp-ease);
+}
+
+/* The add bar: the phone's lantern composer, set into the slate (and the board) */
+.dk-root .dk-place.phone-composer {
+  position: relative;
+  margin: 14px 16px 0;
+  padding: 0;
+  background: none;
+}
+
+.dk-root .phone-composer .command-bar {
+  padding: 4px 4px 4px 16px;
+  border-radius: 18px;
+}
+
+.dk-root .phone-composer .command-bar .quick-add-input {
+  height: 44px;
+  font-size: 15px;
+}
+
+.dk-root .phone-composer .quick-add-input::placeholder {
+  font-size: 16px;
+}
+
+.dk-root .phone-composer .quick-add-input:focus-visible {
+  outline: none;
+}
+
+.dk-root .phone-composer .quick-add-input-row {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.dk-root .phone-composer .quick-add-chips-row {
+  order: 3;
+  flex-basis: 100%;
+  padding: 7px 0 3px;
+  border-top: 1px solid rgba(241, 234, 219, 0.1);
+}
+
+.dk-root .phone-composer .chip-btn,
+.dk-root .phone-composer .clear-chip-btn {
+  min-width: 0;
+  min-height: 32px;
+}
+
+.sl-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 16px 10px;
+  scrollbar-width: none;
+}
+
+.sl-body::-webkit-scrollbar,
+.bd-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Scroll areas fade at whichever edge has more to show, instead of cutting off */
+.dk-fade-b {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), transparent);
+}
+
+.dk-fade-t {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 30px);
+  mask-image: linear-gradient(to bottom, transparent, #000 30px);
+}
+
+.dk-fade-t.dk-fade-b {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 30px, #000 calc(100% - 44px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 30px, #000 calc(100% - 44px), transparent);
+}
+
+/* The task you are on: the slate's lantern card */
+.sl-now {
+  position: relative;
+  margin-top: 14px;
+  padding: 14px 16px 14px 18px;
+  border-radius: 16px;
+  background: var(--lp-ground-3);
+  box-shadow: inset 3px 0 0 var(--lp-amber-g), inset 0 0 0 1px rgba(242, 180, 81, 0.28);
+  transition: background var(--lp-world);
+  animation: lpFocusIn 0.55s var(--lp-ease) both;
+}
+
+.sl-now.is-calm {
+  box-shadow: inset 3px 0 0 var(--lp-jade), inset 0 0 0 1px rgba(123, 221, 178, 0.22);
+}
+
+.sl-now-k {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-amber-g);
+}
+
+.sl-now.is-calm .sl-now-k {
+  color: var(--lp-jade);
+}
+
+.sl-now-t {
+  margin-top: 6px;
+  font-family: var(--lp-serif);
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.18;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  color: var(--lp-paper);
+}
+
+.sl-now-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.sl-now-mm {
+  font-size: 44px;
+  font-weight: 300;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--lp-paper);
+}
+
+.sl-now .lp-unit {
+  padding-bottom: 2px;
+  font-size: 13px;
+  color: var(--lp-paper-2);
+}
+
+.sl-now .lp-unit b {
+  color: var(--lp-amber-g);
+}
+
+.sl-burn {
+  height: 3px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(241, 234, 219, 0.12);
+}
+
+.sl-burn i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--lp-amber-g);
+  transition: width 1s linear;
+}
+
+.sl-now-acts {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.sl-now .lp-btn {
+  height: 40px;
+  padding: 0 14px 0 11px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.sl-now .lp-btn-chip {
+  padding: 0 14px;
+  border-color: rgba(241, 234, 219, 0.16);
+  background: var(--lp-ground-2);
+  box-shadow: none;
+  color: var(--lp-paper);
+}
+
+/* Sections */
+.sl-sec {
+  padding-top: 18px;
+}
+
+.sl-sec-h {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 2px;
+}
+
+.sl-sec-h h2 {
+  font-family: var(--lp-serif);
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--lp-paper);
+}
+
+.sl-sec-h .n {
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-paper-3);
+}
+
+.sl-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  margin-left: auto;
+  padding: 0 12px 0 9px;
+  border: 1.5px solid var(--lp-amber-g);
+  border-radius: 16px;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--lp-amber-g);
+}
+
+.sl-sub {
+  margin-top: 3px;
+  padding: 0 2px;
+  font-size: 13px;
+  color: var(--lp-paper-3);
+}
+
+/* Rows: the phone's lantern list, with a time and a delete key for the desktop */
+.dk-list.lp-trail-list {
+  margin-top: 4px;
+}
+
+.dk-list.lp-trail-list::before {
+  top: 24px;
+  bottom: 24px;
+  left: 19px;
+}
+
+.dk-list.lp-trail-list .dk-row {
+  gap: 6px;
+  min-height: 46px;
+  border-radius: 14px;
+  outline-offset: -2px;
+}
+
+.dk-list .lp-lampbtn {
+  width: 40px;
+  height: 40px;
+  background: var(--lp-ground-2);
+}
+
+.dk-list .lp-lampbtn svg {
+  width: 20px;
+  height: 31px;
+}
+
+.dk-list .lp-li-txt {
+  min-height: 42px;
+  padding: 3px 6px;
+}
+
+.dk-list .lp-li-title {
+  font-size: 17px;
+  line-height: 1.22;
+}
+
+.dk-list .dk-row.is-selected {
+  background: var(--lp-ground-3);
+  box-shadow: inset 3px 0 0 var(--lp-amber-g);
+}
+
+.dk-list .dk-row.is-selected .lp-lampbtn {
+  background: var(--lp-ground-3);
+}
+
+.dk-list .dk-row.is-selected .lp-li-txt {
+  background: none;
+}
+
+/* The task you are on burns in the list too, like its lantern on the trail */
+.dk-list .dk-row.is-now .lp-gl-iron {
+  fill: var(--lp-amber-g);
+}
+
+.dk-list .dk-row.is-now .lp-gl-glass {
+  fill: rgba(244, 184, 90, 0.28);
+  stroke: var(--lp-amber-g);
+}
+
+.dk-list .dk-row.is-now .lp-gl-fl {
+  opacity: 1;
+  fill: #ffd27a;
+  animation: lpFlicker 2.1s ease-in-out infinite;
+}
+
+.dk-time {
+  flex-shrink: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-paper-3);
+}
+
+.dk-row.is-now .dk-time {
+  font-weight: 500;
+  color: var(--lp-amber-g);
+}
+
+.dk-del {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  margin-right: 2px;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  color: var(--lp-paper-3);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.dk-row:hover .dk-del,
+.dk-row:focus-within .dk-del,
+.dk-row:focus-visible .dk-del {
+  opacity: 1;
+}
+
+.dk-nowline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px !important;
+  padding-left: 48px;
+  animation: none !important;
+}
+
+.dk-nowline span {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(242, 180, 81, 0.14);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-amber-g);
+}
+
+.dk-nowline::after {
+  content: "";
+  flex: 1;
+  border-top: 1px dashed rgba(242, 180, 81, 0.45);
+}
+
+/* An empty day says so warmly, with ideas to start */
+.sl-emptycard {
+  margin-top: 16px;
+  padding: 22px 18px 18px;
+  border-radius: 16px;
+  background: var(--lp-ground-3);
+  text-align: center;
+}
+
+.sl-emptycard > svg {
+  width: 28px;
+  height: 43px;
+}
+
+.sl-emptycard .lp-gl-iron {
+  fill: var(--lp-paper-2);
+}
+
+.sl-emptycard .lp-gl-glass {
+  fill: var(--lp-ground-2);
+  stroke: var(--lp-paper-2);
+  stroke-width: 1.3;
+}
+
+.sl-emptycard .lp-gl-fl {
+  opacity: 0;
+}
+
+.sl-emptycard h3 {
+  margin-top: 10px;
+  font-family: var(--lp-serif);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--lp-paper);
+}
+
+.sl-emptycard p {
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--lp-paper-2);
+}
+
+.sl-tries {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.sl-try {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid rgba(241, 234, 219, 0.16);
+  border-radius: 17px;
+  background: none;
+  font-family: var(--lp-serif);
+  font-size: 15px;
+  color: var(--lp-paper);
+}
+
+/* The slider: Show all days, at the foot of the slate */
+.sl-foot {
+  border-top: 1px solid rgba(241, 234, 219, 0.1);
+}
+
+.sl-expander {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 56px;
+  padding: 0 18px 0 20px;
+  border: none;
+  background: none;
+  font-family: var(--lp-sans);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-align: left;
+  color: var(--lp-paper);
+}
+
+.sl-expander .dk-map {
+  color: var(--lp-paper-2);
+}
+
+.sl-expander .grow {
+  flex: 1;
+}
+
+.sl-expander .kbd {
+  color: var(--lp-paper-3);
+}
+
+.sl-expander .chev {
+  color: var(--lp-amber-g);
+  transition: transform 0.3s var(--lp-ease);
+}
+
+.sl-pill {
+  padding: 3px 10px;
+  border-radius: 11px;
+  background: var(--lp-ground-3);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-paper-2);
+}
+
+/* ---------- All days: the board the slider opens ---------- */
+.bd {
+  position: absolute;
+  top: var(--hud);
+  right: var(--hud);
+  bottom: 0;
+  left: var(--hud);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateX(-24px) scale(0.985);
+  transform-origin: top left;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.5s var(--lp-ease);
+}
+
+.is-all .bd {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.bd-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-right: 190px;
+}
+
+.bd-title {
+  font-family: var(--lp-serif);
+  font-size: 34px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--lp-paper);
+}
+
+.bd-tally {
+  font-size: 14px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-paper-2);
+}
+
+.dk-root .bd .dk-place.phone-composer {
+  flex: 1;
+  max-width: 560px;
+  margin: 0 0 0 auto;
+}
+
+.bd-scroll {
+  flex: 1;
+  min-height: 0;
+  margin-top: 20px;
+  padding-bottom: 110px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.bd-grid {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.bd-col {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.bd-card {
+  padding: 14px 14px 8px 16px;
+  border-radius: 20px;
+  background: var(--lp-ground-2);
+  box-shadow: inset 0 0 0 1px rgba(241, 234, 219, 0.09), 0 24px 50px -28px rgba(0, 0, 0, 0.7);
+  color: var(--lp-paper);
+  transition: background var(--lp-world), box-shadow 0.2s;
+}
+
+.bd-card.is-today {
+  box-shadow: inset 0 0 0 1.5px var(--lp-amber-g), 0 24px 50px -28px rgba(0, 0, 0, 0.7);
+}
+
+/* A task dragged over a day card */
+.bd-card.is-drop-hover {
+  box-shadow: inset 0 0 0 2px var(--lp-amber-g), 0 0 0 4px rgba(242, 180, 81, 0.16), 0 24px 50px -28px rgba(0, 0, 0, 0.7);
+}
+
+.bd-card-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% + 12px);
+  margin: -4px -6px 2px;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  text-align: left;
+}
+
+.bd-card-h b {
+  font-family: var(--lp-serif);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--lp-paper);
+}
+
+.bd-card.is-today .bd-card-h b {
+  color: var(--lp-amber-g);
+}
+
+.bd-card.is-past .bd-card-h b {
+  color: var(--lp-paper-2);
+}
+
+.bd-card-h .d {
+  font-size: 13px;
+  color: var(--lp-paper-3);
+}
+
+.bd-card-h .dk-meter {
+  width: 56px;
+  margin: 0 0 0 auto;
+}
+
+.bd-card-h .c {
+  min-width: 30px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-paper-2);
+}
+
+.bd-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  margin-top: 2px;
+  padding: 0 8px 0 12px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  font-family: var(--lp-sans);
+  font-size: 14px;
+  color: var(--lp-paper-3);
+}
+
+.bd-new-in {
+  width: 100%;
+  height: 40px;
+  margin: 2px 0 6px;
+  padding: 0 12px;
+  border: 1px solid var(--lp-amber-g);
+  border-radius: 12px;
+  outline: none;
+  background: var(--lp-ground);
+  font-family: var(--lp-sans);
+  font-size: 15px;
+  color: var(--lp-paper);
+}
+
+.bd-new-in::placeholder {
+  font-family: var(--lp-serif);
+  color: var(--lp-paper-3);
+}
+
+.bd-back {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 20px 0 16px;
+  border: 1px solid rgba(241, 234, 219, 0.12);
+  border-radius: 24px;
+  background: var(--lp-ground-3);
+  box-shadow: 0 16px 34px -10px rgba(0, 0, 0, 0.6);
+  font-family: var(--lp-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--lp-paper);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 12px);
+  transition: opacity 0.3s, transform 0.45s var(--lp-ease), background var(--lp-world);
+}
+
+.bd-back svg {
+  color: var(--lp-amber-g);
+}
+
+.bd-back .kbd {
+  color: var(--lp-paper-3);
+}
+
+.is-all .bd-back {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- Details: the inspector as a drawer on the ground colour ---------- */
+.dk-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: rgba(5, 8, 16, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.dk-scrim.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dk-root .inspector-slate {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  z-index: 41;
+  width: min(440px, 100vw);
+  max-height: none;
+  overflow-y: auto;
+  border-radius: 0;
+  background: var(--lp-ground-2);
+  box-shadow: -24px 0 60px -20px rgba(0, 0, 0, 0.6);
+  scrollbar-width: none;
+  animation: dkDrawerIn 0.42s var(--lp-ease);
+}
+
+@keyframes dkDrawerIn {
+  from {
+    transform: translateX(104%);
+  }
+}
+
+.dk-root .inspector-slate .inspector {
+  min-height: 100%;
+  padding: 26px 28px 28px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+  animation: none;
+}
+
+.dk-root .inspector-slate .inspector.is-closing {
+  animation: dkDrawerOut 0.2s ease-in forwards;
+}
+
+@keyframes dkDrawerOut {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+/* The app's own inspector, in the Lantern voice: one sans, serif title, rounded keys and fields.
+   The same on tablets, where details rise as a bottom sheet instead of the drawer. */
+body.is-lantern-desk .sheet-panel {
+  border: none;
+  border-radius: 24px 24px 0 0;
+  background: var(--lp-ground-2);
+  clip-path: none;
+}
+
+.dk-root .inspector-slate .inspector,
+body.is-lantern-desk .sheet-panel .inspector {
+  gap: 12px;
+  font-family: var(--lp-sans);
+}
+
+.dk-root .inspector-slate .inspector-kicker,
+body.is-lantern-desk .sheet-panel .inspector-kicker,
+.dk-root .inspector-slate .inspector-field-label,
+body.is-lantern-desk .sheet-panel .inspector-field-label,
+.dk-root .inspector-slate .inspector-meta dt,
+body.is-lantern-desk .sheet-panel .inspector-meta dt {
+  font-family: var(--lp-sans);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--lp-paper-3);
+}
+
+.dk-root .inspector-slate .inspector-close,
+body.is-lantern-desk .sheet-panel .inspector-close {
+  border-radius: 50%;
+}
+
+.dk-root .inspector-title,
+body.is-lantern-desk .sheet-panel .inspector-title {
+  /* Grows with its text, so a short title leaves no empty line */
+  field-sizing: content;
+  min-height: 0;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: var(--lp-ground);
+  box-shadow: none;
+  font-family: var(--lp-serif);
+  font-size: 26px;
+  line-height: 1.18;
+  color: var(--lp-paper);
+}
+
+.dk-root .inspector-title:focus,
+body.is-lantern-desk .sheet-panel .inspector-title:focus {
+  border-color: var(--lp-amber-g);
+  outline: none;
+}
+
+.dk-root .inspector-slate .inspector-status,
+body.is-lantern-desk .sheet-panel .inspector-status,
+.dk-root .inspector-slate .inspector-delete,
+body.is-lantern-desk .sheet-panel .inspector-delete {
+  height: 46px;
+  border-radius: 23px;
+  font-family: var(--lp-sans);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.dk-root .inspector-slate .inspector-value-btn,
+body.is-lantern-desk .sheet-panel .inspector-value-btn,
+.dk-root .inspector-slate .inspector-meta,
+body.is-lantern-desk .sheet-panel .inspector-meta,
+.dk-root .inspector-slate .repeat-picker,
+body.is-lantern-desk .sheet-panel .repeat-picker {
+  border-radius: 12px;
+  font-family: var(--lp-sans);
+}
+
+.dk-root .inspector-slate .repeat-option,
+body.is-lantern-desk .sheet-panel .repeat-option {
+  border-radius: 10px;
+}
+
+.dk-root .inspector-slate .repeat-option-hint,
+body.is-lantern-desk .sheet-panel .repeat-option-hint {
+  font-family: var(--lp-sans);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* ---------- Undo: the light paper slip, at the bottom ---------- */
+body.is-lantern-desk .toast-region {
+  top: auto;
+  bottom: 28px;
+}
+
+body.is-lantern-desk:has(.dk-root.is-all) .toast-region {
+  bottom: 88px;
+}
+
+body.is-lantern-desk .toast {
+  padding: 8px 8px 8px 16px;
+  border: none;
+  border-radius: 14px;
+  background: #f3ecdd;
+  box-shadow: 0 14px 30px -10px rgba(0, 0, 0, 0.55);
+  color: #18211f;
+  animation: dkSlipIn 240ms var(--lp-ease);
+}
+
+@keyframes dkSlipIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+body.is-lantern-desk .toast-icon {
+  display: none;
+}
+
+body.is-lantern-desk .toast-message {
+  font-family: var(--lp-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #18211f;
+}
+
+body.is-lantern-desk .toast-detail {
+  color: #18211f;
+  opacity: 0.72;
+}
+
+body.is-lantern-desk .toast-action {
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--lp-sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: #7a4505;
+}
+
+/* ---------- Hover: desktop only, quiet, never a colour that means something ---------- */
+@media (hover: hover) {
+  .dk-root .lp-dial:hover {
+    filter: brightness(1.04);
+    box-shadow: 0 6px 14px rgba(10, 16, 14, 0.18);
+  }
+
+  .dk-root .lp-btn-amber:hover {
+    filter: brightness(1.06);
+  }
+
+  .sl-back:hover,
+  .sl-datewrap:hover .sl-datebtn {
+    color: var(--lp-paper);
+  }
+
+  .sl-datewrap:hover {
+    background: var(--lp-ground-3);
+  }
+
+  .sl-expander:hover {
+    background: var(--lp-ground-3);
+  }
+
+  .sl-expander:hover .chev:not(.is-back) {
+    transform: translateX(3px);
+  }
+
+  .sl-move:hover {
+    background: rgba(242, 180, 81, 0.12);
+  }
+
+  .dk-list .dk-row:hover {
+    background: rgba(241, 234, 219, 0.045);
+  }
+
+  .dk-list .lp-li-txt:hover {
+    background: none;
+  }
+
+  .dk-del:hover {
+    background: rgba(240, 128, 112, 0.14);
+    color: #f2998b;
+  }
+
+  .sl-try:hover {
+    border-color: var(--lp-amber-g);
+    color: var(--lp-amber-g);
+  }
+
+  .dk-world .lp-stop-lamp:hover .lp-ml {
+    transform: translateY(-2px);
+  }
+
+  .dk-world .lp-plabel:hover {
+    background: var(--lp-ghost);
+  }
+
+  .dk-world .lp-backto:hover,
+  .bd-back:hover {
+    filter: brightness(1.12);
+  }
+
+  .bd-card-h:hover,
+  .bd-new:hover {
+    background: var(--lp-ground-3);
+  }
+
+  .bd-new:hover {
+    color: var(--lp-paper);
+  }
+}
+
+/* ---------- Narrower windows ---------- */
+@media (max-width: 1279px) {
+  body.is-lantern-desk {
+    --hud: 24px;
+    --sl-w: 420px;
+  }
+
+  .dk-strip-keys {
+    display: none;
+  }
+}
+
+/* Tablets and small windows: the slate stays, the lantern stands smaller in what is left of the valley */
+@media (max-width: 1024px) {
+  body.is-lantern-desk {
+    --hud: 16px;
+    --sl-w: min(420px, calc(100vw - 32px));
+  }
+
+  .dk-post {
+    --post-h: min(400px, calc(100vh - 190px));
+    left: calc(var(--hud) + var(--sl-w) + (100vw - var(--hud) - var(--sl-w) - var(--post-h) * 0.4545) / 2);
+  }
+
+  .dk-strip-hint {
+    display: none;
+  }
+
+  .bd-head {
+    flex-wrap: wrap;
+    row-gap: 12px;
+    margin-right: 170px;
+  }
+
+  .dk-root .bd .dk-place.phone-composer {
+    flex-basis: 100%;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+@media (max-width: 860px) {
+  .dk-post {
+    display: none;
+  }
+}
