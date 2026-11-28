@@ -1,8 +1,8 @@
 // Main Application Shell & UI Coordinator
 // Manual mode: the Lantern Path — a drawn valley where each task is a lantern on the day's trail. Desktop
 // floats the day slate (and All days) over it (DesktopShell); phones get the same world as an app screen
-// (PhoneShell). Game mode: the quest arena.
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+// (PhoneShell).
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { auth, onAuthStateChanged } from './firebase';
 import { addDays, getLocalISODate } from './modules/dateUtils';
 import { ensureRecurringOccurrences, initFirestoreSync, setUiState, state, stopFirestoreSync, summarizeView, updateTaskItem } from './modules/store';
@@ -10,7 +10,6 @@ import { setupTaskDragAndDrop } from './modules/listDrag';
 import { moveTask } from './modules/taskActions';
 import { countForView, daysFromToday, NAV_ITEMS } from './modules/navigation';
 import type { NavKey } from './modules/navigation';
-import { useDisplaySettings } from './modules/displaySettings';
 import { THEME_KEY, applyThemeAttribute, readRenderedTheme } from './modules/theme';
 import { useStore } from './hooks/useStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
@@ -21,7 +20,6 @@ import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
 import { usePreservedValue } from './hooks/usePreservedValue';
 import { playUiSound } from './audio/uiSounds';
 import { swellAmbientMusic } from './audio/ambientMusic';
-import { rewardCompletedQuests } from './game/state/gameProgress';
 import { clampDayOffset, FUTURE_DAY_LIMIT, PAST_DAY_LIMIT } from './world/trail';
 import type { WorldLens } from './world/worldViews';
 import { SystemMenu } from './components/SystemMenu';
@@ -34,31 +32,15 @@ import { Sheet } from './components/Sheet';
 import { Toasts } from './components/Toasts';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { InspectorSlate } from './components/InspectorSlate';
-import type { ViewportMode } from './components/ViewportModeToggle';
 import { TimePopover, TimePopoverContext } from './components/TimePopover';
 import type { OpenTimePopover, TimePopoverHandle } from './components/TimePopover';
 import type { Theme, TimePopoverContext as PopoverTarget, ViewName } from './types';
 
 const HEADER_CONDENSE_OFFSET = 12;
-const VIEWPORT_MODE_KEY = 'actionstodo_viewport_mode';
-const BULK_SYNC_THRESHOLD = 3;
-
-const GameArena = lazy(() => import('./game/GameArena'));
-
-function readInitialViewportMode(): ViewportMode {
-  try {
-    return localStorage.getItem(VIEWPORT_MODE_KEY) === 'game' ? 'game' : 'manual';
-  } catch {
-    return 'manual';
-  }
-}
 
 export function App() {
   const appState = useStore();
   const { prefersReducedMotion, isTouchDevice } = useMotionProfile();
-  // Animations are off unless the System panel turns them on, so low-end machines stay responsive
-  const { animationsEnabled } = useDisplaySettings();
-  const reducedMotion = prefersReducedMotion || !animationsEnabled;
   const isWide = useMediaQuery(DESKTOP_SCROLL_PANE_QUERY);
   const isCompact = !isWide;
   // Phones get the Lantern Path as an app screen (PhoneShell); wider screens float the slate over it
@@ -66,11 +48,8 @@ export function App() {
   const [theme, setTheme] = useState<Theme>(readRenderedTheme);
   const [scrollPane, setScrollPane] = useState<HTMLElement | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [viewportMode, setViewportMode] = useState<ViewportMode>(readInitialViewportMode);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const hasRewardedInitialQuests = useRef(false);
-  const rewardedCompletionCount = useRef(0);
   const quickAddInputRef = useRef<HTMLInputElement>(null);
   const timePopoverRef = useRef<TimePopoverHandle>(null);
   const scrollMemory = useRef(new Map<string, number>());
@@ -141,13 +120,10 @@ export function App() {
   }, [currentView]);
 
   // --- Drag & drop: day cards, the Today log and timeline beads all take dropped tasks ---
-  useEffect(() => {
-    if (viewportMode !== 'manual') return;
-    return setupTaskDragAndDrop({
-      getTask: (id) => state.tasks.find(t => t.id === id),
-      onMove: moveTask
-    });
-  }, [viewportMode]);
+  useEffect(() => setupTaskDragAndDrop({
+    getTask: (id) => state.tasks.find(t => t.id === id),
+    onMove: moveTask
+  }), []);
 
   // --- Firebase Authentication Lifecycle ---
   useEffect(() => {
@@ -161,18 +137,13 @@ export function App() {
     });
   }, []);
 
-  // --- Motion, sound & 3D choreography ---
+  // --- Motion & sound ---
   useUiSounds();
 
-  useEffect(() => {
-    document.body.classList.toggle('is-reduced-motion', reducedMotion);
-  }, [reducedMotion]);
-
-  const motionAllowed = !reducedMotion;
   const scroller = useSmoothScroll({
     scrollPane,
     usePaneAsScroller: true,
-    smoothingEnabled: motionAllowed && !isTouchDevice
+    smoothingEnabled: !prefersReducedMotion && !isTouchDevice
   });
   useEffect(() => {
     if (!scroller) return;
@@ -289,8 +260,7 @@ export function App() {
       onToggleShortcuts: () => setIsShortcutsOpen(open => !open),
       onToggleAllDays: toggleAllDays,
       onToday: () => focusDay(getLocalISODate())
-    },
-    viewportMode === 'manual'
+    }
   );
 
   // --- Time Popover ---
@@ -306,44 +276,15 @@ export function App() {
     }
   }, []);
 
-  // --- Quest arena ---
-  const changeViewportMode = useCallback((mode: ViewportMode) => {
-    if (mode === 'game') void import('./game/effects/arenaAudio').then(({ warmUpArenaAudio }) => warmUpArenaAudio());
-    setViewportMode(mode);
-    try {
-      localStorage.setItem(VIEWPORT_MODE_KEY, mode);
-    } catch {
-      return;
-    }
-  }, []);
-
   useEffect(() => {
-    document.body.classList.toggle('is-game-mode', viewportMode === 'game');
-  }, [viewportMode]);
-
-  const isPhoneApp = isPhone && viewportMode === 'manual';
-  useEffect(() => {
-    document.body.classList.toggle('is-phone-app', isPhoneApp);
-  }, [isPhoneApp]);
+    document.body.classList.toggle('is-phone-app', isPhone);
+  }, [isPhone]);
 
   // Wider screens float the slate over the same Lantern Path (DesktopShell)
-  const isLanternDesk = !isPhone && viewportMode === 'manual';
+  const isLanternDesk = !isPhone;
   useEffect(() => {
     document.body.classList.toggle('is-lantern-desk', isLanternDesk);
   }, [isLanternDesk]);
-
-  useEffect(() => {
-    const completedCount = appState.tasks.filter(task => task.completed).length;
-    const newlyCompleted = completedCount - rewardedCompletionCount.current;
-    const isBulkSync = newlyCompleted > BULK_SYNC_THRESHOLD;
-    rewardCompletedQuests(appState.tasks, { announceLevelUps: hasRewardedInitialQuests.current && !isBulkSync });
-    hasRewardedInitialQuests.current = true;
-    rewardedCompletionCount.current = completedCount;
-  }, [appState.tasks]);
-
-  const completeQuest = useCallback((taskId: string) => {
-    updateTaskItem(taskId, { completed: true });
-  }, []);
 
   // --- Where we are: the slate header names the day; the buttons only need the way back ---
   const backTargetLabel = NAV_ITEMS.find(item => item.key === currentView)?.label ?? 'path';
@@ -351,13 +292,12 @@ export function App() {
 
   const lastSheetTask = usePreservedValue(selectedTask);
 
-  // The mascot key in the top-right corner: profile, games and settings
+  // The mascot key in the top-right corner: profile and settings
   const systemMenu = (
     <SystemMenu
       appState={appState}
       theme={theme}
       onSetTheme={applyTheme}
-      onEnterGameMode={() => changeViewportMode('game')}
       onOpenControls={() => setIsShortcutsOpen(true)}
     />
   );
@@ -365,26 +305,7 @@ export function App() {
   return (
     <TaskSelectionContext.Provider value={taskSelection}>
       <TimePopoverContext.Provider value={openTimePopover}>
-        {viewportMode === 'game' && (
-          <div className="arena-fullscreen">
-            <Suspense fallback={<div className="game-arena-loading">Summoning the quest arena…</div>}>
-              <GameArena
-                tasks={viewTasks}
-                theme={theme}
-                prefersReducedMotion={reducedMotion}
-                isTouchDevice={isTouchDevice}
-                onCompleteQuest={completeQuest}
-                onChangeMode={changeViewportMode}
-              >
-                <div className="arena-quick-add">
-                  <QuickAddForm appState={appState} quickAddInputRef={quickAddInputRef} />
-                </div>
-              </GameArena>
-            </Suspense>
-          </div>
-        )}
-
-        {isPhoneApp && (
+        {isPhone && (
           <PhoneShell
             tasks={tasks}
             today={today}
@@ -429,12 +350,12 @@ export function App() {
 
         {/* On desktop the portal takes the Lantern tokens too, so toasts, popovers and sheets match the slate */}
         <div className={`hud-dark hud-portal ${isLanternDesk ? 'lp-app' : ''}`}>
-          {viewportMode === 'manual' && isCompact && (
+          {isCompact && (
             <Sheet isOpen={Boolean(selectedTask)} label="Task details" onClose={closeTask}>
               {lastSheetTask && <TaskInspector key={lastSheetTask.id} task={lastSheetTask} isClosing={false} onClose={closeTask} />}
             </Sheet>
           )}
-          {viewportMode === 'manual' && <ShortcutsOverlay isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />}
+          <ShortcutsOverlay isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
           <Toasts />
           <TimePopover ref={timePopoverRef} onTimeApplied={handleTimeApplied} />
         </div>

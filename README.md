@@ -8,18 +8,18 @@ A minimalist, high-productivity daily task manager with real-time Firebase Cloud
 - ✍️ **Natural Language Parsing**: Type `"Call Alex at 5pm"` or `"Design sprint 2pm to 3:30pm"` to automatically parse and slot time.
 - 🔁 **Recurring Tasks**: Add `"Gym every day at 6pm"`, `"Standup weekdays 9am"`, or `"Rent monthly"` and the app builds a rolling series of real daily tasks. Each day is completed independently, title/time edits flow to future open days, and the details panel can change the rule or add an end date.
 - 🏮 **The Lantern Path**: Your day is a trail through a drawn valley; every timed task is a lantern on it, and completing one lights it. The task you are on burns in a big lantern on its post, with a plaque counting down the time left. Walk the days with `Q` / `E`. Today's log opens first; **Show all days** (or `A`) slides out into every day as a board of day cards (drag a task onto another day to move it).
-- 🗒️ **Day slate & details**: The day slate floats over the valley: the task you are on with a live countdown and Mark done, the schedule with a NOW line, Anytime, and tasks left on the trail from earlier days (Move all to today). Click a task to edit title, date, time and repeat in the details drawer.
-- 😈 **Profile key**: The mascot in the top-right corner opens the profile panel: the games first, then sound, time of day, motion and account.
+- 🗒️ **Day slate & details**: The day slate floats over the valley: the task you are on with a live countdown and Mark done, the schedule with a NOW line, Anytime, and tasks left on the trail from earlier days (Move all to today). Click a task to edit title, date, time and repeat in the details panel that opens right beside the slate.
+- 😈 **Profile key**: The mascot in the top-right corner opens the profile panel: time of day, account and controls.
 - 📱 **Phone app**: On phones the 3D valley becomes the Lantern Path, a hand-drawn valley you walk sideways. The task you are on burns in a big lantern with a live countdown, every timed task is a lantern on the trail, and lighting one marks it done. The week shows as cairns, tasks left from earlier wait on the trail with Move all to today, and Day / Night is a horizon dial in the header. The add-task bar sits at the thumb; All days keeps its Open / Done filters and folded past weeks.
-- 🔊 **Sound & music**: Synthesised interface sounds and an optional ambient soundtrack, each with its own switch and volume in the System menu.
+- 🔊 **Sound & music**: Synthesised interface sounds and a quiet ambient soundtrack, always on once you first interact with the page.
 - ☁️ **Real-Time Firebase Cloud Sync**: Google Sign-In with instant Firestore multi-device synchronization.
 - 💾 **Offline First & Disk Sync**: Seamless offline mode with `localStorage`, direct `.json` disk sync via File System Access API, and 1-click JSON backup import/export.
-- 🌄 **Night & Day**: The valley's time of day follows your theme; the horizon dial beside the profile key switches it. Night lights the lanterns you lit. Animations are **off by default** (System → Motion → Animations) so low-end machines stay smooth, and the system reduced-motion setting always wins.
+- 🌄 **Night & Day**: The valley's time of day follows your theme; the horizon dial beside the profile key switches it. Night lights the lanterns you lit. Animations are always on; the system reduced-motion setting still turns them off.
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 19 + TypeScript + Vite
-- **3D & Motion**: Three.js, React Three Fiber, Drei and Rapier (lazy-loaded Game mode), GSAP, Lenis; the Lantern Path itself is SVG and CSS
+- **Motion**: GSAP, Lenis; the Lantern Path itself is SVG and CSS
 - **Audio**: Web Audio API — every sound is generated at runtime, no audio files
 - **Cloud Database**: Google Firebase Firestore
 - **Authentication**: Firebase Auth (Google Provider)

@@ -6,23 +6,13 @@
 [build.environment]
   NODE_VERSION = "24.12.0"
 
-# Conservative security headers. No full CSP: it would need tuning for Firebase auth, Google Fonts and three.js.
+# Conservative security headers. No full CSP: it would need tuning for Firebase auth and Google Fonts.
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-
-[[redirects]]
-  from = "/alpineoverride"
-  to = "/alpineoverride/"
-  status = 301
-
-[[redirects]]
-  from = "/alpineoverride/*"
-  to = "/alpineoverride/index.html"
-  status = 200
 
 [[redirects]]
   from = "/*"

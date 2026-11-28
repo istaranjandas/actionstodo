@@ -1,10 +1,9 @@
 // Shared Web Audio graph: one context, an effects bus and a music bus, both behind a soft limiter.
 // Every sound is synthesised here at runtime, so there are no audio files to license or download.
-import { getSoundSettings, subscribeSoundSettings } from './soundSettings';
 
-// Headroom so 100% volume still sits politely under other apps
-const EFFECTS_BUS_LEVEL = 0.5;
-const MUSIC_BUS_LEVEL = 0.24;
+// Fixed levels that sit politely under other apps
+const EFFECTS_BUS_LEVEL = 0.3;
+const MUSIC_BUS_LEVEL = 0.12;
 
 interface AudioGraph {
   context: AudioContext;
@@ -51,16 +50,6 @@ function createNoiseBuffer(context: AudioContext): AudioBuffer {
   return buffer;
 }
 
-function applyBusLevels() {
-  if (!graph) return;
-  const { effectsEnabled, effectsVolume, musicEnabled, musicVolume } = getSoundSettings();
-  const now = graph.context.currentTime;
-  graph.effects.gain.setTargetAtTime(effectsEnabled ? effectsVolume * EFFECTS_BUS_LEVEL : 0, now, 0.02);
-  graph.music.gain.setTargetAtTime(musicEnabled ? musicVolume * MUSIC_BUS_LEVEL : 0, now, 0.6);
-}
-
-subscribeSoundSettings(applyBusLevels);
-
 // Browsers only allow audio after a user gesture, so the graph is built lazily on the first one
 function ensureGraph(): AudioGraph | null {
   if (graph) {
@@ -81,13 +70,14 @@ function ensureGraph(): AudioGraph | null {
 
   const effects = context.createGain();
   const music = context.createGain();
-  effects.gain.value = 0;
+  effects.gain.value = EFFECTS_BUS_LEVEL;
+  // The music bus fades in rather than starting at full level
   music.gain.value = 0;
+  music.gain.setTargetAtTime(MUSIC_BUS_LEVEL, context.currentTime, 0.6);
   effects.connect(limiter);
   music.connect(limiter);
 
   graph = { context, effects, music, noise: createNoiseBuffer(context) };
-  applyBusLevels();
   context.addEventListener('statechange', announceUnlockIfRunning);
   if (context.state === 'suspended') void context.resume().catch(() => undefined);
   announceUnlockIfRunning();
@@ -107,9 +97,7 @@ export function onAudioUnlocked(listener: () => void): () => void {
   return () => unlockListeners.delete(listener);
 }
 
-// Returns null while effects are muted, so callers skip building nodes nobody will hear
 export function getEffectsOutput(): AudioOutput | null {
-  if (!getSoundSettings().effectsEnabled) return null;
   const active = ensureGraph();
   return active ? { context: active.context, destination: active.effects, noise: active.noise } : null;
 }

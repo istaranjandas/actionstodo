@@ -2,7 +2,7 @@
    One tab
    No dock and no lens tabs: today's log opens at the top-left, and its footer
    row opens every day as the grid (and folds it back). The mascot left the dock
-   for the top-right corner, where it is the profile key: games, then settings.
+   for the top-right corner, where it is the profile key: settings.
    ========================================================================== */
 .game-shell {
   --slate-top: 24px;
@@ -108,12 +108,7 @@
   color: var(--muted-ink);
 }
 
-/* The game rows reach the panel's edges like the rows of a list */
-.system-panel .arcade-list {
-  margin: 0 -8px;
-}
-
-/* Game mode moved up into the games list, so Controls has the row to itself */
+/* Controls has the row to itself */
 .system-grid {
   grid-template-columns: 1fr;
 }

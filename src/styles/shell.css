@@ -737,39 +737,6 @@ body:not(.has-world) .world-labels {
   white-space: nowrap;
 }
 
-/* Segmented mode selector used by Game mode's HUD */
-.viewport-mode-toggle {
-  display: inline-flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: var(--radius-sm);
-}
-
-.viewport-mode-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 12px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--ink-3);
-  font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  transition: color var(--dur-quick) ease, background var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
-}
-
-.viewport-mode-option.is-active {
-  background: linear-gradient(180deg, var(--raised-top), var(--raised-bottom));
-  border-color: var(--line-strong);
-  color: var(--ink);
-  box-shadow: var(--shadow-key);
-}
-
 .picker-chip-wrap {
   position: relative;
   display: inline-flex;
@@ -1217,23 +1184,15 @@ body:not(.has-world) .world-labels {
   box-shadow: none;
 }
 
-/* ---------- Generic lens selector & mode toggle (outside the ribbon) ---------- */
-.view-nav-list,
-.viewport-mode-toggle {
+/* ---------- Generic lens selector (outside the ribbon) ---------- */
+.view-nav-list {
   border-radius: 0;
 }
 
 .view-nav-indicator,
-.viewport-mode-option,
 .view-nav-item,
 .view-nav-count {
   border-radius: 0;
-}
-
-.viewport-mode-option.is-active {
-  border-color: var(--amber-line);
-  background: var(--amber-wash);
-  box-shadow: inset 0 -2px 0 var(--amber);
 }
 
 .toolbar-btn {
@@ -1545,8 +1504,7 @@ body:not(.has-world) .world-labels {
   }
 
   /* The panel drops from the cluster, not from a taller bar */
-  .system-panel,
-  .arcade-panel {
+  .system-panel {
     position: fixed;
     top: 74px;
     right: 12px;
@@ -1575,110 +1533,6 @@ body:not(.has-world) .world-labels {
     align-items: center;
     min-height: 44px;
   }
-}
-
-/* ---------- The arcade ---------- */
-.arcade-panel {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 12px);
-  z-index: 1001;
-  width: 332px;
-  padding: 10px;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--hud-glass-edge);
-  background: var(--hud-glass-strong);
-  -webkit-backdrop-filter: var(--hud-glass-blur);
-  backdrop-filter: var(--hud-glass-blur);
-  box-shadow: var(--hud-glass-shadow), 0 24px 60px -24px var(--cast);
-  transform-origin: top right;
-  animation: panelDeploy var(--dur-panel) var(--ease-out);
-}
-
-.arcade-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 4px 6px 8px;
-}
-
-.arcade-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.arcade-count {
-  font-size: 12px;
-  color: var(--muted-ink);
-}
-
-.arcade-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.arcade-game {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 16px;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 8px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  text-align: left;
-  transition: background-color var(--dur-quick) ease;
-}
-
-.arcade-game:hover,
-.arcade-game:focus-visible {
-  background: var(--hover);
-}
-
-.arcade-game-icon {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-md);
-  background: var(--amber-tint);
-  color: var(--amber-text);
-}
-
-.arcade-game-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.arcade-game-title {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--ink);
-}
-
-.arcade-game-detail {
-  font-size: 12px;
-  line-height: 1.35;
-  color: var(--muted-ink);
-}
-
-.arcade-game-go {
-  color: var(--ink-3);
-}
-
-.arcade-foot {
-  margin: 8px 6px 2px;
-  font-size: 11.5px;
-  line-height: 1.4;
-  color: var(--ink-3);
 }
 
 /* Phone dock: two views fit with their names, so the dock never asks you to guess from an icon */

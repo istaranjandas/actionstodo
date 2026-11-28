@@ -1123,28 +1123,23 @@ body.is-lantern-desk {
   color: var(--lp-paper-3);
 }
 
+/* Back to today leads the board's header, so the way out sits beside the title */
 .bd-back {
-  position: absolute;
-  bottom: 26px;
-  left: 50%;
-  z-index: 12;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: 10px;
-  height: 48px;
-  padding: 0 20px 0 16px;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px 0 12px;
   border: 1px solid rgba(241, 234, 219, 0.12);
-  border-radius: 24px;
+  border-radius: 20px;
   background: var(--lp-ground-3);
-  box-shadow: 0 16px 34px -10px rgba(0, 0, 0, 0.6);
   font-family: var(--lp-sans);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
   color: var(--lp-paper);
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, 12px);
-  transition: opacity 0.3s, transform 0.45s var(--lp-ease), background var(--lp-world);
+  transition: background var(--lp-world);
 }
 
 .bd-back svg {
@@ -1155,18 +1150,12 @@ body.is-lantern-desk {
   color: var(--lp-paper-3);
 }
 
-.is-all .bd-back {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translate(-50%, 0);
-}
-
-/* ---------- Details: the inspector as a drawer on the ground colour ---------- */
+/* ---------- Details: a leaf docked beside the slate, on the ground colour ---------- */
+/* Clicking the open valley closes it; the slate stays above so another task switches the leaf */
 .dk-scrim {
   position: absolute;
   inset: 0;
-  z-index: 40;
-  background: rgba(5, 8, 16, 0.42);
+  z-index: 9;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s;
@@ -1178,31 +1167,55 @@ body.is-lantern-desk {
 }
 
 .dk-root .inspector-slate {
+  --leaf-x: calc(var(--hud) + var(--sl-w) + 14px);
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: auto;
+  top: var(--hud);
+  right: auto;
+  bottom: auto;
+  left: var(--leaf-x);
   z-index: 41;
-  width: min(440px, 100vw);
-  max-height: none;
+  width: min(400px, calc(100vw - var(--leaf-x) - var(--hud)));
+  max-height: calc(100vh - 2 * var(--hud));
   overflow-y: auto;
-  border-radius: 0;
+  border-radius: 22px;
   background: var(--lp-ground-2);
-  box-shadow: -24px 0 60px -20px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(241, 234, 219, 0.09), 0 34px 70px -30px rgba(0, 0, 0, 0.7);
   scrollbar-width: none;
-  animation: dkDrawerIn 0.42s var(--lp-ease);
+  animation: dkLeafIn 0.38s var(--lp-ease);
 }
 
-@keyframes dkDrawerIn {
+@keyframes dkLeafIn {
   from {
-    transform: translateX(104%);
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+.dk-notch {
+  position: absolute;
+  left: calc(var(--hud) + var(--sl-w) + 14px - 7px);
+  z-index: 42;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 0 0 0 3px;
+  background: var(--lp-ground-2);
+  box-shadow: inset 1px -1px 0 rgba(241, 234, 219, 0.09);
+  transform: rotate(45deg);
+  pointer-events: none;
+  transition: top 0.25s var(--lp-ease);
+  animation: dkNotchIn 0.38s var(--lp-ease);
+}
+
+@keyframes dkNotchIn {
+  from {
+    opacity: 0;
   }
 }
 
 .dk-root .inspector-slate .inspector {
-  min-height: 100%;
-  padding: 26px 28px 28px;
+  min-height: 0;
+  padding: 22px 24px 24px;
   border: none;
   border-radius: 0;
   background: none;
@@ -1211,14 +1224,14 @@ body.is-lantern-desk {
   animation: none;
 }
 
-.dk-root .inspector-slate .inspector.is-closing {
+.dk-root .inspector-slate:has(> .inspector.is-closing) {
   animation: dkDrawerOut 0.2s ease-in forwards;
 }
 
 @keyframes dkDrawerOut {
   to {
     opacity: 0;
-    transform: translateX(24px);
+    transform: translateX(-16px);
   }
 }
 

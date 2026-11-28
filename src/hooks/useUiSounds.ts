@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { startAmbientMusic, stopAmbientMusic } from '../audio/ambientMusic';
 import { isAudioUnlocked, onAudioUnlocked, unlockAudio } from '../audio/soundEngine';
-import { useSoundSettings } from '../audio/soundSettings';
 import { isUiSound, playUiSound } from '../audio/uiSounds';
 
 const CLICKABLE_SELECTOR = 'button, [role="button"], [role="switch"], [role="radio"], a[href], summary, .inline-add-row, .chip-date-input';
@@ -14,7 +13,6 @@ const HOVER_SELECTOR = [
   '.system-trigger',
   '.system-action',
   '.segmented-option',
-  '.settings-switch',
   '.slate-back',
   '.slate-date',
   '.slate-stat.is-toggle',
@@ -26,8 +24,6 @@ const HOVER_SELECTOR = [
   '.grid-slot-btn',
   '.duration-pill',
   '.inline-add-row',
-  '.viewport-mode-option',
-  '.hud-quest-log-toggle',
   '.day-card-add'
 ].join(', ');
 // Rows and day cards are swept past in bulk, so they get the quieter, more widely spaced tick
@@ -44,8 +40,6 @@ function isDisabled(element: HTMLElement): boolean {
 }
 
 export function useUiSounds(): void {
-  const { musicEnabled } = useSoundSettings();
-
   useEffect(() => {
     let hoveredElement: HTMLElement | null = null;
     let isKeyboardNavigating = false;
@@ -102,12 +96,8 @@ export function useUiSounds(): void {
     };
   }, []);
 
-  // Ambient music plays only while enabled, unlocked by a gesture, and the tab is visible
+  // Ambient music plays once a gesture unlocks audio, and only while the tab is visible
   useEffect(() => {
-    if (!musicEnabled) {
-      stopAmbientMusic();
-      return;
-    }
     const syncWithVisibility = () => {
       if (document.visibilityState === 'visible' && isAudioUnlocked()) startAmbientMusic();
       else stopAmbientMusic();
@@ -120,5 +110,5 @@ export function useUiSounds(): void {
       document.removeEventListener('visibilitychange', syncWithVisibility);
       stopAmbientMusic();
     };
-  }, [musicEnabled]);
+  }, []);
 }
