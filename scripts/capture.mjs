@@ -142,7 +142,7 @@ async function captureScenario({ name, width, height, mobile, steps }) {
     if (mobile) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     await send('Page.navigate', { url: APP_URL });
     for (let attempt = 0; attempt < 60; attempt++) {
-      if (await evaluate(`!!document.querySelector('.date-group, .empty-state')`)) break;
+      if (await evaluate(`!!document.querySelector('.date-group, .empty-state, .dk-root .sl, .lp-app')`)) break;
       await sleep(500);
     }
 
@@ -219,10 +219,10 @@ const scenarios = [
       await audit('profile-dusk');
       await evaluate(`document.querySelector('.system-menu > button.system-trigger').click(); true`);
       await sleep(400);
-      await evaluate(`document.querySelectorAll('.task-row')[1].click(); true`);
+      await evaluate(`document.querySelectorAll('.dk-row .lp-li-txt')[1].click(); true`);
       await sleep(1000);
       await shoot('03-task-details-dusk');
-      await evaluate(`document.querySelectorAll('.task-row')[1].querySelector('.task-checkbox').click(); true`);
+      await evaluate(`document.querySelectorAll('.dk-row')[1].querySelector('.lp-lampbtn').click(); true`);
       await sleep(420);
       await shoot('04-lantern-lit-dusk');
       await evaluate(pressKey('Escape'));
