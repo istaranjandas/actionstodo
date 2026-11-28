@@ -152,7 +152,7 @@ Controls are tactile and confident. Keys respond to touch: the frame lights ambe
 - Trail Jade means done or success; Ember Red means danger. Nothing else uses them.
 - Uppercase, letter-spaced sans for navigation, headers and legends; quiet sentence-case body.
 - Tactile keys with amber hover frames and a press-down response.
-- Motion is opt-in (off by default) and reduced-motion always wins.
+- Motion is always on and reduced-motion always wins.
 
 ## Colors
 
@@ -197,7 +197,7 @@ A cool slate neutral ramp lit by a single warm lantern colour, with jade and emb
 
 **Display Font:** Geist (with Inter, system sans fallback)
 **Body Font:** Geist (same family)
-**Label/Mono Font:** Geist Mono, for counters, tabular numbers, keycaps and the Game mode HUD only
+**Label/Mono Font:** Geist Mono, for counters, tabular numbers and keycaps only
 
 **Character:** One sans family carries the whole console. Hierarchy comes from case, tracking and weight, not from a second typeface: uppercase, letter-spaced legends for structure and quiet sentence-case for content.
 
@@ -212,13 +212,13 @@ A cool slate neutral ramp lit by a single warm lantern colour, with jade and emb
 Nothing is set below 10.5px; anything a person must read is 11px or larger.
 
 ### Named Rules
-**The One Voice Rule.** The interface speaks in one sans. Mono appears only for numbers, keycaps and the Game mode HUD.
+**The One Voice Rule.** The interface speaks in one sans. Mono appears only for numbers and keycaps.
 
 **The Stencilled Legend Rule.** Navigation, headers and section legends are uppercase with tracking; content (task titles, notes, inputs) is never uppercase.
 
 ## Layout
 
-Desktop (`src/components/DesktopShell.tsx`, `src/styles/lantern-desk.css`, on top of `lantern.css`) is the same drawn valley full screen: sky, far mountains (two hazy ranges), day clouds, the three ridges and the trail along the bottom (140px an hour, wheel or drag to walk it, a `Q`/`E` strip beneath). The day slate floats at the top-left (`--hud` 36px, 456px wide; 24px and 420px under 1280px; 16px under 1025px) on `--lp-ground-2`: the weekday in Alegreya italic, the date (it opens the date picker), the open/lit tally with a jade meter, the add bar, the task-you-are-on card (amber rail, live countdown, burn bar, Mark done, Details), Schedule with a NOW line, Anytime and Left on the trail. Its list fades at the edges instead of cutting off. The foot, Show all days (`A`), slides out into the All days board: day cards dealt into columns with no holes, each with a jade meter and New task, over a blurred world, with a Back to today pill. The big waypost stands in the hill right of the slate; its plaque is bolted to the pole and reads the time left; lanterns and hour labels that slide under the slate fade out. The horizon dial and the profile key sit top-right. Details open as a drawer on the ground colour (a bottom sheet under 1025px); Undo is the light paper slip at the bottom. Phones (≤680px) drop the 3D valley and the slate for the Lantern Path (`src/components/LanternPath.tsx`, `src/styles/lantern.css`, on top of `src/styles/phone.css`). A drawn valley fills the top: sky, three parallax ridges with cypress trees and a dark foreground hill. The header carries the weekday in Alegreya italic, the date (it opens the date picker), the horizon dial (Day / Night) and the profile key, a white disc with the black devil. Under it the focus lantern hangs on a waypost: its candle burns down with the task's real minutes left, the countdown sits beside it in light Jost numerals, and Mark done blooms the flame jade. The trail scrolls sideways at 140px an hour with a lantern per timed task, the traveller at now, a jade walked line and an hour ruler. The ground below is solid `--lp-ground` (deep green by day, navy by night) with the week as cairns, "Left on the trail" and Anytime as dotted lantern lists. Night lights the lanterns you lit: halos and pools of light on the path, stars, fireflies and the moon. The add-task bar is pinned above the gesture area; All days, the profile panel and task details stay sheets on the ground colour; Undo is a light paper snackbar above the add bar. Delete lives in the details sheet, not on the row.
+Desktop (`src/components/DesktopShell.tsx`, `src/styles/lantern-desk.css`, on top of `lantern.css`) is the same drawn valley full screen: sky, far mountains (two hazy ranges), day clouds, the three ridges and the trail along the bottom (140px an hour, wheel or drag to walk it, a `Q`/`E` strip beneath). The day slate floats at the top-left (`--hud` 36px, 456px wide; 24px and 420px under 1280px; 16px under 1025px) on `--lp-ground-2`: the weekday in Alegreya italic, the date (it opens the date picker), the open/lit tally with a jade meter, the add bar, the task-you-are-on card (amber rail, live countdown, burn bar, Mark done, Details), Schedule with a NOW line, Anytime and Left on the trail. Its list fades at the edges instead of cutting off. The foot, Show all days (`A`), slides out into the All days board: day cards dealt into columns with no holes, each with a jade meter and New task, over a blurred world, with a Back to today pill just before the All days title. The big waypost stands in the hill right of the slate; its plaque is bolted to the pole and reads the time left; lanterns and hour labels that slide under the slate fade out. The horizon dial and the profile key sit top-right. Details open as a leaf docked 14px right of the slate, same top and radius, on the ground colour, with a notch pointing at the task's row; clicking another row switches it and clicking the valley closes it (a bottom sheet under 1025px); Undo is the light paper slip at the bottom. Phones (≤680px) drop the 3D valley and the slate for the Lantern Path (`src/components/LanternPath.tsx`, `src/styles/lantern.css`, on top of `src/styles/phone.css`). A drawn valley fills the top: sky, three parallax ridges with cypress trees and a dark foreground hill. The header carries the weekday in Alegreya italic, the date (it opens the date picker), the horizon dial (Day / Night) and the profile key, a white disc with the black devil. Under it the focus lantern hangs on a waypost: its candle burns down with the task's real minutes left, the countdown sits beside it in light Jost numerals, and Mark done blooms the flame jade. The trail scrolls sideways at 140px an hour with a lantern per timed task, the traveller at now, a jade walked line and an hour ruler. The ground below is solid `--lp-ground` (deep green by day, navy by night) with the week as cairns, "Left on the trail" and Anytime as dotted lantern lists. Night lights the lanterns you lit: halos and pools of light on the path, stars, fireflies and the moon. The add-task bar is pinned above the gesture area; All days, the profile panel and task details stay sheets on the ground colour; Undo is a light paper snackbar above the add bar. Delete lives in the details sheet, not on the row.
 
 In the All board the valley stays visible as the backdrop: a light scrim holds only the header band darker, the cards carry their own glass blur, and waypost signs are hidden so nothing drifts between cards.
 
@@ -285,7 +285,7 @@ Tactile and confident: quiet at rest, lit when touched, pressed when used.
 
 ### Navigation
 - **One tab:** no lens tabs. The day slate closes with a full-width footer row, "Show all days", with a count pill of open tasks on other days and an amber chevron; it opens the grid. In the grid the way back is one floating glass pill, "Back to today". `A` toggles; `Esc` goes back.
-- **Profile key:** the mascot, a 46px amber disc (on phones a 44px white disc with the black devil), alone in the top-right corner. It opens the profile panel: who is signed in, the games, then the settings.
+- **Profile key:** the mascot, a 46px amber disc (on phones a 44px white disc with the black devil), alone in the top-right corner. It opens the profile panel: who is signed in, then the settings.
 
 ### Task Row (signature)
 - 10px radius, 5px 8px padding, bleeding 8px into the card edge. Hover reveals the drag handle.
@@ -305,7 +305,7 @@ Tactile and confident: quiet at rest, lit when touched, pressed when used.
 - **Do** design every change in both Daylight and Dusk.
 - **Do** keep amber for active, focused, selected and primary states only (The One Lantern Rule).
 - **Do** use the shared motion tokens: `--dur-press` (70ms), `--dur-quick` (160ms), `--dur-panel` (240ms) with `--ease-out`, `--ease-spring` or `--ease-press`.
-- **Do** keep motion off by default and respect reduced motion; the app must stay smooth on low-end PCs.
+- **Do** keep motion light and respect reduced motion; the app must stay smooth on low-end PCs.
 - **Do** use the 680 / 1024 / 1025px breakpoints and gate hover styles behind `(hover: hover)`.
 - **Do** give every floating panel a 1px frame and a cast shadow (The Lifted Panel Rule).
 
@@ -313,7 +313,7 @@ Tactile and confident: quiet at rest, lit when touched, pressed when used.
 - **Don't** drift into a generic SaaS dashboard: plain white cards on grey, blue primary buttons, purple gradients.
 - **Don't** darken amber with black or warm the neutrals towards sepia (The No-Olive Rule).
 - **Don't** use Trail Jade or Ember Red outside done/success and danger states.
-- **Don't** add a second typeface or use mono outside numbers, keycaps and the Game mode HUD.
+- **Don't** add a second typeface or use mono outside numbers and keycaps.
 - **Don't** uppercase content such as task titles or notes.
 - **Don't** add one-off breakpoints or hard-coded colours outside the token file.
 - **Don't** make a destructive action one tap without an Undo.

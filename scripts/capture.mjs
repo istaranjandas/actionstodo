@@ -193,10 +193,10 @@ async function captureScenario({ name, width, height, mobile, steps }) {
   return report;
 }
 
-const resetWithDemoData = (theme, viewportMode = 'manual') => `localStorage.setItem('todo_do_tasks_v1', ${JSON.stringify(demoTasksJson)}); localStorage.setItem('notion_minimal_theme', '${theme}'); localStorage.setItem('actionstodo_viewport_mode', '${viewportMode}'); location.reload(); true`;
+const resetWithDemoData = (theme) => `localStorage.setItem('todo_do_tasks_v1', ${JSON.stringify(demoTasksJson)}); localStorage.setItem('notion_minimal_theme', '${theme}'); location.reload(); true`;
 const pressKey = (key) => `window.dispatchEvent(new KeyboardEvent('keydown', { key: '${key}', bubbles: true })); true`;
 // Time of day lives in the System menu: open it, pick Daylight, close it.
-// The profile key (the mascot) opens the panel with games and settings.
+// The profile key (the mascot) opens the panel with settings.
 const switchToDaylight = `document.querySelector('.system-menu > button.system-trigger').click(); setTimeout(() => { const daylight = document.querySelectorAll('.segmented-option')[1]; if (daylight) daylight.click(); document.querySelector('.system-menu > button.system-trigger').click(); }, 300); true`;
 const WORLD_LOAD_MS = 9000;
 const CAMERA_FLIGHT_MS = 2800;
@@ -212,7 +212,7 @@ const scenarios = [
       await sleep(WORLD_LOAD_MS);
       await shoot('01-today-dusk');
       await audit('today-dusk');
-      // The profile panel lists the mini-games first, then closes without launching
+      // The profile panel opens, then closes
       await evaluate(`document.querySelector('.system-menu > button.system-trigger').click(); true`);
       await sleep(500);
       await shoot('02-profile-dusk');
@@ -243,10 +243,6 @@ const scenarios = [
       await sleep(CAMERA_FLIGHT_MS);
       await shoot('09-all-daylight');
       await audit('all-daylight');
-      await evaluate(resetWithDemoData('dark', 'game'));
-      await sleep(WORLD_LOAD_MS);
-      await shoot('10-game-arena-dusk');
-      await audit('game-arena-dusk');
     }
   },
   {
@@ -277,10 +273,6 @@ const scenarios = [
       await sleep(CAMERA_FLIGHT_MS);
       await shoot('05-all-daylight');
       await audit('all-daylight');
-      await evaluate(resetWithDemoData('dark', 'game'));
-      await sleep(WORLD_LOAD_MS);
-      await shoot('06-game-arena-dusk');
-      await audit('game-arena-dusk');
     }
   }
 ];

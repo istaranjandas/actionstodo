@@ -537,7 +537,7 @@ function DayCard({ date, list, today, onPickDate }: DayCardData & { today: strin
   );
 }
 
-function Board({ tasks, today, isOpen, composer, scrollRef, onPickDate }: { tasks: Task[]; today: string; isOpen: boolean; composer: ReactNode; scrollRef?: RefCallback<HTMLElement>; onPickDate: (date: string) => void }) {
+function Board({ tasks, today, isOpen, composer, scrollRef, onPickDate, onBack }: { tasks: Task[]; today: string; isOpen: boolean; composer: ReactNode; scrollRef?: RefCallback<HTMLElement>; onPickDate: (date: string) => void; onBack: () => void }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [columnCount, setColumnCount] = useState(3);
   const { open, done } = tallyTasks(tasks);
@@ -580,6 +580,11 @@ function Board({ tasks, today, isOpen, composer, scrollRef, onPickDate }: { task
   return (
     <section className="bd" aria-label="All days" aria-hidden={!isOpen} inert={!isOpen}>
       <header className="bd-head">
+        <button type="button" className="bd-back" title="Back to today (A)" data-sfx="close" onClick={onBack}>
+          <ArrowLeft size={16} strokeWidth={2.2} aria-hidden="true" />
+          Back to today
+          <kbd className="kbd">A</kbd>
+        </button>
         <h2 className="bd-title">All days</h2>
         <p className="bd-tally">
           <b>{open}</b> open · <b className="is-lit">{done}</b> lit
@@ -654,6 +659,34 @@ export function DesktopShell(props: DesktopShellProps) {
     setFade(prev => (prev.top === next.top && prev.bottom === next.bottom ? prev : next));
   };
   useLayoutEffect(updateFade);
+
+  // Details dock beside the slate; a notch points at the task's row while that row is in view
+  const { selectedTaskId } = useTaskSelection();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [notchY, setNotchY] = useState<number | null>(null);
+  const placeNotch = useCallback(() => {
+    const row = isInspectorOpen && !isAll ? slateRef.current?.querySelector('.dk-row.is-selected') : null;
+    const body = bodyRef.current?.getBoundingClientRect();
+    const leaf = rootRef.current?.querySelector('.inspector-slate')?.getBoundingClientRect();
+    let next: number | null = null;
+    if (row && body && leaf) {
+      const rect = row.getBoundingClientRect();
+      const y = Math.round(rect.top + rect.height / 2);
+      if (y > body.top + 8 && y < body.bottom - 8 && y > leaf.top + 22 && y < leaf.bottom - 22) next = y;
+    }
+    setNotchY(prev => (prev === next ? prev : next));
+  }, [isInspectorOpen, isAll]);
+  useLayoutEffect(() => {
+    placeNotch();
+    const leaf = rootRef.current?.querySelector('.inspector-slate');
+    const observer = new ResizeObserver(placeNotch);
+    if (leaf) observer.observe(leaf);
+    window.addEventListener('resize', placeNotch);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', placeNotch);
+    };
+  }, [placeNotch, selectedTaskId, slateTasks]);
   // Stable, so React does not detach and re-attach the app's scroll pane on every render
   const setBody = useCallback(
     (el: HTMLDivElement | null) => {
@@ -668,7 +701,7 @@ export function DesktopShell(props: DesktopShellProps) {
   const dateLine = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
-    <div className={`lp-app dk-root ${isAll ? 'is-all' : ''}`}>
+    <div className={`lp-app dk-root ${isAll ? 'is-all' : ''}`} ref={rootRef}>
       <div className="dk-world">
         <LanternSky />
         <Scenery />
@@ -714,7 +747,7 @@ export function DesktopShell(props: DesktopShellProps) {
           </p>
         </header>
         <div className="dk-place phone-composer">{!isAll && composer}</div>
-        <div className={`sl-body ${fade.top ? 'dk-fade-t' : ''} ${fade.bottom ? 'dk-fade-b' : ''}`} ref={setBody} onScroll={updateFade}>
+        <div className={`sl-body ${fade.top ? 'dk-fade-t' : ''} ${fade.bottom ? 'dk-fade-b' : ''}`} ref={setBody} onScroll={() => { updateFade(); placeNotch(); }}>
           <SlateBody tasks={tasks} today={today} day={day} dayTasks={slateTasks} onMarkDone={markDone} />
         </div>
         <footer className="sl-foot">
@@ -736,12 +769,7 @@ export function DesktopShell(props: DesktopShellProps) {
         </footer>
       </aside>
 
-      <Board tasks={tasks} today={today} isOpen={isAll} composer={composer} scrollRef={isAll ? scrollRef : undefined} onPickDate={onPickDate} />
-      <button type="button" className="bd-back" tabIndex={isAll ? 0 : -1} aria-hidden={!isAll} title="Back to today (A)" data-sfx="close" onClick={onToggleAllDays}>
-        <ArrowLeft size={18} strokeWidth={2.2} aria-hidden="true" />
-        Back to today
-        <kbd className="kbd">A</kbd>
-      </button>
+      <Board tasks={tasks} today={today} isOpen={isAll} composer={composer} scrollRef={isAll ? scrollRef : undefined} onPickDate={onPickDate} onBack={onToggleAllDays} />
 
       <div className="dk-keys-tr">
         <HorizonDial theme={theme} onSetTheme={onSetTheme} />
@@ -750,6 +778,7 @@ export function DesktopShell(props: DesktopShellProps) {
 
       <div className={`dk-scrim ${isInspectorOpen ? 'is-open' : ''}`} aria-hidden="true" onClick={onCloseInspector} />
       {inspector}
+      {notchY !== null && <div className="dk-notch" style={{ top: notchY }} aria-hidden="true" />}
     </div>
   );
 }

@@ -17,7 +17,7 @@ const SELF_DISMISSING_SELECTOR = '.time-popover.open, .system-panel, .creator-po
 // Anything that already does something with Enter (or sits in a dialog) keeps it
 const INTERACTIVE_SELECTOR = 'button, a[href], summary, [role="button"], [role="listitem"], [role="dialog"], [tabindex], .sheet-panel, .inspector, .shortcuts-panel, .time-popover';
 
-export function useGlobalShortcuts(handlers: ShortcutHandlers, enabled: boolean): void {
+export function useGlobalShortcuts(handlers: ShortcutHandlers): void {
   const handlersRef = useRef(handlers);
 
   useEffect(() => {
@@ -25,7 +25,6 @@ export function useGlobalShortcuts(handlers: ShortcutHandlers, enabled: boolean)
   });
 
   useEffect(() => {
-    if (!enabled) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target instanceof HTMLElement ? event.target : null;
@@ -73,5 +72,5 @@ export function useGlobalShortcuts(handlers: ShortcutHandlers, enabled: boolean)
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [enabled]);
+  }, []);
 }

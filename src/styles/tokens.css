@@ -13,7 +13,7 @@
   color-scheme: light;
 
   /* One voice: the interface speaks in the sans at two weights — 500 for navigation and headers,
-     400 for body and inputs. Mono survives only inside the arcade HUD and keycaps. */
+     400 for body and inputs. Mono survives only in keycaps. */
   --font-sans: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-display: var(--font-sans);

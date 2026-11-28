@@ -1,103 +1,30 @@
-// The one system control in the HUD: the mascot key opens the profile panel — games first, then sound,
-// time of day, motion, account, help and the creator's contact
+// The one system control in the HUD: the mascot key opens the profile panel — time of day, account,
+// help and the creator's contact
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import type { CSSProperties, MouseEvent, ReactNode } from 'react';
-import { ChevronRight, Keyboard, Moon, Music, Sparkles, Sun, Volume2 } from 'lucide-react';
+import type { MouseEvent } from 'react';
+import { Keyboard, Moon, Sun } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup, signOut } from '../firebase';
-import { updateSoundSettings, useSoundSettings } from '../audio/soundSettings';
-import { updateDisplaySettings, useDisplaySettings } from '../modules/displaySettings';
-import { playUiSound } from '../audio/uiSounds';
 import { pushToast } from '../modules/toasts';
 import { useDismissiblePopup } from '../hooks/useDismissiblePopup';
 import { CreatorAvatarIcon, DevilIcon, GoogleIcon } from './Icons';
-import { GAMES } from './games';
-import type { GameId } from './games';
 import type { AppState, Theme } from '../types';
 
 const CREATOR_EMAIL = 'istaranjandas@gmail.com';
-
-interface SettingRowProps {
-  icon: ReactNode;
-  label: string;
-  hint: string;
-  enabled: boolean;
-  onToggle: () => void;
-  // Extra controls that belong under the switch (the volume slider)
-  children?: ReactNode;
-}
-
-// The one preference row: icon, label, explanation and switch, plus whatever the setting adds below
-function SettingRow({ icon, label, hint, enabled, onToggle, children }: SettingRowProps) {
-  const labelId = useId();
-
-  return (
-    <div className={`settings-row ${enabled ? 'is-on' : ''}`}>
-      <div className="settings-row-head">
-        <span className="settings-row-icon" aria-hidden="true">{icon}</span>
-        <span className="settings-row-copy">
-          <span className="settings-row-label" id={labelId}>{label}</span>
-          <span className="settings-row-hint">{hint}</span>
-        </span>
-        <button type="button" role="switch" aria-checked={enabled} aria-labelledby={labelId} className="settings-switch" data-sfx="none" onClick={onToggle}>
-          <span className="settings-switch-thumb" />
-        </button>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-interface SoundSettingRowProps extends Omit<SettingRowProps, 'children'> {
-  volume: number;
-  onVolumeChange: (volume: number) => void;
-  onVolumeCommit?: () => void;
-}
-
-// A preference row that also carries a volume slider; the slider greys out with the switch
-function SoundSettingRow({ icon, label, hint, enabled, volume, onToggle, onVolumeChange, onVolumeCommit }: SoundSettingRowProps) {
-  const percent = Math.round(volume * 100);
-
-  return (
-    <SettingRow icon={icon} label={label} hint={hint} enabled={enabled} onToggle={onToggle}>
-      <label className="settings-volume">
-        <span className="settings-volume-label">Volume</span>
-        <input
-          type="range"
-          className="settings-slider"
-          min={0}
-          max={100}
-          step={5}
-          value={percent}
-          disabled={!enabled}
-          aria-label={`${label} volume`}
-          style={{ '--slider-fill': `${percent}%` } as CSSProperties}
-          onChange={(e) => onVolumeChange(Number(e.target.value) / 100)}
-          onPointerUp={onVolumeCommit}
-          onKeyUp={onVolumeCommit}
-        />
-        <span className="settings-volume-value">{percent}%</span>
-      </label>
-    </SettingRow>
-  );
-}
 
 interface SystemMenuProps {
   appState: AppState;
   theme: Theme;
   onSetTheme: (theme: Theme) => void;
-  onEnterGameMode: () => void;
   onOpenControls: () => void;
 }
 
-export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpenControls }: SystemMenuProps) {
+export function SystemMenu({ appState, theme, onSetTheme, onOpenControls }: SystemMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copyLabel, setCopyLabel] = useState('Copy');
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const copyTimer = useRef<number | undefined>(undefined);
   const titleId = useId();
-  const { effectsEnabled, effectsVolume, musicEnabled, musicVolume } = useSoundSettings();
-  const { animationsEnabled } = useDisplaySettings();
   const { currentUser } = appState;
 
   const close = useCallback(() => {
@@ -107,26 +34,10 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
   useDismissiblePopup(isOpen, close, panelRef, triggerRef);
 
   useEffect(() => {
-    if (isOpen) panelRef.current?.querySelector<HTMLElement>('[role="switch"]')?.focus({ preventScroll: true });
+    if (isOpen) panelRef.current?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]')?.focus({ preventScroll: true });
   }, [isOpen]);
 
   useEffect(() => () => window.clearTimeout(copyTimer.current), []);
-
-  // Turning sound off plays its cue first; turning it on plays the cue once the bus is live
-  const toggleEffects = () => {
-    if (effectsEnabled) {
-      playUiSound('toggleOff');
-      updateSoundSettings({ effectsEnabled: false });
-    } else {
-      updateSoundSettings({ effectsEnabled: true });
-      playUiSound('toggleOn');
-    }
-  };
-
-  const toggleMusic = () => {
-    playUiSound(musicEnabled ? 'toggleOff' : 'toggleOn');
-    updateSoundSettings({ musicEnabled: !musicEnabled });
-  };
 
   const handleSignIn = async () => {
     try {
@@ -162,13 +73,6 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
     copyTimer.current = window.setTimeout(() => setCopyLabel('Copy'), 2000);
   };
 
-  const launchGame = (id: GameId) => {
-    setIsOpen(false);
-    playUiSound('open');
-    if (id === 'arena') onEnterGameMode();
-    else window.location.href = '/alpineoverride/';
-  };
-
   const profileName = currentUser ? currentUser.displayName || currentUser.email || 'Signed in' : 'Guest';
 
   return (
@@ -201,47 +105,6 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
           </div>
 
           <section className="settings-section">
-            <span className="settings-section-label">Games</span>
-            <ul className="arcade-list">
-              {GAMES.map(({ id, title, detail, Icon }) => (
-                <li key={id}>
-                  <button type="button" className="arcade-game" data-sfx="select" onClick={() => launchGame(id)}>
-                    <span className="arcade-game-icon" aria-hidden="true"><Icon size={18} strokeWidth={1.9} /></span>
-                    <span className="arcade-game-copy">
-                      <span className="arcade-game-title">{title}</span>
-                      <span className="arcade-game-detail">{detail}</span>
-                    </span>
-                    <ChevronRight className="arcade-game-go" size={16} aria-hidden="true" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="settings-section">
-            <span className="settings-section-label">Audio</span>
-            <SoundSettingRow
-              icon={<Volume2 size={16} strokeWidth={2} />}
-              label="Sound effects"
-              hint="Hover ticks, drops and mission-complete chimes"
-              enabled={effectsEnabled}
-              volume={effectsVolume}
-              onToggle={toggleEffects}
-              onVolumeChange={(volume) => updateSoundSettings({ effectsVolume: volume })}
-              onVolumeCommit={() => playUiSound('select')}
-            />
-            <SoundSettingRow
-              icon={<Music size={16} strokeWidth={2} />}
-              label="Ambient music"
-              hint="A quiet, evolving soundtrack"
-              enabled={musicEnabled}
-              volume={musicVolume}
-              onToggle={toggleMusic}
-              onVolumeChange={(volume) => updateSoundSettings({ musicVolume: volume })}
-            />
-          </section>
-
-          <section className="settings-section">
             <span className="settings-section-label">Time of day</span>
             <div className="segmented" role="radiogroup" aria-label="Time of day">
               {([['dark', 'Dusk', Moon], ['light', 'Daylight', Sun]] as const).map(([value, label, Icon]) => (
@@ -259,17 +122,6 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
                 </button>
               ))}
             </div>
-          </section>
-
-          <section className="settings-section">
-            <span className="settings-section-label">Motion</span>
-            <SettingRow
-              icon={<Sparkles size={16} strokeWidth={2} />}
-              label="Animations"
-              hint={animationsEnabled ? 'On — full motion' : 'Off by default to keep low-end devices smooth'}
-              enabled={animationsEnabled}
-              onToggle={() => updateDisplaySettings({ animationsEnabled: !animationsEnabled })}
-            />
           </section>
 
           <section className="settings-section">
@@ -309,7 +161,6 @@ export function SystemMenu({ appState, theme, onSetTheme, onEnterGameMode, onOpe
             </div>
           </section>
 
-          <p className="settings-note">Animations are off by default. Turn them on for the full experience; your device’s reduced-motion setting is always respected.</p>
         </div>
       )}
     </div>
